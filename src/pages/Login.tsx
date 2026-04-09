@@ -20,10 +20,11 @@ const Login = () => {
     setLoading(true);
     try {
       await login(email, password);
+      const saved = localStorage.getItem("cebio_user");
+      const loggedUser = saved ? JSON.parse(saved) : null;
       toast({ title: "Bem-vindo!", description: "Login realizado com sucesso." });
-      const user = JSON.parse(localStorage.getItem("cebio_user") || "{}");
-      if (user.role === "admin") navigate("/admin/dashboard");
-      else if (user.role === "pesquisador") navigate("/pesquisador/dashboard");
+      if (loggedUser?.role === "admin") navigate("/admin/dashboard");
+      else if (loggedUser?.role === "pesquisador") navigate("/pesquisador/dashboard");
       else navigate("/bolsista/dashboard");
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
