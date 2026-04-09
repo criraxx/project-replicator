@@ -254,9 +254,6 @@ class ApiClient {
     return this.request<any>('GET', '/reports/dashboard');
   }
 
-  async toggleMaintenance(enabled: boolean, message?: string) {
-    return this.request<any>('POST', '/admin/maintenance', { enabled, message });
-  }
 }
 
 export const api = new ApiClient();
