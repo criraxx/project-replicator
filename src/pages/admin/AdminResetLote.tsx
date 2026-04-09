@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Users, KeyRound, CheckCircle, Inbox, X } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
@@ -160,7 +161,5 @@ const AdminResetLote = () => {
     </AppLayout>
   );
 };
-
-const navigate = (path: string) => window.location.href = path;
 
 export default AdminResetLote;
