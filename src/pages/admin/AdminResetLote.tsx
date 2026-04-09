@@ -8,6 +8,7 @@ import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 
 const AdminResetLote = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<any[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
