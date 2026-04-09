@@ -1,7 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { authMiddleware, requireRole } from '../utils/auth';
 import { AppDataSource } from '../config/database';
-import { enableMaintenance, disableMaintenance, getMaintenanceStatus } from '../middleware/maintenance';
 import { UserService } from '../services/UserService';
 import { ProjectService } from '../services/ProjectService';
 
@@ -15,7 +14,6 @@ router.get('/admin/status', authMiddleware, requireRole('admin'), async (req: Re
     res.json({
       status: 'ok',
       database: AppDataSource.isInitialized,
-      maintenance: getMaintenanceStatus(),
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
     });
@@ -28,25 +26,9 @@ router.get('/admin/status', authMiddleware, requireRole('admin'), async (req: Re
 router.get('/admin/config', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
   try {
     res.json({
-      maintenance: getMaintenanceStatus(),
       max_upload_size: '10mb',
       allowed_file_types: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'zip'],
     });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Erro interno' });
-  }
-});
-
-// POST /api/admin/maintenance
-router.post('/admin/maintenance', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
-  try {
-    const { enabled, message } = req.body;
-    if (enabled) {
-      enableMaintenance(message);
-    } else {
-      disableMaintenance();
-    }
-    res.json(getMaintenanceStatus());
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Erro interno' });
   }
