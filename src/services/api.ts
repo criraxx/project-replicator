@@ -49,7 +49,17 @@ class ApiClient {
       throw new Error('Sessão expirada');
     }
 
-    const data = await response.json();
+    const text = await response.text();
+    if (!text) {
+      throw new Error('Servidor não respondeu. Verifique se o backend está rodando.');
+    }
+
+    let data: any;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error('Resposta inválida do servidor.');
+    }
 
     if (!response.ok) {
       throw new Error(data.error || 'Erro na requisição');
