@@ -8,7 +8,6 @@ export const ADMIN_NAV: NavItem[] = [
   { label: "Projetos", path: "/admin/projetos" },
   { label: "Usuários", path: "/admin/usuarios" },
   { label: "Categorias", path: "/admin/categorias" },
-  { label: "Níveis Acadêmicos", path: "/admin/niveis-academicos" },
   { label: "Ações Admin", path: "/admin/acoes" },
   { label: "Relatórios", path: "/admin/relatorios" },
   { label: "Auditoria", path: "/admin/auditoria" },
