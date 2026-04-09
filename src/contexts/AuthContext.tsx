@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
+import api from "@/services/api";
 
 export type UserRole = "admin" | "pesquisador" | "bolsista";
 
@@ -8,6 +9,7 @@ export interface User {
   email: string;
   role: UserRole;
   institution: string;
+  must_change_password?: boolean;
 }
 
 interface AuthContextType {
@@ -19,22 +21,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
-// Mock users aligned with backend seed.ts
-const MOCK_USERS: Record<string, User & { password: string }> = {
-  "admin@cebio.org.br": {
-    id: 1, name: "Administrador do Sistema", email: "admin@cebio.org.br",
-    role: "admin", institution: "IF Goiano - Campus Iporá", password: "admin123",
-  },
-  "pesquisador@cebio.org.br": {
-    id: 2, name: "Dr. Carlos Silva", email: "pesquisador@cebio.org.br",
-    role: "pesquisador", institution: "IF Goiano - Campus Iporá", password: "pesq123",
-  },
-  "bolsista@cebio.org.br": {
-    id: 3, name: "Maria Santos", email: "bolsista@cebio.org.br",
-    role: "bolsista", institution: "IF Goiano - Campus Iporá", password: "bolsa123",
-  },
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem("cebio_user");
@@ -42,20 +28,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const login = useCallback(async (email: string, password: string) => {
-    await new Promise((r) => setTimeout(r, 800));
-    const mockUser = MOCK_USERS[email];
-    if (!mockUser || mockUser.password !== password) {
-      throw new Error("Credenciais inválidas");
-    }
-    const { password: _, ...userData } = mockUser;
+    const data = await api.login(email, password);
+    const userData: User = {
+      id: data.user.id,
+      name: data.user.name,
+      email: data.user.email,
+      role: data.user.role,
+      institution: data.user.institution || "",
+      must_change_password: data.user.must_change_password,
+    };
     localStorage.setItem("cebio_user", JSON.stringify(userData));
-    localStorage.setItem("cebio_token", "mock-jwt-token");
     setUser(userData);
   }, []);
 
   const logout = useCallback(() => {
+    api.clearToken();
     localStorage.removeItem("cebio_user");
-    localStorage.removeItem("cebio_token");
     setUser(null);
   }, []);
 
