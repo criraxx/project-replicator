@@ -65,13 +65,15 @@ router.post('/users', authMiddleware, requireRole('admin'), async (req: Request,
 
     const user = await userService.createUser(email, name, password, role, institution, req.user!.id);
 
-    await auditService.log({
-      action: 'CREATE_USER',
-      userId: req.user!.id,
-      details: `Usuário criado: ${email} (${role})`,
-      severity: 'medium',
-      ipAddress: req.ip || 'unknown',
-    });
+    await auditService.logAction(
+      'CREATE_USER',
+      req.user!.id,
+      user.id,
+      undefined,
+      `Usuário criado: ${email} (${role})`,
+      req.ip || 'unknown',
+      'medium'
+    );
 
     res.status(201).json({
       id: user.id,
@@ -124,13 +126,15 @@ router.post('/users/batch', authMiddleware, requireRole('admin'), async (req: Re
       }
     }
 
-    await auditService.log({
-      action: 'BATCH_CREATE_USERS',
-      userId: req.user!.id,
-      details: `Criação em lote: ${results.success.length} criados, ${results.errors.length} erros`,
-      severity: 'high',
-      ipAddress: req.ip || 'unknown',
-    });
+    await auditService.logAction(
+      'BATCH_CREATE_USERS',
+      req.user!.id,
+      undefined,
+      undefined,
+      `Criação em lote: ${results.success.length} criados, ${results.errors.length} erros`,
+      req.ip || 'unknown',
+      'high'
+    );
 
     res.status(201).json(results);
   } catch (error: any) {
@@ -144,13 +148,15 @@ router.put('/users/:id', authMiddleware, requireRole('admin'), async (req: Reque
     const updates = req.body;
     const user = await userService.updateUser(Number(req.params.id), updates);
 
-    await auditService.log({
-      action: 'UPDATE_USER',
-      userId: req.user!.id,
-      details: `Usuário atualizado: ${user.email}`,
-      severity: 'medium',
-      ipAddress: req.ip || 'unknown',
-    });
+    await auditService.logAction(
+      'UPDATE_USER',
+      req.user!.id,
+      user.id,
+      undefined,
+      `Usuário atualizado: ${user.email}`,
+      req.ip || 'unknown',
+      'medium'
+    );
 
     res.json({
       id: user.id,
@@ -183,13 +189,15 @@ router.put('/users/:id/reset-password', authMiddleware, requireRole('admin'), as
       must_change_password: true,
     });
 
-    await auditService.log({
-      action: 'RESET_PASSWORD',
-      userId: req.user!.id,
-      details: `Senha resetada para: ${user.email}`,
-      severity: 'high',
-      ipAddress: req.ip || 'unknown',
-    });
+    await auditService.logAction(
+      'RESET_PASSWORD',
+      req.user!.id,
+      userId,
+      undefined,
+      `Senha resetada para: ${user.email}`,
+      req.ip || 'unknown',
+      'high'
+    );
 
     res.json({ message: 'Senha resetada com sucesso', temporary_password: newPassword });
   } catch (error: any) {
@@ -207,13 +215,15 @@ router.delete('/users/:id', authMiddleware, requireRole('admin'), async (req: Re
 
     await userService.deleteUser(Number(req.params.id));
 
-    await auditService.log({
-      action: 'DELETE_USER',
-      userId: req.user!.id,
-      details: `Usuário removido: ${user.email}`,
-      severity: 'critical',
-      ipAddress: req.ip || 'unknown',
-    });
+    await auditService.logAction(
+      'DELETE_USER',
+      req.user!.id,
+      Number(req.params.id),
+      undefined,
+      `Usuário removido: ${user.email}`,
+      req.ip || 'unknown',
+      'high'
+    );
 
     res.json({ message: 'Usuário removido com sucesso' });
   } catch (error: any) {

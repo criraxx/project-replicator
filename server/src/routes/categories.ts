@@ -18,7 +18,8 @@ router.get('/categories', authMiddleware, async (req: Request, res: Response) =>
 // POST /api/categories
 router.post('/categories', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
   try {
-    const category = await categoryService.createCategory(req.body);
+    const { name, slug, description, color, icon } = req.body;
+    const category = await categoryService.createCategory(name, slug, description, color, icon, req.user!.id);
     res.status(201).json(category);
   } catch (error: any) {
     res.status(error.statusCode || 500).json({ error: error.message || 'Erro interno' });
