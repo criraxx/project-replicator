@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { AuditService } from '../services/AuditService';
 import { authMiddleware, requireRole } from '../utils/auth';
+import { AuditService } from '../services/AuditService';
 
 const router = Router();
 const auditService = new AuditService();

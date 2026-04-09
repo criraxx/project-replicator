@@ -26,13 +26,15 @@ router.post('/login', async (req: Request, res: Response) => {
 
     const token = generateToken(user.id, user.role);
 
-    await auditService.log({
-      action: 'LOGIN',
-      userId: user.id,
-      details: `Login realizado: ${user.email}`,
-      severity: 'low',
-      ipAddress: req.ip || 'unknown',
-    });
+    await auditService.logAction(
+      'LOGIN',
+      user.id,
+      undefined,
+      undefined,
+      `Login realizado: ${user.email}`,
+      req.ip || 'unknown',
+      'low'
+    );
 
     res.json({
       access_token: token,
@@ -86,13 +88,15 @@ router.put('/auth/change-password', authMiddleware, async (req: Request, res: Re
 
     await userService.changePassword(req.user!.id, current_password, new_password);
 
-    await auditService.log({
-      action: 'CHANGE_PASSWORD',
-      userId: req.user!.id,
-      details: 'Senha alterada pelo próprio usuário',
-      severity: 'medium',
-      ipAddress: req.ip || 'unknown',
-    });
+    await auditService.logAction(
+      'CHANGE_PASSWORD',
+      req.user!.id,
+      undefined,
+      undefined,
+      'Senha alterada pelo próprio usuário',
+      req.ip || 'unknown',
+      'medium'
+    );
 
     res.json({ message: 'Senha alterada com sucesso' });
   } catch (error: any) {

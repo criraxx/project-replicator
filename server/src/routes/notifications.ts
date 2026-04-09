@@ -23,7 +23,7 @@ router.get('/notifications', authMiddleware, async (req: Request, res: Response)
 // PUT /api/notifications/:id/read
 router.put('/notifications/:id/read', authMiddleware, async (req: Request, res: Response) => {
   try {
-    await notificationService.markAsRead(Number(req.params.id), req.user!.id);
+    await notificationService.markAsRead(Number(req.params.id));
     res.json({ message: 'Notificação marcada como lida' });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Erro interno' });
@@ -34,7 +34,7 @@ router.put('/notifications/:id/read', authMiddleware, async (req: Request, res: 
 router.post('/notifications/broadcast', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
   try {
     const { title, message, type } = req.body;
-    await notificationService.broadcast(title, message, type);
+    await notificationService.broadcastNotification(title, message, type);
     res.json({ message: 'Notificação enviada para todos' });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Erro interno' });

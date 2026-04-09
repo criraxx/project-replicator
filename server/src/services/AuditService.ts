@@ -1,5 +1,6 @@
 import { AppDataSource } from '../config/database';
 import { AuditLog } from '../entities/AuditLog';
+import { MoreThanOrEqual } from 'typeorm';
 
 export class AuditService {
   private auditRepository = AppDataSource.getRepository(AuditLog);
@@ -43,7 +44,7 @@ export class AuditService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayCount = await this.auditRepository.count({
-      where: { timestamp: { $gte: today } as any },
+      where: { timestamp: MoreThanOrEqual(today) },
     });
 
     return { total, today: todayCount };
