@@ -56,4 +56,35 @@ router.get('/academic-levels', authMiddleware, async (req: Request, res: Respons
   }
 });
 
+// POST /api/academic-levels
+router.post('/academic-levels', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+  try {
+    const { name, slug, description, order } = req.body;
+    const level = await categoryService.createAcademicLevel(name, slug, description, order, req.user!.id);
+    res.status(201).json(level);
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Erro interno' });
+  }
+});
+
+// PUT /api/academic-levels/:id
+router.put('/academic-levels/:id', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+  try {
+    const level = await categoryService.updateAcademicLevel(Number(req.params.id), req.body);
+    res.json(level);
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Erro interno' });
+  }
+});
+
+// DELETE /api/academic-levels/:id
+router.delete('/academic-levels/:id', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+  try {
+    await categoryService.deleteAcademicLevel(Number(req.params.id));
+    res.json({ message: 'Nível acadêmico removido com sucesso' });
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Erro interno' });
+  }
+});
+
 export default router;

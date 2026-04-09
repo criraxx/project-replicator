@@ -212,6 +212,18 @@ class ApiClient {
     return this.request<any[]>('GET', '/academic-levels');
   }
 
+  async createAcademicLevel(data: { name: string; slug: string; description?: string; order?: number }) {
+    return this.request<any>('POST', '/academic-levels', data);
+  }
+
+  async updateAcademicLevel(id: number, data: Partial<any>) {
+    return this.request<any>('PUT', `/academic-levels/${id}`, data);
+  }
+
+  async deleteAcademicLevel(id: number) {
+    return this.request<void>('DELETE', `/academic-levels/${id}`);
+  }
+
   // ============================================
   // AUDIT
   // ============================================
