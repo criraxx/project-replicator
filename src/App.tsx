@@ -61,6 +61,9 @@ const App = () => (
             <Route path="/bolsista/submissao" element={<SubmissionForm />} />
             <Route path="/bolsista/historico" element={<BolsistaHistory />} />
             
+            {/* Shared */}
+            <Route path="/projeto" element={<ProjectDetailView />} />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
