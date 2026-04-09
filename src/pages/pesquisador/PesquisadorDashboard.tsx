@@ -1,4 +1,4 @@
-import { FolderOpen, Clock, CheckCircle, XCircle, FileText } from "lucide-react";
+import { FolderOpen, Clock, CheckCircle, XCircle, FileText, Inbox } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { mockProjects } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,10 +7,10 @@ import { statusColors, statusLabels } from "@/constants/ui";
 
 const PesquisadorDashboard = () => {
   const { user } = useAuth();
-  const myProjects = mockProjects.filter((p) => p.owner_id === 2);
+  const myProjects = mockProjects.filter((p) => p.owner_id === user?.id);
 
   return (
-    <AppLayout pageName="Meu Dashboard" navItems={PESQUISADOR_NAV} notificationCount={1}>
+    <AppLayout pageName="Meu Dashboard" navItems={PESQUISADOR_NAV} notificationCount={0}>
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6 flex justify-between items-center">
         <div>
           <h2 className="text-[22px] font-semibold mb-1.5">Bem-vindo, {user?.name}</h2>
@@ -45,15 +45,22 @@ const PesquisadorDashboard = () => {
           <h3 className="text-base font-semibold">Meus Projetos</h3>
         </div>
         <div className="p-5 pt-4 space-y-3">
-          {myProjects.map((p) => (
-            <div key={p.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-              <div>
-                <div className="font-semibold text-foreground">{p.title}</div>
-                <div className="text-xs text-muted-foreground mt-1">{p.category} • {p.academic_level} • v{p.version}</div>
-              </div>
-              <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${statusColors[p.status]}`}>{statusLabels[p.status]}</span>
+          {myProjects.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Inbox className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="text-sm">Você ainda não tem projetos. Comece criando uma nova submissão!</p>
             </div>
-          ))}
+          ) : (
+            myProjects.map((p) => (
+              <div key={p.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                <div>
+                  <div className="font-semibold text-foreground">{p.title}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{p.category} • {p.academic_level} • v{p.version}</div>
+                </div>
+                <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${statusColors[p.status]}`}>{statusLabels[p.status]}</span>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </AppLayout>

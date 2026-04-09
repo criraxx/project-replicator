@@ -1,4 +1,4 @@
-import { Search, AlertTriangle, Shield, Clock } from "lucide-react";
+import { Search, AlertTriangle, Shield, Clock, Inbox } from "lucide-react";
 import { useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { mockAuditLogs } from "@/data/mockData";
@@ -13,7 +13,7 @@ const AdminAudit = () => {
   );
 
   return (
-    <AppLayout pageName="Auditoria" navItems={ADMIN_NAV} notificationCount={3}>
+    <AppLayout pageName="Auditoria" navItems={ADMIN_NAV} notificationCount={0}>
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6">
         <h2 className="text-[22px] font-semibold mb-1.5">Logs de Auditoria</h2>
         <p className="text-sm opacity-90">Rastreabilidade completa de todas as ações no sistema</p>
@@ -30,7 +30,7 @@ const AdminAudit = () => {
         </div>
         <div className="bg-card rounded-xl p-5 shadow-sm border border-border flex items-center gap-4">
           <div className="w-11 h-11 rounded-full bg-cebio-green-bg flex items-center justify-center"><Clock className="w-5 h-5 text-primary" /></div>
-          <div><div className="text-2xl font-bold">Hoje</div><div className="text-sm text-muted-foreground">Último Registro</div></div>
+          <div><div className="text-2xl font-bold">—</div><div className="text-sm text-muted-foreground">Último Registro</div></div>
         </div>
       </div>
 
@@ -42,32 +42,40 @@ const AdminAudit = () => {
       </div>
 
       <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/50">
-              <th className="p-3 text-left font-semibold text-muted-foreground">Ação</th>
-              <th className="p-3 text-left font-semibold text-muted-foreground">Usuário</th>
-              <th className="p-3 text-left font-semibold text-muted-foreground">Detalhes</th>
-              <th className="p-3 text-left font-semibold text-muted-foreground">Severidade</th>
-              <th className="p-3 text-left font-semibold text-muted-foreground">IP</th>
-              <th className="p-3 text-left font-semibold text-muted-foreground">Data/Hora</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((log) => (
-              <tr key={log.id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                <td className="p-3 font-medium text-foreground">{log.action.replace(/_/g, " ")}</td>
-                <td className="p-3 text-muted-foreground">{log.user_name}</td>
-                <td className="p-3 text-muted-foreground text-xs max-w-[300px] truncate">{log.details}</td>
-                <td className="p-3">
-                  <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${severityColors[log.severity]}`}>{log.severity}</span>
-                </td>
-                <td className="p-3 text-muted-foreground text-xs font-mono">{log.ip_address}</td>
-                <td className="p-3 text-muted-foreground text-xs">{new Date(log.created_at).toLocaleString("pt-BR")}</td>
+        {filtered.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <Inbox className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p className="text-sm font-medium">Nenhum log de auditoria encontrado.</p>
+            <p className="text-xs mt-1">As ações do sistema serão registradas aqui.</p>
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/50">
+                <th className="p-3 text-left font-semibold text-muted-foreground">Ação</th>
+                <th className="p-3 text-left font-semibold text-muted-foreground">Usuário</th>
+                <th className="p-3 text-left font-semibold text-muted-foreground">Detalhes</th>
+                <th className="p-3 text-left font-semibold text-muted-foreground">Severidade</th>
+                <th className="p-3 text-left font-semibold text-muted-foreground">IP</th>
+                <th className="p-3 text-left font-semibold text-muted-foreground">Data/Hora</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.map((log) => (
+                <tr key={log.id} className="border-b border-border hover:bg-muted/30 transition-colors">
+                  <td className="p-3 font-medium text-foreground">{log.action.replace(/_/g, " ")}</td>
+                  <td className="p-3 text-muted-foreground">{log.user_name}</td>
+                  <td className="p-3 text-muted-foreground text-xs max-w-[300px] truncate">{log.details}</td>
+                  <td className="p-3">
+                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${severityColors[log.severity]}`}>{log.severity}</span>
+                  </td>
+                  <td className="p-3 text-muted-foreground text-xs font-mono">{log.ip_address}</td>
+                  <td className="p-3 text-muted-foreground text-xs">{new Date(log.created_at).toLocaleString("pt-BR")}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </AppLayout>
   );
