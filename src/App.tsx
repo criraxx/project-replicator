@@ -13,7 +13,11 @@ import AdminActions from "./pages/admin/AdminActions";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminAudit from "./pages/admin/AdminAudit";
 import PesquisadorDashboard from "./pages/pesquisador/PesquisadorDashboard";
+import PesquisadorProjects from "./pages/pesquisador/PesquisadorProjects";
+import PesquisadorHistory from "./pages/pesquisador/PesquisadorHistory";
 import BolsistaDashboard from "./pages/bolsista/BolsistaDashboard";
+import BolsistaProjects from "./pages/bolsista/BolsistaProjects";
+import BolsistaHistory from "./pages/bolsista/BolsistaHistory";
 import SubmissionForm from "./pages/shared/SubmissionForm";
 import NotFound from "./pages/NotFound";
 
@@ -40,15 +44,15 @@ const App = () => (
             
             {/* Pesquisador */}
             <Route path="/pesquisador/dashboard" element={<PesquisadorDashboard />} />
-            <Route path="/pesquisador/projetos" element={<PesquisadorDashboard />} />
+            <Route path="/pesquisador/projetos" element={<PesquisadorProjects />} />
             <Route path="/pesquisador/submissao" element={<SubmissionForm />} />
-            <Route path="/pesquisador/historico" element={<PesquisadorDashboard />} />
+            <Route path="/pesquisador/historico" element={<PesquisadorHistory />} />
             
             {/* Bolsista */}
             <Route path="/bolsista/dashboard" element={<BolsistaDashboard />} />
-            <Route path="/bolsista/projetos" element={<BolsistaDashboard />} />
+            <Route path="/bolsista/projetos" element={<BolsistaProjects />} />
             <Route path="/bolsista/submissao" element={<SubmissionForm />} />
-            <Route path="/bolsista/historico" element={<BolsistaDashboard />} />
+            <Route path="/bolsista/historico" element={<BolsistaHistory />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>

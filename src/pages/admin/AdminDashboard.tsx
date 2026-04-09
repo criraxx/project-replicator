@@ -1,15 +1,8 @@
 import { Users, FolderOpen, Clock, CheckCircle, Shield, LayoutGrid, Activity } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-
-const ADMIN_NAV = [
-  { label: "Dashboard", path: "/admin/dashboard" },
-  { label: "Projetos", path: "/admin/projetos" },
-  { label: "Usuários", path: "/admin/usuarios" },
-  { label: "Ações Admin", path: "/admin/acoes" },
-  { label: "Relatórios", path: "/admin/relatorios" },
-  { label: "Auditoria", path: "/admin/auditoria" },
-];
+import { ADMIN_NAV } from "@/constants/navigation";
+import { statusColors, statusLabels } from "@/constants/ui";
 
 const pieData = [
   { name: "Aprovados", value: 12, color: "hsl(170, 37%, 39%)" },
@@ -40,20 +33,6 @@ const recentActivity = [
   { id: 4, action: "Senha resetada", detail: "joao.pereira@ifgoiano.edu.br", time: "há 1 dia" },
 ];
 
-const statusColors: Record<string, string> = {
-  aprovado: "bg-cebio-green-bg text-primary",
-  pendente: "bg-cebio-yellow-bg text-cebio-yellow",
-  rejeitado: "bg-cebio-red-bg text-cebio-red",
-  em_revisao: "bg-cebio-blue-bg text-cebio-blue",
-};
-
-const statusLabels: Record<string, string> = {
-  aprovado: "Aprovado",
-  pendente: "Pendente",
-  rejeitado: "Rejeitado",
-  em_revisao: "Em Revisão",
-};
-
 const AdminDashboard = () => {
   return (
     <AppLayout pageName="Painel do Administrador" navItems={ADMIN_NAV} notificationCount={3}>
@@ -74,10 +53,8 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Section Title */}
       <h3 className="text-base font-semibold mb-4">Análise de Projetos</h3>
 
-      {/* Stat Cards */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         {[
           { label: "Total de Projetos", value: 28, sub: "+3 este mês", subColor: "text-primary", icon: Users, iconBg: "bg-cebio-blue-bg", iconColor: "text-cebio-blue" },
@@ -98,7 +75,6 @@ const AdminDashboard = () => {
         ))}
       </div>
 
-      {/* Charts */}
       <div className="grid grid-cols-2 gap-6 mb-6">
         <div className="bg-card rounded-xl shadow-sm border border-border p-5">
           <h3 className="text-base font-semibold mb-4">Status do Projeto</h3>
@@ -132,7 +108,6 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Recent Projects + Activity */}
       <div className="grid grid-cols-2 gap-6">
         <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
           <div className="flex justify-between items-center p-5 pb-0">

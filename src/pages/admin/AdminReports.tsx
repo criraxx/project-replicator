@@ -1,15 +1,7 @@
 import { BarChart3, FileText, Users, TrendingUp, Download } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
-
-const ADMIN_NAV = [
-  { label: "Dashboard", path: "/admin/dashboard" },
-  { label: "Projetos", path: "/admin/projetos" },
-  { label: "Usuários", path: "/admin/usuarios" },
-  { label: "Ações Admin", path: "/admin/acoes" },
-  { label: "Relatórios", path: "/admin/relatorios" },
-  { label: "Auditoria", path: "/admin/auditoria" },
-];
+import { ADMIN_NAV } from "@/constants/navigation";
 
 const monthlyData = [
   { month: "Jan", projetos: 3, usuarios: 1 },
@@ -45,7 +37,6 @@ const AdminReports = () => {
         </button>
       </div>
 
-      {/* KPIs */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         {[
           { icon: FileText, label: "Projetos Totais", value: "28", sub: "+12% vs mês anterior", iconBg: "bg-cebio-blue-bg", iconColor: "text-cebio-blue" },
@@ -66,7 +57,6 @@ const AdminReports = () => {
         ))}
       </div>
 
-      {/* Charts Row 1 */}
       <div className="grid grid-cols-2 gap-6 mb-6">
         <div className="bg-card rounded-xl shadow-sm border border-border p-5">
           <h3 className="text-base font-semibold mb-4">Evolução Mensal</h3>
@@ -98,7 +88,6 @@ const AdminReports = () => {
         </div>
       </div>
 
-      {/* Charts Row 2 */}
       <div className="bg-card rounded-xl shadow-sm border border-border p-5">
         <h3 className="text-base font-semibold mb-4">Por Nível Acadêmico</h3>
         <div style={{ height: 250 }}>

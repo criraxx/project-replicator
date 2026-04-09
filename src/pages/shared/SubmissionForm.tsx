@@ -5,6 +5,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { mockCategories, mockAcademicLevels } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { ADMIN_NAV, PESQUISADOR_NAV, BOLSISTA_NAV } from "@/constants/navigation";
 
 const SubmissionForm = () => {
   const { user } = useAuth();
@@ -14,10 +15,10 @@ const SubmissionForm = () => {
   const isAdmin = user?.role === "admin";
   const isPesquisador = user?.role === "pesquisador";
   const navItems = isAdmin
-    ? [{ label: "Dashboard", path: "/admin/dashboard" }, { label: "Projetos", path: "/admin/projetos" }]
+    ? ADMIN_NAV.slice(0, 2)
     : isPesquisador
-    ? [{ label: "Dashboard", path: "/pesquisador/dashboard" }, { label: "Meus Projetos", path: "/pesquisador/projetos" }, { label: "Nova Submissão", path: "/pesquisador/submissao" }, { label: "Histórico", path: "/pesquisador/historico" }]
-    : [{ label: "Dashboard", path: "/bolsista/dashboard" }, { label: "Meus Projetos", path: "/bolsista/projetos" }, { label: "Nova Submissão", path: "/bolsista/submissao" }, { label: "Histórico", path: "/bolsista/historico" }];
+    ? PESQUISADOR_NAV
+    : BOLSISTA_NAV;
 
   const [form, setForm] = useState({
     title: "", summary: "", description: "", category: "", academic_level: "", start_date: "", end_date: "",
