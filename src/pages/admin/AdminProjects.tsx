@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Eye, CheckCircle, XCircle, Download } from "lucide-react";
+import { Search, Eye, CheckCircle, XCircle, Download, Inbox } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { mockProjects } from "@/data/mockData";
 import { ADMIN_NAV } from "@/constants/navigation";
@@ -25,7 +25,7 @@ const AdminProjects = () => {
   };
 
   return (
-    <AppLayout pageName="Gestão de Projetos" navItems={ADMIN_NAV} notificationCount={3}>
+    <AppLayout pageName="Gestão de Projetos" navItems={ADMIN_NAV} notificationCount={0}>
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6">
         <h2 className="text-[22px] font-semibold mb-1.5">Gestão de Projetos</h2>
         <p className="text-sm opacity-90">Gerencie todos os projetos submetidos ao CEBIO</p>
@@ -70,59 +70,69 @@ const AdminProjects = () => {
       </div>
 
       <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/50">
-              <th className="p-3 text-left w-10">
-                <input type="checkbox" checked={selectedIds.length === filtered.length && filtered.length > 0} onChange={toggleAll} className="accent-primary" />
-              </th>
-              <th className="p-3 text-left font-semibold text-muted-foreground">Projeto</th>
-              <th className="p-3 text-left font-semibold text-muted-foreground">Autor</th>
-              <th className="p-3 text-left font-semibold text-muted-foreground">Categoria</th>
-              <th className="p-3 text-left font-semibold text-muted-foreground">Nível</th>
-              <th className="p-3 text-left font-semibold text-muted-foreground">Status</th>
-              <th className="p-3 text-left font-semibold text-muted-foreground">Data</th>
-              <th className="p-3 text-center font-semibold text-muted-foreground">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((p) => (
-              <tr key={p.id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                <td className="p-3">
-                  <input type="checkbox" checked={selectedIds.includes(p.id)} onChange={() => toggleSelect(p.id)} className="accent-primary" />
-                </td>
-                <td className="p-3">
-                  <div className="font-semibold text-foreground">{p.title}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{p.summary}</div>
-                </td>
-                <td className="p-3 text-muted-foreground">{p.owner_name}</td>
-                <td className="p-3 text-muted-foreground">{p.category}</td>
-                <td className="p-3 text-muted-foreground">{p.academic_level}</td>
-                <td className="p-3">
-                  <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${statusColors[p.status]}`}>
-                    {statusLabels[p.status]}
-                  </span>
-                </td>
-                <td className="p-3 text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
-                <td className="p-3">
-                  <div className="flex justify-center gap-1">
-                    <button className="p-1.5 rounded hover:bg-muted" title="Ver detalhes"><Eye className="w-4 h-4 text-cebio-blue" /></button>
-                    {p.status === "pendente" && (
-                      <>
-                        <button className="p-1.5 rounded hover:bg-muted" title="Aprovar"><CheckCircle className="w-4 h-4 text-primary" /></button>
-                        <button className="p-1.5 rounded hover:bg-muted" title="Rejeitar"><XCircle className="w-4 h-4 text-cebio-red" /></button>
-                      </>
-                    )}
-                    <button className="p-1.5 rounded hover:bg-muted" title="Download"><Download className="w-4 h-4 text-muted-foreground" /></button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="p-4 text-sm text-muted-foreground border-t border-border">
-          Mostrando {filtered.length} de {mockProjects.length} projetos
-        </div>
+        {filtered.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <Inbox className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p className="text-sm font-medium">Nenhum projeto encontrado.</p>
+            <p className="text-xs mt-1">Os projetos submetidos aparecerão aqui.</p>
+          </div>
+        ) : (
+          <>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="p-3 text-left w-10">
+                    <input type="checkbox" checked={selectedIds.length === filtered.length && filtered.length > 0} onChange={toggleAll} className="accent-primary" />
+                  </th>
+                  <th className="p-3 text-left font-semibold text-muted-foreground">Projeto</th>
+                  <th className="p-3 text-left font-semibold text-muted-foreground">Autor</th>
+                  <th className="p-3 text-left font-semibold text-muted-foreground">Categoria</th>
+                  <th className="p-3 text-left font-semibold text-muted-foreground">Nível</th>
+                  <th className="p-3 text-left font-semibold text-muted-foreground">Status</th>
+                  <th className="p-3 text-left font-semibold text-muted-foreground">Data</th>
+                  <th className="p-3 text-center font-semibold text-muted-foreground">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((p) => (
+                  <tr key={p.id} className="border-b border-border hover:bg-muted/30 transition-colors">
+                    <td className="p-3">
+                      <input type="checkbox" checked={selectedIds.includes(p.id)} onChange={() => toggleSelect(p.id)} className="accent-primary" />
+                    </td>
+                    <td className="p-3">
+                      <div className="font-semibold text-foreground">{p.title}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{p.summary}</div>
+                    </td>
+                    <td className="p-3 text-muted-foreground">{p.owner_name}</td>
+                    <td className="p-3 text-muted-foreground">{p.category}</td>
+                    <td className="p-3 text-muted-foreground">{p.academic_level}</td>
+                    <td className="p-3">
+                      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${statusColors[p.status]}`}>
+                        {statusLabels[p.status]}
+                      </span>
+                    </td>
+                    <td className="p-3 text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
+                    <td className="p-3">
+                      <div className="flex justify-center gap-1">
+                        <button className="p-1.5 rounded hover:bg-muted" title="Ver detalhes"><Eye className="w-4 h-4 text-cebio-blue" /></button>
+                        {p.status === "pendente" && (
+                          <>
+                            <button className="p-1.5 rounded hover:bg-muted" title="Aprovar"><CheckCircle className="w-4 h-4 text-primary" /></button>
+                            <button className="p-1.5 rounded hover:bg-muted" title="Rejeitar"><XCircle className="w-4 h-4 text-cebio-red" /></button>
+                          </>
+                        )}
+                        <button className="p-1.5 rounded hover:bg-muted" title="Download"><Download className="w-4 h-4 text-muted-foreground" /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="p-4 text-sm text-muted-foreground border-t border-border">
+              Mostrando {filtered.length} de {mockProjects.length} projetos
+            </div>
+          </>
+        )}
       </div>
     </AppLayout>
   );

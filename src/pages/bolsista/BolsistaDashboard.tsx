@@ -1,4 +1,4 @@
-import { FolderOpen, Clock, CheckCircle, XCircle, FileText } from "lucide-react";
+import { FolderOpen, Clock, CheckCircle, XCircle, FileText, Inbox } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { mockProjects } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,10 +7,10 @@ import { statusColors, statusLabels } from "@/constants/ui";
 
 const BolsistaDashboard = () => {
   const { user } = useAuth();
-  const myProjects = mockProjects.filter((p) => p.owner_id === 3);
+  const myProjects = mockProjects.filter((p) => p.owner_id === user?.id);
 
   return (
-    <AppLayout pageName="Meu Dashboard" navItems={BOLSISTA_NAV} notificationCount={1}>
+    <AppLayout pageName="Meu Dashboard" navItems={BOLSISTA_NAV} notificationCount={0}>
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6 flex justify-between items-center">
         <div>
           <h2 className="text-[22px] font-semibold mb-1.5">Bem-vindo, {user?.name}</h2>
@@ -45,8 +45,8 @@ const BolsistaDashboard = () => {
         <div className="p-5 pt-4 space-y-3">
           {myProjects.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Você ainda não tem projetos. Comece criando uma nova submissão!</p>
+              <Inbox className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="text-sm">Você ainda não tem projetos. Comece criando uma nova submissão!</p>
             </div>
           ) : (
             myProjects.map((p) => (

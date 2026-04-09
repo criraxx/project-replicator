@@ -1,15 +1,17 @@
-import { Clock, CheckCircle, XCircle, FileText } from "lucide-react";
+import { Clock, CheckCircle, XCircle, FileText, Inbox } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { mockProjects } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
 import { PESQUISADOR_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
 
 const PesquisadorHistory = () => {
-  const myProjects = mockProjects.filter((p) => p.owner_id === 2);
+  const { user } = useAuth();
+  const myProjects = mockProjects.filter((p) => p.owner_id === user?.id);
   const finalized = myProjects.filter((p) => p.status === "aprovado" || p.status === "rejeitado");
 
   return (
-    <AppLayout pageName="Histórico" navItems={PESQUISADOR_NAV} notificationCount={1}>
+    <AppLayout pageName="Histórico" navItems={PESQUISADOR_NAV} notificationCount={0}>
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6">
         <h2 className="text-[22px] font-semibold mb-1.5">Histórico de Submissões</h2>
         <p className="text-sm opacity-90">Acompanhe o histórico completo dos seus projetos</p>
@@ -38,8 +40,8 @@ const PesquisadorHistory = () => {
         <div className="p-5 pt-4 space-y-3">
           {finalized.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Nenhum projeto finalizado ainda.</p>
+              <Inbox className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="text-sm">Nenhum projeto finalizado ainda.</p>
             </div>
           ) : (
             finalized.map((p) => (
