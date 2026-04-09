@@ -57,6 +57,30 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        cebio: {
+          green: {
+            dark: "hsl(var(--cebio-green-dark))",
+            DEFAULT: "hsl(var(--cebio-green-main))",
+            light: "hsl(var(--cebio-green-light))",
+            bg: "hsl(var(--cebio-green-bg))",
+          },
+          blue: {
+            DEFAULT: "hsl(var(--cebio-blue))",
+            bg: "hsl(var(--cebio-blue-bg))",
+          },
+          yellow: {
+            DEFAULT: "hsl(var(--cebio-yellow))",
+            bg: "hsl(var(--cebio-yellow-bg))",
+          },
+          red: {
+            DEFAULT: "hsl(var(--cebio-red))",
+            bg: "hsl(var(--cebio-red-bg))",
+          },
+          purple: {
+            DEFAULT: "hsl(var(--cebio-purple))",
+            bg: "hsl(var(--cebio-purple-bg))",
+          },
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -65,20 +89,12 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
       },
       animation: {
