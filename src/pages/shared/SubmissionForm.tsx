@@ -58,7 +58,9 @@ const SubmissionForm = () => {
     try {
       await api.createProject({
         title: form.title,
+        summary: form.description,
         category: form.category,
+        academic_level: "graduacao",
         description: form.description,
         start_date: form.start_date || undefined,
         end_date: form.end_date || undefined,
