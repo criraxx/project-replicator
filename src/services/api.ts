@@ -107,6 +107,19 @@ class ApiClient {
     return this.request<void>('DELETE', `/users/${id}`);
   }
 
+  async resetUserPassword(id: number, newPassword?: string) {
+    return this.request<{ message: string; temporary_password: string }>('PUT', `/users/${id}/reset-password`, {
+      new_password: newPassword,
+    });
+  }
+
+  async batchCreateUsers(users: { email: string; name: string; role?: string; institution?: string }[], defaultPassword?: string) {
+    return this.request<{ success: any[]; errors: any[] }>('POST', '/users/batch', {
+      users,
+      default_password: defaultPassword,
+    });
+  }
+
   // ============================================
   // PROJECTS
   // ============================================

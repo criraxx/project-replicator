@@ -1,21 +1,125 @@
-import { useState } from "react";
-import { Search, UserPlus, Eye, KeyRound, UserX, UserCheck, Inbox } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, UserPlus, Eye, KeyRound, UserX, UserCheck, Inbox, Upload, X } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
-import { mockUsers } from "@/data/mockData";
 import { ADMIN_NAV } from "@/constants/navigation";
 import { roleBadge } from "@/constants/ui";
+import api from "@/services/api";
+import { useToast } from "@/hooks/use-toast";
+import type { User } from "@/data/mockData";
 
 const AdminUsers = () => {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showNewUser, setShowNewUser] = useState(false);
+  const [showBatchModal, setShowBatchModal] = useState(false);
+  const { toast } = useToast();
 
-  const filtered = mockUsers.filter((u) => {
+  // Form state for new user
+  const [newUser, setNewUser] = useState({ name: "", email: "", role: "bolsista", institution: "", password: "cebio2024" });
+
+  // Batch creation state
+  const [batchText, setBatchText] = useState("");
+  const [batchPassword, setBatchPassword] = useState("cebio2024");
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const data = await api.listUsers(
+        roleFilter || undefined,
+        statusFilter !== "" ? statusFilter === "true" : undefined
+      );
+      setUsers(data);
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, [roleFilter, statusFilter]);
+
+  const filtered = users.filter((u) => {
     const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
-    const matchRole = !roleFilter || u.role === roleFilter;
-    const matchStatus = !statusFilter || (statusFilter === "true" ? u.is_active : !u.is_active);
-    return matchSearch && matchRole && matchStatus;
+    return matchSearch;
   });
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await api.createUser({
+        email: newUser.email,
+        name: newUser.name,
+        password: newUser.password,
+        role: newUser.role,
+        institution: newUser.institution,
+      });
+      toast({ title: "Sucesso", description: "Usuário criado com sucesso!" });
+      setShowNewUser(false);
+      setNewUser({ name: "", email: "", role: "bolsista", institution: "", password: "cebio2024" });
+      fetchUsers();
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleBatchCreate = async () => {
+    try {
+      const lines = batchText.trim().split("\n").filter((l) => l.trim());
+      const usersData = lines.map((line) => {
+        const parts = line.split(";").map((p) => p.trim());
+        return {
+          name: parts[0] || "",
+          email: parts[1] || "",
+          role: parts[2] || "bolsista",
+          institution: parts[3] || "",
+        };
+      });
+
+      if (usersData.length === 0) {
+        toast({ title: "Erro", description: "Nenhum usuário para cadastrar", variant: "destructive" });
+        return;
+      }
+
+      const result = await api.batchCreateUsers(usersData, batchPassword);
+      toast({
+        title: "Criação em lote concluída",
+        description: `${result.success.length} criados, ${result.errors.length} erros`,
+      });
+      setShowBatchModal(false);
+      setBatchText("");
+      fetchUsers();
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleResetPassword = async (userId: number, userName: string) => {
+    if (!confirm(`Deseja resetar a senha de ${userName}?`)) return;
+    try {
+      const result = await api.resetUserPassword(userId);
+      toast({
+        title: "Senha resetada",
+        description: `Nova senha temporária: ${result.temporary_password}`,
+      });
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleToggleActive = async (userId: number, currentActive: boolean) => {
+    try {
+      await api.updateUser(userId, { is_active: !currentActive });
+      toast({ title: "Sucesso", description: `Usuário ${currentActive ? "desativado" : "ativado"}` });
+      fetchUsers();
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    }
+  };
 
   return (
     <AppLayout pageName="Gestão de Usuários" navItems={ADMIN_NAV} notificationCount={0}>
@@ -26,10 +130,10 @@ const AdminUsers = () => {
 
       <div className="grid grid-cols-4 gap-4 mb-6">
         {[
-          { label: "Total", value: mockUsers.length, color: "text-cebio-blue" },
-          { label: "Ativos", value: mockUsers.filter((u) => u.is_active).length, color: "text-primary" },
-          { label: "Inativos", value: mockUsers.filter((u) => !u.is_active).length, color: "text-cebio-red" },
-          { label: "Pesquisadores", value: mockUsers.filter((u) => u.role === "pesquisador").length, color: "text-cebio-purple" },
+          { label: "Total", value: users.length, color: "text-cebio-blue" },
+          { label: "Ativos", value: users.filter((u) => u.is_active).length, color: "text-primary" },
+          { label: "Inativos", value: users.filter((u) => !u.is_active).length, color: "text-cebio-red" },
+          { label: "Pesquisadores", value: users.filter((u) => u.role === "pesquisador").length, color: "text-cebio-purple" },
         ].map((s, i) => (
           <div key={i} className="bg-card rounded-xl p-5 shadow-sm border border-border text-center">
             <div className={`text-3xl font-bold ${s.color}`}>{s.value}</div>
@@ -54,13 +158,93 @@ const AdminUsers = () => {
           <option value="true">Ativos</option>
           <option value="false">Inativos</option>
         </select>
-        <button className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5">
+        <button onClick={() => setShowNewUser(true)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5">
           <UserPlus className="w-4 h-4" /> Novo Usuário
+        </button>
+        <button onClick={() => setShowBatchModal(true)} className="bg-secondary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5">
+          <Upload className="w-4 h-4" /> Cadastro em Lote
         </button>
       </div>
 
+      {/* Modal: Novo Usuário */}
+      {showNewUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-xl p-6 w-full max-w-md shadow-xl border border-border">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Novo Usuário</h3>
+              <button onClick={() => setShowNewUser(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
+            </div>
+            <form onSubmit={handleCreateUser} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Nome</label>
+                <input type="text" required value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Email</label>
+                <input type="email" required value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Perfil</label>
+                <select value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card">
+                  <option value="bolsista">Bolsista</option>
+                  <option value="pesquisador">Pesquisador</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Instituição</label>
+                <input type="text" value={newUser.institution} onChange={(e) => setNewUser({ ...newUser, institution: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Senha inicial</label>
+                <input type="text" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+              </div>
+              <button type="submit" className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg text-sm font-semibold">Criar Usuário</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Cadastro em Lote */}
+      {showBatchModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-xl p-6 w-full max-w-lg shadow-xl border border-border">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Cadastro em Lote</h3>
+              <button onClick={() => setShowBatchModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              Cole os dados dos usuários, um por linha, no formato:<br />
+              <code className="text-xs bg-muted px-1.5 py-0.5 rounded">Nome;Email;Perfil;Instituição</code>
+            </p>
+            <p className="text-xs text-muted-foreground mb-3">
+              Exemplo: <code className="bg-muted px-1 py-0.5 rounded">Maria Santos;maria@email.com;bolsista;IF Goiano</code>
+            </p>
+            <textarea
+              rows={8}
+              value={batchText}
+              onChange={(e) => setBatchText(e.target.value)}
+              placeholder="Nome;Email;Perfil;Instituição"
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card font-mono mb-3"
+            />
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Senha padrão para todos</label>
+              <input type="text" value={batchPassword} onChange={(e) => setBatchPassword(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+            </div>
+            <button onClick={handleBatchCreate} className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg text-sm font-semibold">
+              Cadastrar Todos
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tabela */}
       <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <p className="text-sm">Carregando...</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <Inbox className="w-12 h-12 mx-auto mb-3 opacity-50" />
             <p className="text-sm font-medium">Nenhum usuário encontrado.</p>
@@ -103,12 +287,12 @@ const AdminUsers = () => {
                           {u.is_active ? "Ativo" : "Inativo"}
                         </span>
                       </td>
-                      <td className="p-3 text-muted-foreground text-xs">{new Date(u.last_login).toLocaleDateString("pt-BR")}</td>
+                      <td className="p-3 text-muted-foreground text-xs">{u.last_login ? new Date(u.last_login).toLocaleDateString("pt-BR") : "Nunca"}</td>
                       <td className="p-3">
                         <div className="flex justify-center gap-1">
                           <button className="p-1.5 rounded hover:bg-muted" title="Ver detalhes"><Eye className="w-4 h-4 text-cebio-blue" /></button>
-                          <button className="p-1.5 rounded hover:bg-muted" title="Resetar senha"><KeyRound className="w-4 h-4 text-cebio-yellow" /></button>
-                          <button className="p-1.5 rounded hover:bg-muted" title={u.is_active ? "Desativar" : "Ativar"}>
+                          <button onClick={() => handleResetPassword(u.id, u.name)} className="p-1.5 rounded hover:bg-muted" title="Resetar senha"><KeyRound className="w-4 h-4 text-cebio-yellow" /></button>
+                          <button onClick={() => handleToggleActive(u.id, u.is_active)} className="p-1.5 rounded hover:bg-muted" title={u.is_active ? "Desativar" : "Ativar"}>
                             {u.is_active ? <UserX className="w-4 h-4 text-cebio-red" /> : <UserCheck className="w-4 h-4 text-primary" />}
                           </button>
                         </div>
@@ -119,7 +303,7 @@ const AdminUsers = () => {
               </tbody>
             </table>
             <div className="p-4 text-sm text-muted-foreground border-t border-border">
-              Mostrando {filtered.length} de {mockUsers.length} usuários
+              Mostrando {filtered.length} de {users.length} usuários
             </div>
           </>
         )}

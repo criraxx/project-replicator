@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { extractToken, verifyToken } from '../utils/auth';
+import { extractToken, verifyToken } from '../middleware/auth';
 
 declare global {
   namespace Express {
@@ -45,3 +45,6 @@ export const requireRole = (...roles: string[]) => {
     next();
   };
 };
+
+// Re-export auth utilities for convenience
+export { hashPassword, verifyPassword, generateToken } from '../middleware/auth';
