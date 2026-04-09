@@ -24,6 +24,7 @@ import BolsistaDashboard from "./pages/bolsista/BolsistaDashboard";
 import BolsistaProjects from "./pages/bolsista/BolsistaProjects";
 import BolsistaHistory from "./pages/bolsista/BolsistaHistory";
 import SubmissionForm from "./pages/shared/SubmissionForm";
+import ProjectDetailView from "./pages/shared/ProjectDetailView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,9 @@ const App = () => (
             <Route path="/bolsista/projetos" element={<BolsistaProjects />} />
             <Route path="/bolsista/submissao" element={<SubmissionForm />} />
             <Route path="/bolsista/historico" element={<BolsistaHistory />} />
+            
+            {/* Shared */}
+            <Route path="/projeto" element={<ProjectDetailView />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
