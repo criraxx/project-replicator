@@ -14,8 +14,6 @@ import AdminReports from "./pages/admin/AdminReports";
 import AdminAudit from "./pages/admin/AdminAudit";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminBatchApproval from "./pages/admin/AdminBatchApproval";
-import AdminRejeicaoLote from "./pages/admin/AdminRejeicaoLote";
-import AdminResetLote from "./pages/admin/AdminResetLote";
 import AdminMassNotification from "./pages/admin/AdminMassNotification";
 import PesquisadorDashboard from "./pages/pesquisador/PesquisadorDashboard";
 import PesquisadorProjects from "./pages/pesquisador/PesquisadorProjects";
@@ -49,8 +47,6 @@ const App = () => (
             <Route path="/admin/relatorios" element={<AdminReports />} />
             <Route path="/admin/auditoria" element={<AdminAudit />} />
             <Route path="/admin/aprovacao-lote" element={<AdminBatchApproval />} />
-            <Route path="/admin/rejeicao-lote" element={<AdminRejeicaoLote />} />
-            <Route path="/admin/reset-lote" element={<AdminResetLote />} />
             <Route path="/admin/notificacao-massa" element={<AdminMassNotification />} />
             
             {/* Pesquisador */}

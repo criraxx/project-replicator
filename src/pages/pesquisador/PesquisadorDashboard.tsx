@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FolderOpen, Clock, CheckCircle, XCircle, FileText, Inbox, Plus, Calendar } from "lucide-react";
+import { FolderOpen, Clock, CheckCircle, XCircle, FileText, Inbox } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import AppLayout from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { PESQUISADOR_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
+
+const COLORS = ["hsl(170,37%,30%)", "hsl(43,96%,56%)", "hsl(210,72%,46%)", "hsl(3,81%,55%)"];
 
 const PesquisadorDashboard = () => {
   const { user } = useAuth();
@@ -25,120 +28,107 @@ const PesquisadorDashboard = () => {
   }, []);
 
   const approved = projects.filter(p => p.status === "aprovado").length;
-  const pending = projects.filter(p => p.status === "pendente" || p.status === "em_revisao").length;
+  const pending = projects.filter(p => p.status === "pendente").length;
   const rejected = projects.filter(p => p.status === "rejeitado").length;
-  const approvalRate = projects.length > 0 ? Math.round(approved / projects.length * 100) : 0;
+
+  const chartData = [
+    { name: "Aprovados", value: approved },
+    { name: "Pendentes", value: pending },
+    { name: "Rejeitados", value: rejected },
+  ].filter(d => d.value > 0);
 
   return (
     <AppLayout pageName="Meu Dashboard" navItems={PESQUISADOR_NAV} notificationCount={0}>
-      {/* Banner */}
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6 flex justify-between items-center">
         <div>
-          <h2 className="text-[22px] font-semibold mb-1">Bem-vindo, {user?.name}</h2>
-          <p className="text-sm opacity-90 mb-1">Pesquisador • CEBIO Brasil - Centro de Excelência em Bioinsumos</p>
-          <p className="text-[13px] opacity-80 mb-3">Gerencie seus projetos acadêmicos e acompanhe o progresso das submissões</p>
-          <button onClick={() => navigate("/pesquisador/submissao")} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-            + Nova Submissão
-          </button>
+          <h2 className="text-[22px] font-semibold mb-1.5">Bem-vindo, {user?.name}</h2>
+          <p className="text-sm opacity-90">Painel do Pesquisador - CEBIO Brasil</p>
         </div>
-        <div className="text-center opacity-80">
-          <FileText className="w-12 h-12 mx-auto mb-1" />
-          <span className="text-sm">Sistema CEBIO</span>
-        </div>
+        <button onClick={() => navigate("/pesquisador/submissao")} className="bg-primary-foreground text-primary px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-primary-foreground/90">
+          <FileText className="w-4 h-4" /> Novo Projeto
+        </button>
       </div>
 
-      {/* Stat Cards */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         {[
-          { label: "Total de Projetos", value: projects.length, sub: `${projects.length} projetos no total`, subColor: "text-primary", iconBg: "bg-cebio-blue-bg", iconColor: "text-cebio-blue" },
-          { label: "Em Revisão", value: pending, sub: "Aguardando aprovação", subColor: "text-cebio-yellow", iconBg: "bg-cebio-yellow-bg", iconColor: "text-cebio-yellow" },
-          { label: "Aprovados", value: approved, sub: `Taxa: ${approvalRate}%`, subColor: "text-primary", iconBg: "bg-cebio-green-bg", iconColor: "text-primary" },
-          { label: "Rejeitados", value: rejected, sub: rejected === 0 ? "Nenhum rejeitado" : `${rejected} rejeitado(s)`, subColor: "text-cebio-red", iconBg: "bg-cebio-red-bg", iconColor: "text-cebio-red" },
+          { icon: FolderOpen, label: "Meus Projetos", value: projects.length, iconBg: "bg-cebio-blue-bg", iconColor: "text-cebio-blue" },
+          { icon: CheckCircle, label: "Aprovados", value: approved, iconBg: "bg-cebio-green-bg", iconColor: "text-primary" },
+          { icon: Clock, label: "Pendentes", value: pending, iconBg: "bg-cebio-yellow-bg", iconColor: "text-cebio-yellow" },
+          { icon: XCircle, label: "Rejeitados", value: rejected, iconBg: "bg-cebio-red-bg", iconColor: "text-cebio-red" },
         ].map((s, i) => (
           <div key={i} className="bg-card rounded-xl p-5 shadow-sm border border-border flex justify-between items-start">
             <div>
               <div className="text-[13px] text-muted-foreground mb-1">{s.label}</div>
-              <div className="text-[32px] font-bold text-foreground leading-none">{s.value}</div>
-              <div className={`text-xs mt-1 ${s.subColor}`}>{s.sub}</div>
+              <div className="text-3xl font-bold text-foreground">{s.value}</div>
             </div>
             <div className={`w-11 h-11 rounded-full ${s.iconBg} flex items-center justify-center`}>
-              <FolderOpen className={`w-[22px] h-[22px] ${s.iconColor}`} />
+              <s.icon className={`w-5 h-5 ${s.iconColor}`} />
             </div>
           </div>
         ))}
       </div>
 
-      {/* Main + Sidebar */}
-      <div className="grid grid-cols-3 gap-6">
-        {/* Meus Projetos */}
-        <div className="col-span-2 bg-card rounded-xl shadow-sm border border-border overflow-hidden">
-          <div className="flex justify-between items-center p-5 pb-0">
-            <h3 className="text-base font-semibold">Meus Projetos</h3>
-            <button onClick={() => navigate("/pesquisador/projetos")} className="text-xs text-primary font-medium">Ver todos</button>
-          </div>
-          <div className="p-5 pt-4">
-            {loading ? (
-              <p className="text-center text-sm text-muted-foreground py-4">Carregando...</p>
-            ) : projects.length === 0 ? (
-              <div className="text-center py-10 text-muted-foreground">
-                <FolderOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <h4 className="font-semibold mb-1">Nenhum projeto encontrado</h4>
-                <p className="text-sm mb-4">Comece criando seu primeiro projeto acadêmico</p>
-                <button onClick={() => navigate("/pesquisador/submissao")} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium">
-                  + Criar Primeiro Projeto
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {projects.slice(0, 5).map((p: any) => (
-                  <div key={p.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                    <div>
-                      <div className="font-semibold text-foreground">{p.title}</div>
-                      <div className="text-xs text-muted-foreground mt-1">{p.category} • {p.academic_level}</div>
-                    </div>
-                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${statusColors[p.status as keyof typeof statusColors] || ""}`}>
-                      {statusLabels[p.status as keyof typeof statusLabels] || p.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+      <div className="grid grid-cols-2 gap-6 mb-6">
+        {/* Chart */}
+        <div className="bg-card rounded-xl shadow-sm border border-border p-5">
+          <h3 className="text-base font-semibold mb-4">Projetos por Status</h3>
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie data={chartData} cx="50%" cy="50%" outerRadius={70} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                  {chartData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground"><p className="text-sm">Sem dados</p></div>
+          )}
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-4">
-          <div className="bg-card rounded-xl shadow-sm border border-border p-5">
-            <h4 className="text-sm font-semibold mb-3">Notificações</h4>
-            <p className="text-[13px] text-muted-foreground">Nenhuma notificação nova</p>
+        {/* Quick Actions */}
+        <div className="bg-card rounded-xl shadow-sm border border-border p-5">
+          <h3 className="text-base font-semibold mb-4">Atalhos Rápidos</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: "Novo Projeto", path: "/pesquisador/submissao", icon: FileText },
+              { label: "Meus Projetos", path: "/pesquisador/projetos", icon: FolderOpen },
+              { label: "Histórico", path: "/pesquisador/historico", icon: Clock },
+            ].map((a, i) => (
+              <button key={i} onClick={() => navigate(a.path)} className="flex items-center gap-2 p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors text-sm font-medium">
+                <a.icon className="w-4 h-4 text-primary" /> {a.label}
+              </button>
+            ))}
           </div>
-          <div className="bg-card rounded-xl shadow-sm border border-border p-5">
-            <h4 className="text-sm font-semibold mb-3">Estatísticas Pessoais</h4>
-            <div className="space-y-2.5">
-              {[
-                { label: "Total de Versões", value: "0" },
-                { label: "Projetos Este Ano", value: String(projects.length) },
-                { label: "Taxa de Aprovação", value: `${approvalRate}%`, color: "text-cebio-red" },
-                { label: "Tempo Médio de Revisão", value: "14 dias" },
-              ].map((r, i) => (
-                <div key={i} className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">{r.label}</span>
-                  <span className={`font-semibold ${r.color || ""}`}>{r.value}</span>
+        </div>
+      </div>
+
+      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+        <div className="flex justify-between items-center p-5 pb-0">
+          <h3 className="text-base font-semibold">Meus Projetos Recentes</h3>
+          <button onClick={() => navigate("/pesquisador/projetos")} className="text-xs text-primary font-medium">Ver todos</button>
+        </div>
+        <div className="p-5 pt-4 space-y-3">
+          {loading ? (
+            <p className="text-center text-sm text-muted-foreground py-4">Carregando...</p>
+          ) : projects.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Inbox className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="text-sm">Você ainda não tem projetos. Comece criando uma nova submissão!</p>
+            </div>
+          ) : (
+            projects.slice(0, 5).map((p: any) => (
+              <div key={p.id} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                <div>
+                  <div className="font-semibold text-foreground">{p.title}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{p.category} • {p.academic_level}</div>
                 </div>
-              ))}
-            </div>
-          </div>
-          <div className="bg-card rounded-xl shadow-sm border border-border p-5">
-            <h4 className="text-sm font-semibold mb-3">Ações Rápidas</h4>
-            <div className="space-y-2">
-              <button onClick={() => navigate("/pesquisador/submissao")} className="w-full flex items-center gap-2 p-2.5 rounded-lg hover:bg-muted/50 transition-colors text-sm text-left">
-                <Plus className="w-4 h-4 text-primary" /> Nova Submissão
-              </button>
-              <button onClick={() => navigate("/pesquisador/historico")} className="w-full flex items-center gap-2 p-2.5 rounded-lg hover:bg-muted/50 transition-colors text-sm text-left">
-                <Calendar className="w-4 h-4 text-primary" /> Ver Histórico
-              </button>
-            </div>
-          </div>
+                <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${statusColors[p.status as keyof typeof statusColors] || ""}`}>
+                  {statusLabels[p.status as keyof typeof statusLabels] || p.status}
+                </span>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </AppLayout>
