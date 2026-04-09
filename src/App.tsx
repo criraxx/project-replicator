@@ -15,8 +15,6 @@ import AdminAudit from "./pages/admin/AdminAudit";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminBatchApproval from "./pages/admin/AdminBatchApproval";
 import AdminMassNotification from "./pages/admin/AdminMassNotification";
-import AdminCategories from "./pages/admin/AdminCategories";
-import AdminAcademicLevels from "./pages/admin/AdminAcademicLevels";
 import PesquisadorDashboard from "./pages/pesquisador/PesquisadorDashboard";
 import PesquisadorProjects from "./pages/pesquisador/PesquisadorProjects";
 import PesquisadorHistory from "./pages/pesquisador/PesquisadorHistory";
@@ -44,10 +42,11 @@ const App = () => (
             <Route path="/admin/projetos" element={<AdminProjects />} />
             <Route path="/admin/usuarios" element={<AdminUsers />} />
             <Route path="/admin/categorias" element={<AdminCategories />} />
-            <Route path="/admin/niveis-academicos" element={<AdminAcademicLevels />} />
             <Route path="/admin/acoes" element={<AdminActions />} />
             <Route path="/admin/relatorios" element={<AdminReports />} />
             <Route path="/admin/auditoria" element={<AdminAudit />} />
+            <Route path="/admin/aprovacao-lote" element={<AdminBatchApproval />} />
+            <Route path="/admin/notificacao-massa" element={<AdminMassNotification />} />
             
             {/* Pesquisador */}
             <Route path="/pesquisador/dashboard" element={<PesquisadorDashboard />} />
