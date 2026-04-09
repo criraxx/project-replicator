@@ -19,19 +19,19 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
-// Mock users for development
+// Mock users aligned with backend seed.ts
 const MOCK_USERS: Record<string, User & { password: string }> = {
-  "admin@cebio.com": {
-    id: 1, name: "Administrador", email: "admin@cebio.com",
+  "admin@cebio.org.br": {
+    id: 1, name: "Administrador do Sistema", email: "admin@cebio.org.br",
     role: "admin", institution: "IF Goiano - Campus Iporá", password: "admin123",
   },
-  "pesquisador@cebio.com": {
-    id: 2, name: "Dr. Carlos Silva", email: "pesquisador@cebio.com",
-    role: "pesquisador", institution: "IF Goiano - Campus Iporá", password: "123456",
+  "pesquisador@cebio.org.br": {
+    id: 2, name: "Dr. Carlos Silva", email: "pesquisador@cebio.org.br",
+    role: "pesquisador", institution: "IF Goiano - Campus Iporá", password: "pesq123",
   },
-  "bolsista@cebio.com": {
-    id: 3, name: "Maria Santos", email: "bolsista@cebio.com",
-    role: "bolsista", institution: "IF Goiano - Campus Iporá", password: "123456",
+  "bolsista@cebio.org.br": {
+    id: 3, name: "Maria Santos", email: "bolsista@cebio.org.br",
+    role: "bolsista", institution: "IF Goiano - Campus Iporá", password: "bolsa123",
   },
 };
 
@@ -42,7 +42,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const login = useCallback(async (email: string, password: string) => {
-    // Simulate API delay
     await new Promise((r) => setTimeout(r, 800));
     const mockUser = MOCK_USERS[email];
     if (!mockUser || mockUser.password !== password) {

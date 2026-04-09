@@ -21,7 +21,6 @@ const Login = () => {
     try {
       await login(email, password);
       toast({ title: "Bem-vindo!", description: "Login realizado com sucesso." });
-      // Redirect based on role
       const user = JSON.parse(localStorage.getItem("cebio_user") || "{}");
       if (user.role === "admin") navigate("/admin/dashboard");
       else if (user.role === "pesquisador") navigate("/pesquisador/dashboard");
@@ -36,81 +35,47 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: "hsl(var(--cebio-green-bg))" }}>
       <div className="bg-card rounded-2xl p-10 w-full max-w-[400px] shadow-lg border border-border">
-        {/* Logos */}
         <div className="flex items-center justify-center gap-5 mb-6">
           <img src={logoIf} alt="IF Goiano" className="h-[60px] w-auto" />
           <span className="text-2xl text-muted-foreground/50 font-light">×</span>
           <img src={logoCebio} alt="CEBIO" className="h-[60px] w-auto" />
         </div>
 
-        {/* Title */}
         <div className="text-center mb-8">
           <h2 className="text-lg font-semibold text-primary">Centro de Excelência em Bioinsumos</h2>
           <p className="text-sm text-muted-foreground">Sistema de Gestão de Projetos Acadêmicos</p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
           <div className="mb-5">
-            <label htmlFor="email" className="block text-sm font-semibold text-foreground mb-2">
-              Usuário
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu@email.com"
-              required
-              className="w-full px-4 py-3 border border-border rounded-lg text-sm outline-none focus:border-primary transition-colors bg-card text-foreground"
-            />
+            <label htmlFor="email" className="block text-sm font-semibold text-foreground mb-2">Usuário</label>
+            <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required className="w-full px-4 py-3 border border-border rounded-lg text-sm outline-none focus:border-primary transition-colors bg-card text-foreground" />
           </div>
 
           <div className="mb-5">
-            <label htmlFor="password" className="block text-sm font-semibold text-foreground mb-2">
-              Senha
-            </label>
+            <label htmlFor="password" className="block text-sm font-semibold text-foreground mb-2">Senha</label>
             <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Sua senha"
-                required
-                className="w-full px-4 py-3 border border-border rounded-lg text-sm outline-none focus:border-primary transition-colors bg-card text-foreground pr-12"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
+              <input type={showPassword ? "text" : "password"} id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Sua senha" required className="w-full px-4 py-3 border border-border rounded-lg text-sm outline-none focus:border-primary transition-colors bg-card text-foreground pr-12" />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3.5 bg-primary text-primary-foreground rounded-lg text-[15px] font-semibold hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button type="submit" disabled={loading} className="w-full py-3.5 bg-primary text-primary-foreground rounded-lg text-[15px] font-semibold hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             {loading ? "Entrando..." : "Entrar no Sistema"}
           </button>
         </form>
 
         <div className="text-center mt-5">
-          <a href="#" className="text-sm text-primary hover:underline">
-            Esqueceu sua senha?
-          </a>
+          <a href="#" className="text-sm text-primary hover:underline">Esqueceu sua senha?</a>
         </div>
 
-        {/* Demo credentials */}
         <div className="mt-6 p-3 bg-muted rounded-lg text-[11px] text-muted-foreground">
           <p className="font-semibold mb-1">Credenciais de teste:</p>
-          <p>Admin: admin@cebio.com / admin123</p>
-          <p>Pesquisador: pesquisador@cebio.com / 123456</p>
-          <p>Bolsista: bolsista@cebio.com / 123456</p>
+          <p>Admin: admin@cebio.org.br / admin123</p>
+          <p>Pesquisador: pesquisador@cebio.org.br / pesq123</p>
+          <p>Bolsista: bolsista@cebio.org.br / bolsa123</p>
         </div>
       </div>
     </div>

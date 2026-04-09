@@ -1,15 +1,6 @@
 import { CheckCircle, XCircle, UserPlus, KeyRound, Bell, Settings, Tag, GraduationCap } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
-import { useNavigate } from "react-router-dom";
-
-const ADMIN_NAV = [
-  { label: "Dashboard", path: "/admin/dashboard" },
-  { label: "Projetos", path: "/admin/projetos" },
-  { label: "Usuários", path: "/admin/usuarios" },
-  { label: "Ações Admin", path: "/admin/acoes" },
-  { label: "Relatórios", path: "/admin/relatorios" },
-  { label: "Auditoria", path: "/admin/auditoria" },
-];
+import { ADMIN_NAV } from "@/constants/navigation";
 
 const actions = [
   { icon: CheckCircle, title: "Aprovar Projetos em Lote", desc: "Aprovação em massa de projetos pendentes", tag: "Projetos", iconBg: "bg-cebio-green-bg", iconColor: "text-primary", badge: 2 },

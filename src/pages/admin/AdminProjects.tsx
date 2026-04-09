@@ -1,30 +1,9 @@
 import { useState } from "react";
-import { Search, Filter, Eye, CheckCircle, XCircle, Download } from "lucide-react";
+import { Search, Eye, CheckCircle, XCircle, Download } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
-import { mockProjects, Project } from "@/data/mockData";
-
-const ADMIN_NAV = [
-  { label: "Dashboard", path: "/admin/dashboard" },
-  { label: "Projetos", path: "/admin/projetos" },
-  { label: "Usuários", path: "/admin/usuarios" },
-  { label: "Ações Admin", path: "/admin/acoes" },
-  { label: "Relatórios", path: "/admin/relatorios" },
-  { label: "Auditoria", path: "/admin/auditoria" },
-];
-
-const statusColors: Record<string, string> = {
-  aprovado: "bg-cebio-green-bg text-primary",
-  pendente: "bg-cebio-yellow-bg text-cebio-yellow",
-  rejeitado: "bg-cebio-red-bg text-cebio-red",
-  em_revisao: "bg-cebio-blue-bg text-cebio-blue",
-};
-
-const statusLabels: Record<string, string> = {
-  aprovado: "Aprovado",
-  pendente: "Pendente",
-  rejeitado: "Rejeitado",
-  em_revisao: "Em Revisão",
-};
+import { mockProjects } from "@/data/mockData";
+import { ADMIN_NAV } from "@/constants/navigation";
+import { statusColors, statusLabels } from "@/constants/ui";
 
 const AdminProjects = () => {
   const [search, setSearch] = useState("");
@@ -47,13 +26,11 @@ const AdminProjects = () => {
 
   return (
     <AppLayout pageName="Gestão de Projetos" navItems={ADMIN_NAV} notificationCount={3}>
-      {/* Banner */}
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6">
         <h2 className="text-[22px] font-semibold mb-1.5">Gestão de Projetos</h2>
         <p className="text-sm opacity-90">Gerencie todos os projetos submetidos ao CEBIO</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         {[
           { label: "Total", value: mockProjects.length, color: "text-cebio-blue" },
@@ -68,7 +45,6 @@ const AdminProjects = () => {
         ))}
       </div>
 
-      {/* Filters */}
       <div className="bg-card rounded-xl shadow-sm border border-border p-4 mb-6 flex gap-4 items-center flex-wrap">
         <div className="flex-1 min-w-[250px] flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
           <Search className="w-4 h-4 text-muted-foreground" />
@@ -93,7 +69,6 @@ const AdminProjects = () => {
         )}
       </div>
 
-      {/* Table */}
       <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
         <table className="w-full text-sm">
           <thead>

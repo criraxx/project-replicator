@@ -2,28 +2,12 @@ import { FolderOpen, Clock, CheckCircle, XCircle, FileText } from "lucide-react"
 import AppLayout from "@/components/layout/AppLayout";
 import { mockProjects } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
-
-const BOLSISTA_NAV = [
-  { label: "Dashboard", path: "/bolsista/dashboard" },
-  { label: "Meus Projetos", path: "/bolsista/projetos" },
-  { label: "Nova Submissão", path: "/bolsista/submissao" },
-  { label: "Histórico", path: "/bolsista/historico" },
-];
-
-const statusColors: Record<string, string> = {
-  aprovado: "bg-cebio-green-bg text-primary",
-  pendente: "bg-cebio-yellow-bg text-cebio-yellow",
-  rejeitado: "bg-cebio-red-bg text-cebio-red",
-  em_revisao: "bg-cebio-blue-bg text-cebio-blue",
-};
-
-const statusLabels: Record<string, string> = {
-  aprovado: "Aprovado", pendente: "Pendente", rejeitado: "Rejeitado", em_revisao: "Em Revisão",
-};
+import { BOLSISTA_NAV } from "@/constants/navigation";
+import { statusColors, statusLabels } from "@/constants/ui";
 
 const BolsistaDashboard = () => {
   const { user } = useAuth();
-  const myProjects = mockProjects.filter((p) => p.owner_id === 3); // bolsista mock
+  const myProjects = mockProjects.filter((p) => p.owner_id === 3);
 
   return (
     <AppLayout pageName="Meu Dashboard" navItems={BOLSISTA_NAV} notificationCount={1}>

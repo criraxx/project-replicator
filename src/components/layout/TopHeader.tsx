@@ -1,13 +1,8 @@
 import { Search } from "lucide-react";
-import { useAuth, UserRole } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { roleBadge } from "@/constants/ui";
 import logoIf from "@/assets/logo-if.png";
 import logoCebio from "@/assets/logo-cebio.png";
-
-const roleBadge: Record<UserRole, { label: string; className: string }> = {
-  admin: { label: "Administrador", className: "bg-primary text-primary-foreground" },
-  pesquisador: { label: "Pesquisador", className: "bg-cebio-blue text-primary-foreground" },
-  bolsista: { label: "Bolsista", className: "bg-cebio-purple text-primary-foreground" },
-};
 
 const TopHeader = () => {
   const { user } = useAuth();

@@ -2,22 +2,8 @@ import { Search, AlertTriangle, Shield, Clock } from "lucide-react";
 import { useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { mockAuditLogs } from "@/data/mockData";
-
-const ADMIN_NAV = [
-  { label: "Dashboard", path: "/admin/dashboard" },
-  { label: "Projetos", path: "/admin/projetos" },
-  { label: "Usuários", path: "/admin/usuarios" },
-  { label: "Ações Admin", path: "/admin/acoes" },
-  { label: "Relatórios", path: "/admin/relatorios" },
-  { label: "Auditoria", path: "/admin/auditoria" },
-];
-
-const severityColors: Record<string, string> = {
-  low: "bg-cebio-green-bg text-primary",
-  medium: "bg-cebio-yellow-bg text-cebio-yellow",
-  high: "bg-cebio-red-bg text-cebio-red",
-  critical: "bg-destructive/10 text-destructive",
-};
+import { ADMIN_NAV } from "@/constants/navigation";
+import { severityColors } from "@/constants/ui";
 
 const AdminAudit = () => {
   const [search, setSearch] = useState("");

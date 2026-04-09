@@ -1,22 +1,9 @@
 import { useState } from "react";
-import { Search, UserPlus, Eye, KeyRound, UserX, UserCheck, Trash2 } from "lucide-react";
+import { Search, UserPlus, Eye, KeyRound, UserX, UserCheck } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { mockUsers } from "@/data/mockData";
-
-const ADMIN_NAV = [
-  { label: "Dashboard", path: "/admin/dashboard" },
-  { label: "Projetos", path: "/admin/projetos" },
-  { label: "Usuários", path: "/admin/usuarios" },
-  { label: "Ações Admin", path: "/admin/acoes" },
-  { label: "Relatórios", path: "/admin/relatorios" },
-  { label: "Auditoria", path: "/admin/auditoria" },
-];
-
-const roleBadge: Record<string, { label: string; className: string }> = {
-  admin: { label: "Admin", className: "bg-primary text-primary-foreground" },
-  pesquisador: { label: "Pesquisador", className: "bg-cebio-blue text-primary-foreground" },
-  bolsista: { label: "Bolsista", className: "bg-cebio-purple text-primary-foreground" },
-};
+import { ADMIN_NAV } from "@/constants/navigation";
+import { roleBadge } from "@/constants/ui";
 
 const AdminUsers = () => {
   const [search, setSearch] = useState("");
@@ -37,7 +24,6 @@ const AdminUsers = () => {
         <p className="text-sm opacity-90">Gerencie todos os usuários da plataforma CEBIO</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         {[
           { label: "Total", value: mockUsers.length, color: "text-cebio-blue" },
@@ -52,7 +38,6 @@ const AdminUsers = () => {
         ))}
       </div>
 
-      {/* Filters */}
       <div className="bg-card rounded-xl shadow-sm border border-border p-4 mb-6 flex gap-4 items-center flex-wrap">
         <div className="flex-1 min-w-[250px] flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
           <Search className="w-4 h-4 text-muted-foreground" />
@@ -74,7 +59,6 @@ const AdminUsers = () => {
         </button>
       </div>
 
-      {/* Table */}
       <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
         <table className="w-full text-sm">
           <thead>
