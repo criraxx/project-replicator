@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Eye, CheckCircle, XCircle, Trash2, Inbox, FileText } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
@@ -7,9 +8,17 @@ import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { mockProjects, mockCategories, mockAcademicLevels } from "@/data/mockData";
 
+const STATUS_OPTIONS = [
+  { value: "pendente", label: "Pendente" },
+  { value: "em_revisao", label: "Em Revisão" },
+  { value: "aprovado", label: "Aprovado" },
+  { value: "rejeitado", label: "Rejeitado" },
+];
+
 const AdminProjects = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [levelFilter, setLevelFilter] = useState("");
   const [projects, setProjects] = useState<any[]>([]);
@@ -24,20 +33,20 @@ const AdminProjects = () => {
     const fetchAll = async () => {
       try {
         const [projData, statsData, catsData, lvlsData] = await Promise.allSettled([
-          api.listProjects({ status: statusFilter || undefined, limit: 100 }),
+          api.listProjects({ limit: 100 }),
           api.getProjectStats(),
           api.listCategories(),
           api.listAcademicLevels(),
         ]);
-        const p = projData.status === "fulfilled" ? (projData.value.projects || []) : mockProjects;
+        const p = projData.status === "fulfilled" && projData.value.projects?.length ? projData.value.projects : mockProjects;
         setProjects(p);
         if (statsData.status === "fulfilled") {
           setStats(statsData.value);
         } else {
           setStats({ total: p.length, pending: p.filter((x: any) => x.status === "pendente").length, approved: p.filter((x: any) => x.status === "aprovado").length, rejected: p.filter((x: any) => x.status === "rejeitado").length });
         }
-        setCategories(catsData.status === "fulfilled" ? catsData.value : mockCategories);
-        setLevels(lvlsData.status === "fulfilled" ? lvlsData.value : mockAcademicLevels);
+        setCategories(catsData.status === "fulfilled" && catsData.value?.length ? catsData.value : mockCategories);
+        setLevels(lvlsData.status === "fulfilled" && lvlsData.value?.length ? lvlsData.value : mockAcademicLevels);
       } catch {
         setProjects(mockProjects);
         setStats({ total: mockProjects.length, pending: mockProjects.filter(x => x.status === "pendente").length, approved: mockProjects.filter(x => x.status === "aprovado").length, rejected: mockProjects.filter(x => x.status === "rejeitado").length });
@@ -47,16 +56,21 @@ const AdminProjects = () => {
       setLoading(false);
     };
     fetchAll();
-  }, [statusFilter]);
+  }, []);
+
+  const toggleStatus = (status: string) => {
+    setStatusFilters(prev => prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]);
+  };
 
   const filtered = projects.filter((p) => {
-    const matchSearch = !search || p.title.toLowerCase().includes(search.toLowerCase()) || (p.owner?.name || "").toLowerCase().includes(search.toLowerCase());
+    const matchSearch = !search || p.title.toLowerCase().includes(search.toLowerCase()) || (p.owner?.name || p.owner_name || "").toLowerCase().includes(search.toLowerCase());
+    const matchStatus = statusFilters.length === 0 || statusFilters.includes(p.status);
     const matchCategory = !categoryFilter || p.category === categoryFilter;
     const matchLevel = !levelFilter || p.academic_level === levelFilter;
-    return matchSearch && matchCategory && matchLevel;
+    return matchSearch && matchStatus && matchCategory && matchLevel;
   });
 
-  const clearFilters = () => { setSearch(""); setStatusFilter(""); setCategoryFilter(""); setLevelFilter(""); };
+  const clearFilters = () => { setSearch(""); setStatusFilters([]); setCategoryFilter(""); setLevelFilter(""); };
 
   const toggleSelect = (id: number) => setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   const toggleAll = () => setSelectedIds(selectedIds.length === filtered.length ? [] : filtered.map(p => p.id));
@@ -104,36 +118,50 @@ const AdminProjects = () => {
 
       {/* Filters */}
       <div className="bg-card rounded-xl shadow-sm border border-border p-4 mb-6">
-        <div className="grid grid-cols-5 gap-4 items-end">
+        <div className="grid grid-cols-4 gap-4 items-end mb-4">
           <div>
             <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Buscar</label>
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Título, resumo ou autor..." className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-card" />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Título ou autor..." className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-card" />
           </div>
           <div>
             <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Categoria</label>
             <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-card">
               <option value="">Todas</option>
-              {categories.map(c => <option key={c.id} value={c.slug || c.name}>{c.name}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Status</label>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-card">
-              <option value="">Todos</option>
-              <option value="pendente">Pendente</option>
-              <option value="em_revisao">Em Revisão</option>
-              <option value="aprovado">Aprovado</option>
-              <option value="rejeitado">Rejeitado</option>
+              {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Nível</label>
             <select value={levelFilter} onChange={(e) => setLevelFilter(e.target.value)} className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-card">
               <option value="">Todos</option>
-              {levels.map(l => <option key={l.id} value={l.slug || l.name}>{l.name}</option>)}
+              {levels.map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
             </select>
           </div>
           <button onClick={clearFilters} className="px-4 py-2.5 border border-border rounded-lg text-sm font-medium bg-muted hover:bg-muted/80">Limpar Filtros</button>
+        </div>
+        {/* Multi-select status */}
+        <div>
+          <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Status (selecione um ou mais)</label>
+          <div className="flex gap-2 flex-wrap">
+            {STATUS_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => toggleStatus(opt.value)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                  statusFilters.includes(opt.value)
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card text-muted-foreground border-border hover:bg-muted"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+            {statusFilters.length > 0 && (
+              <button onClick={() => setStatusFilters([])} className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground">
+                ✕ Limpar status
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -185,12 +213,16 @@ const AdminProjects = () => {
                         )}
                       </div>
                     </td>
-                    <td className="p-3 text-muted-foreground">{p.owner?.name || "Sem informação"}</td>
+                    <td className="p-3 text-muted-foreground">{p.owner?.name || p.owner_name || "—"}</td>
                     <td className="p-3 text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
                     <td className="p-3">
                       <div className="flex gap-1.5">
-                        <button className="text-xs font-semibold text-cebio-blue hover:underline">Visualizar</button>
-                        <button onClick={() => handleDelete(p.id)} className="px-2.5 py-1 text-xs font-semibold rounded bg-destructive text-destructive-foreground">Deletar</button>
+                        <button onClick={() => navigate(`/projeto?id=${p.id}`)} className="px-2.5 py-1 text-xs font-semibold rounded bg-cebio-blue text-primary-foreground flex items-center gap-1">
+                          <Eye className="w-3 h-3" /> Ver
+                        </button>
+                        <button onClick={() => handleDelete(p.id)} className="px-2.5 py-1 text-xs font-semibold rounded bg-destructive text-destructive-foreground">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
                       </div>
                     </td>
                   </tr>
