@@ -1,72 +1,78 @@
 
 
-## Plan: Alinhar e Organizar o Frontend CEBIO
+## Plano de Implementacao
 
-### Problemas Identificados
+### Resumo
+3 tarefas principais:
+1. Criar pagina de Rejeicao em Lote
+2. Mover criacao de categorias/niveis do Dashboard para Acoes Admin
+3. Reconstruir pagina de Relatorios com filtros completos e graficos interativos
 
-1. **ADMIN_NAV duplicado** em 6 arquivos admin (Dashboard, Projects, Users, Actions, Reports, Audit) -- idêntico em todos
-2. **statusColors e statusLabels duplicados** em 4 arquivos (AdminDashboard, AdminProjects, PesquisadorDashboard, BolsistaDashboard)
-3. **roleBadge duplicado** em TopHeader e AdminUsers
-4. **Credenciais mock desalinhadas** com o seed do backend -- frontend usa `admin@cebio.com` mas o backend usa `admin@cebio.org.br`
-5. **Mock data**: interfaces Project, User, AuditLog não refletem todas as entidades do backend (faltam ProjectAuthor, ProjectComment, ProjectFile, ProjectLink, ProjectVersion, SystemConfig)
-6. **Rotas placeholder** -- `/pesquisador/projetos`, `/pesquisador/historico`, `/bolsista/projetos`, `/bolsista/historico` apontam para o mesmo Dashboard sem conteúdo diferenciado
-7. **Import não usado**: `useNavigate` em AdminActions.tsx
-8. **`Project` import não usado**: em AdminProjects.tsx (`Project` type importado mas não utilizado como tipo explícito)
+---
 
-### O que será feito
+### 1. Pagina de Rejeicao em Lote (`AdminBatchRejection.tsx`)
 
-#### 1. Extrair constantes compartilhadas para `src/constants/navigation.ts`
-- `ADMIN_NAV`, `PESQUISADOR_NAV`, `BOLSISTA_NAV` num único arquivo
-- `statusColors`, `statusLabels`, `roleBadge`, `severityColors` em `src/constants/ui.ts`
-- Atualizar todos os 10 arquivos que usam essas constantes
+Criar pagina similar a `AdminBatchApproval.tsx` mas para rejeicao:
+- Lista projetos pendentes com checkbox de selecao
+- Campo obrigatorio de motivo da rejeicao (textarea)
+- Botao "Rejeitar Selecionados" que envia os IDs + comentario
+- Atualizar `api.ts` para `batchReject` aceitar comentario
+- Registrar rota `/admin/rejeicao-lote` em `App.tsx`
 
-#### 2. Sincronizar credenciais e mock data com o backend (seed.ts)
-- Atualizar `AuthContext.tsx`: emails para `admin@cebio.org.br`, `pesquisador@cebio.org.br`, `bolsista@cebio.org.br`
-- Atualizar senhas conforme seed: `admin123`, `pesq123`, `bolsa123`
-- Atualizar nomes conforme seed
-- Atualizar credenciais de teste no `Login.tsx`
-- Atualizar `mockData.ts` para alinhar emails/nomes com os novos dados
+### 2. Mover Categorias/Niveis para Acoes Admin
 
-#### 3. Expandir interfaces para refletir as entities do backend
-- Adicionar interfaces: `ProjectAuthor`, `ProjectComment`, `ProjectFile`, `ProjectLink`, `ProjectVersion` em `mockData.ts`
-- Expandir `Project` para incluir campos `keywords`, `authors`, `files`, `links`, `comments`
-- Adicionar interface `SystemConfig`
+**Dashboard (`AdminDashboard.tsx`):**
+- Remover botoes "Nova Categoria" e "Novo Nivel" da area de acoes rapidas
+- Manter apenas: Novo Usuario, Pendentes, Auditoria
 
-#### 4. Criar páginas distintas para rotas placeholder
-- `src/pages/pesquisador/PesquisadorProjects.tsx` -- lista de projetos do pesquisador
-- `src/pages/pesquisador/PesquisadorHistory.tsx` -- histórico de submissões
-- `src/pages/bolsista/BolsistaProjects.tsx` -- lista de projetos do bolsista
-- `src/pages/bolsista/BolsistaHistory.tsx` -- histórico de submissões
-- Atualizar `App.tsx` com as novas rotas
+**Acoes Admin (`AdminActions.tsx`):**
+- Adicionar 2 novos cards: "Gerenciar Categorias" (link para `/admin/categorias`) e "Gerenciar Niveis Academicos" (link para `/admin/categorias` na tab niveis)
 
-#### 5. Limpeza de imports e código
-- Remover `useNavigate` não utilizado em AdminActions
-- Remover tipo `Project` não utilizado em AdminProjects
-- Garantir que todos os imports estejam corretos
+### 3. Pagina de Relatorios Completa (`AdminReports.tsx`)
 
-### Arquivos modificados
-- `src/constants/navigation.ts` (novo)
-- `src/constants/ui.ts` (novo)
-- `src/contexts/AuthContext.tsx`
-- `src/data/mockData.ts`
-- `src/pages/Login.tsx`
-- `src/pages/admin/AdminDashboard.tsx`
-- `src/pages/admin/AdminProjects.tsx`
-- `src/pages/admin/AdminUsers.tsx`
-- `src/pages/admin/AdminActions.tsx`
-- `src/pages/admin/AdminAudit.tsx`
-- `src/pages/admin/AdminReports.tsx`
-- `src/pages/pesquisador/PesquisadorDashboard.tsx`
-- `src/pages/pesquisador/PesquisadorProjects.tsx` (novo)
-- `src/pages/pesquisador/PesquisadorHistory.tsx` (novo)
-- `src/pages/bolsista/BolsistaDashboard.tsx`
-- `src/pages/bolsista/BolsistaProjects.tsx` (novo)
-- `src/pages/bolsista/BolsistaHistory.tsx` (novo)
-- `src/pages/shared/SubmissionForm.tsx`
-- `src/components/layout/TopHeader.tsx`
-- `src/components/layout/SubHeader.tsx`
-- `src/App.tsx`
+Reconstruir totalmente com:
 
-### Sem mudança funcional
-Nenhuma funcionalidade será adicionada ou removida. Apenas organização, deduplicação e alinhamento com o backend.
+**Painel de Filtros:**
+- Status (pendente, aprovado, rejeitado, em revisao)
+- Categoria (dropdown com categorias do sistema)
+- Tipo de usuario (pesquisador, bolsista)
+- Data de inicio e termino (range picker)
+- Proprietario/autor especifico
+- Botao "Gerar Relatorio" e "Limpar Filtros"
+
+**KPIs dinamicos (cards no topo):**
+- Total de projetos (filtrado), usuarios ativos, taxa de aprovacao, tempo medio de revisao
+
+**Graficos interativos (Recharts, ja instalado):**
+- **Colunas**: Projetos por categoria
+- **Barras horizontais**: Projetos por usuario (top 10)
+- **Linhas**: Evolucao temporal de submissoes por mes
+- **Pizza/Setores**: Distribuicao por status
+- **Pictograma**: Proporcao pesquisadores vs bolsistas (grid de icones)
+
+**Seletor de tipo de grafico**: O admin pode alternar entre os 5 tipos para cada visualizacao
+
+**Tabela resumo**: Dados tabulares com totais, exportavel
+
+**Botao Exportar PDF**: Gera relatorio com os filtros aplicados
+
+**Backend**: Criar endpoint `GET /api/reports/advanced` que aceita query params de filtro e retorna dados agregados (por status, por categoria, por usuario, por mes, totais).
+
+---
+
+### Detalhes Tecnicos
+
+**Arquivos novos:**
+- `src/pages/admin/AdminBatchRejection.tsx`
+
+**Arquivos editados:**
+- `src/pages/admin/AdminReports.tsx` (reconstruido)
+- `src/pages/admin/AdminDashboard.tsx` (remover botoes categoria/nivel)
+- `src/pages/admin/AdminActions.tsx` (adicionar cards categoria/nivel)
+- `src/App.tsx` (rota rejeicao-lote)
+- `src/services/api.ts` (endpoint reports/advanced, batchReject com comment)
+- `server/src/routes/admin.ts` (endpoint reports/advanced)
+- `server/src/services/ProjectService.ts` (metodo getAdvancedReport com filtros)
+
+**Bibliotecas**: Recharts (ja instalado) para todos os graficos incluindo pictograma customizado.
 
