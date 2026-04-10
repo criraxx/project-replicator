@@ -148,7 +148,7 @@ class ApiClient {
     return this.request<any>('GET', `/projects/${id}`);
   }
 
-  async createProject(data: { title: string; summary: string; description?: string; category: string; academic_level: string; start_date?: string; end_date?: string }) {
+  async createProject(data: { title: string; summary: string; description?: string; category: string; academic_level: string; start_date?: string; end_date?: string; authors?: Array<{ name: string; cpf: string; institution?: string; academic_level?: string; role_in_project?: string }> }) {
     return this.request<any>('POST', '/projects', data);
   }
 
@@ -274,6 +274,26 @@ class ApiClient {
 
   async getDashboardReports() {
     return this.request<any>('GET', '/reports/dashboard');
+  }
+
+  // ============================================
+  // AUTHOR APPROVALS
+  // ============================================
+
+  async getPendingAuthorApprovals() {
+    return this.request<any[]>('GET', '/author-approvals/pending');
+  }
+
+  async getProjectAuthors(projectId: number) {
+    return this.request<any[]>('GET', `/projects/${projectId}/authors`);
+  }
+
+  async approveAuthorParticipation(authorId: number) {
+    return this.request<any>('POST', `/author-approvals/${authorId}/approve`);
+  }
+
+  async rejectAuthorParticipation(authorId: number, reason: string) {
+    return this.request<any>('POST', `/author-approvals/${authorId}/reject`, { reason });
   }
 
 }
