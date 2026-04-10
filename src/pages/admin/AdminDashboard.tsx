@@ -88,11 +88,9 @@ const AdminDashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-3 gap-3 mb-6">
         {[
           { label: "Novo Usuário", icon: Users, path: "/admin/usuarios" },
-          { label: "Nova Categoria", icon: Tag, path: "/admin/categorias" },
-          { label: "Novo Nível", icon: GraduationCap, path: "/admin/niveis-academicos" },
           { label: "Pendentes", icon: Clock, path: "/admin/projetos" },
           { label: "Auditoria", icon: Eye, path: "/admin/auditoria" },
         ].map((a, i) => (

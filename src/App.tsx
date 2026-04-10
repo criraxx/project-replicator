@@ -14,6 +14,7 @@ import AdminReports from "./pages/admin/AdminReports";
 import AdminAudit from "./pages/admin/AdminAudit";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminBatchApproval from "./pages/admin/AdminBatchApproval";
+import AdminBatchRejection from "./pages/admin/AdminBatchRejection";
 import AdminMassNotification from "./pages/admin/AdminMassNotification";
 import PesquisadorDashboard from "./pages/pesquisador/PesquisadorDashboard";
 import PesquisadorProjects from "./pages/pesquisador/PesquisadorProjects";
