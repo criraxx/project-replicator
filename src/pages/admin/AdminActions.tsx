@@ -18,6 +18,7 @@ const AdminActions = () => {
   const [levels, setLevels] = useState<any[]>([]);
   const [newCatName, setNewCatName] = useState("");
   const [newLevelName, setNewLevelName] = useState("");
+  const [activeTab, setActiveTab] = useState<"categories" | "levels">("categories");
   const [loadingCats, setLoadingCats] = useState(true);
   const [projects, setProjects] = useState<any[]>([]);
 
@@ -161,98 +162,106 @@ const AdminActions = () => {
         ))}
       </div>
 
-      {/* Categories & Levels Management */}
-      <div className="grid grid-cols-2 gap-6 mb-6">
-        {/* Categories */}
-        <div className="bg-card rounded-xl shadow-sm border border-border p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Tag className="w-5 h-5 text-primary" />
-            <h3 className="text-base font-semibold">Categorias</h3>
-          </div>
-          <div className="flex gap-2 mb-4">
-            <input
-              type="text"
-              value={newCatName}
-              onChange={(e) => setNewCatName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && addCategory()}
-              placeholder="Nome da nova categoria"
-              className="flex-1 px-3 py-2 border border-border rounded-lg text-sm outline-none focus:border-primary bg-background"
-            />
-            <button onClick={addCategory} disabled={!newCatName.trim()} className="bg-primary text-primary-foreground px-3 py-2 rounded-lg text-sm font-semibold disabled:opacity-50">
-              <Plus className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="space-y-2 max-h-[300px] overflow-y-auto">
-            {loadingCats ? (
-              <p className="text-center text-muted-foreground py-4 text-sm">Carregando...</p>
-            ) : categories.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">
-                <Inbox className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Nenhuma categoria</p>
-              </div>
-            ) : categories.map((cat) => {
-              const hasProjects = categoryHasProjects(cat.name);
-              return (
-                <div key={cat.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
-                  <span className="text-sm font-medium text-foreground">{cat.name}</span>
-                  <button
-                    onClick={() => removeCategory(cat.id, cat.name)}
-                    disabled={hasProjects}
-                    title={hasProjects ? "Categoria possui projetos vinculados" : "Remover categoria"}
-                    className="text-muted-foreground hover:text-destructive disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+      {/* Categories & Levels Management - Single Card with Tabs */}
+      <div className="bg-card rounded-xl shadow-sm border border-border mb-6">
+        <div className="flex border-b border-border">
+          <button
+            onClick={() => setActiveTab("categories")}
+            className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold border-b-[3px] transition-colors ${activeTab === "categories" ? "text-primary border-primary" : "text-muted-foreground border-transparent"}`}
+          >
+            <Tag className="w-4 h-4" /> Categorias
+          </button>
+          <button
+            onClick={() => setActiveTab("levels")}
+            className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold border-b-[3px] transition-colors ${activeTab === "levels" ? "text-primary border-primary" : "text-muted-foreground border-transparent"}`}
+          >
+            <GraduationCap className="w-4 h-4" /> Níveis Acadêmicos
+          </button>
         </div>
-
-        {/* Levels */}
-        <div className="bg-card rounded-xl shadow-sm border border-border p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <GraduationCap className="w-5 h-5 text-primary" />
-            <h3 className="text-base font-semibold">Níveis Acadêmicos</h3>
-          </div>
-          <div className="flex gap-2 mb-4">
-            <input
-              type="text"
-              value={newLevelName}
-              onChange={(e) => setNewLevelName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && addLevel()}
-              placeholder="Nome do novo nível"
-              className="flex-1 px-3 py-2 border border-border rounded-lg text-sm outline-none focus:border-primary bg-background"
-            />
-            <button onClick={addLevel} disabled={!newLevelName.trim()} className="bg-primary text-primary-foreground px-3 py-2 rounded-lg text-sm font-semibold disabled:opacity-50">
-              <Plus className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="space-y-2 max-h-[300px] overflow-y-auto">
-            {loadingCats ? (
-              <p className="text-center text-muted-foreground py-4 text-sm">Carregando...</p>
-            ) : levels.length === 0 ? (
-              <div className="text-center py-6 text-muted-foreground">
-                <Inbox className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Nenhum nível</p>
+        <div className="p-5">
+          {activeTab === "categories" ? (
+            <>
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="text"
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addCategory()}
+                  placeholder="Nome da nova categoria"
+                  className="flex-1 px-3 py-2 border border-border rounded-lg text-sm outline-none focus:border-primary bg-background"
+                />
+                <button onClick={addCategory} disabled={!newCatName.trim()} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 flex items-center gap-1.5">
+                  <Plus className="w-4 h-4" /> Adicionar
+                </button>
               </div>
-            ) : levels.map((lvl) => {
-              const hasProjects = levelHasProjects(lvl.name);
-              return (
-                <div key={lvl.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
-                  <span className="text-sm font-medium text-foreground">{lvl.name}</span>
-                  <button
-                    onClick={() => removeLevel(lvl.id, lvl.name)}
-                    disabled={hasProjects}
-                    title={hasProjects ? "Nível possui projetos vinculados" : "Remover nível"}
-                    className="text-muted-foreground hover:text-destructive disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+              <div className="space-y-2 max-h-[350px] overflow-y-auto">
+                {loadingCats ? (
+                  <p className="text-center text-muted-foreground py-4 text-sm">Carregando...</p>
+                ) : categories.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <Inbox className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Nenhuma categoria criada ainda</p>
+                  </div>
+                ) : categories.map((cat) => {
+                  const hasProjects = categoryHasProjects(cat.name);
+                  return (
+                    <div key={cat.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
+                      <span className="text-sm font-medium text-foreground">{cat.name}</span>
+                      <button
+                        onClick={() => removeCategory(cat.id, cat.name)}
+                        disabled={hasProjects}
+                        title={hasProjects ? "Categoria possui projetos vinculados" : "Remover categoria"}
+                        className="text-muted-foreground hover:text-destructive disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="text"
+                  value={newLevelName}
+                  onChange={(e) => setNewLevelName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && addLevel()}
+                  placeholder="Nome do novo nível acadêmico"
+                  className="flex-1 px-3 py-2 border border-border rounded-lg text-sm outline-none focus:border-primary bg-background"
+                />
+                <button onClick={addLevel} disabled={!newLevelName.trim()} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50 flex items-center gap-1.5">
+                  <Plus className="w-4 h-4" /> Adicionar
+                </button>
+              </div>
+              <div className="space-y-2 max-h-[350px] overflow-y-auto">
+                {loadingCats ? (
+                  <p className="text-center text-muted-foreground py-4 text-sm">Carregando...</p>
+                ) : levels.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <Inbox className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Nenhum nível criado ainda</p>
+                  </div>
+                ) : levels.map((lvl) => {
+                  const hasProjects = levelHasProjects(lvl.name);
+                  return (
+                    <div key={lvl.id} className="flex items-center justify-between p-3 border border-border rounded-lg">
+                      <span className="text-sm font-medium text-foreground">{lvl.name}</span>
+                      <button
+                        onClick={() => removeLevel(lvl.id, lvl.name)}
+                        disabled={hasProjects}
+                        title={hasProjects ? "Nível possui projetos vinculados" : "Remover nível"}
+                        className="text-muted-foreground hover:text-destructive disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
