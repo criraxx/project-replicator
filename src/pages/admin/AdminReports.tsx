@@ -128,7 +128,7 @@ const RenderChart = ({ type, data, dataKey = "value", nameKey = "name" }: { type
 };
 
 const AdminReports = () => {
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [userTypeFilter, setUserTypeFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
@@ -164,7 +164,7 @@ const AdminReports = () => {
 
   const filtered = useMemo(() => {
     return projects.filter(p => {
-      if (statusFilter !== "all" && p.status !== statusFilter) return false;
+      if (statusFilters.length > 0 && !statusFilters.includes(p.status)) return false;
       if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
       if (userTypeFilter !== "all") {
         const owner = users.find(u => u.id === p.owner_id);
@@ -175,7 +175,7 @@ const AdminReports = () => {
       if (endDate && new Date(p.created_at) > endDate) return false;
       return true;
     });
-  }, [projects, statusFilter, categoryFilter, userTypeFilter, ownerFilter, startDate, endDate, users]);
+  }, [projects, statusFilters, categoryFilter, userTypeFilter, ownerFilter, startDate, endDate, users]);
 
   const byStatus = useMemo(() => {
     const map: Record<string, number> = {};
@@ -221,7 +221,7 @@ const AdminReports = () => {
   const approvalRate = filtered.length > 0 ? Math.round((filtered.filter(p => p.status === "aprovado").length / filtered.length) * 100) : 0;
 
   const clearFilters = () => {
-    setStatusFilter("all");
+    setStatusFilters([]);
     setCategoryFilter("all");
     setUserTypeFilter("all");
     setOwnerFilter("all");
@@ -242,7 +242,7 @@ const AdminReports = () => {
   }, [projects, users]);
 
   const exportPDF = () => {
-    const statusLabel = STATUS_OPTIONS.find(o => o.value === statusFilter)?.label || "Todos";
+    const statusLabel = statusFilters.length > 0 ? statusFilters.map(s => STATUS_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos";
     const userTypeLabel = USER_TYPE_OPTIONS.find(o => o.value === userTypeFilter)?.label || "Todos";
     const catLabel = categoryFilter === "all" ? "Todas" : categoryFilter;
     const ownerLabel = ownerFilter === "all" ? "Todos" : uniqueOwners.find(o => String(o.id) === ownerFilter)?.name || "Todos";
@@ -357,15 +357,29 @@ const AdminReports = () => {
           <h3 className="text-sm font-semibold">Filtros</h3>
         </div>
         <div className="grid grid-cols-3 gap-4 mb-4">
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Status</label>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          <div className="col-span-3">
+            <label className="text-xs text-muted-foreground mb-2 block">Status (selecione um ou mais)</label>
+            <div className="flex gap-2 flex-wrap">
+              {STATUS_OPTIONS.filter(o => o.value !== "all").map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setStatusFilters(prev => prev.includes(opt.value) ? prev.filter(s => s !== opt.value) : [...prev, opt.value])}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                    statusFilters.includes(opt.value)
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card text-muted-foreground border-border hover:bg-muted"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+              {statusFilters.length > 0 && (
+                <button onClick={() => setStatusFilters([])} className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground">✕ Limpar</button>
+              )}
+            </div>
           </div>
+        </div>
+        <div className="grid grid-cols-3 gap-4 mb-4">
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Categoria</label>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>

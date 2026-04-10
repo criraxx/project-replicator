@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Image, ExternalLink } from "lucide-react";
+import { ArrowLeft, FileText, Image, ExternalLink, CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import api from "@/services/api";
 import { ADMIN_NAV, PESQUISADOR_NAV, BOLSISTA_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
+import { mockProjects } from "@/data/mockData";
 
 const ProjectDetailView = () => {
   const { user } = useAuth();
@@ -14,13 +15,11 @@ const ProjectDetailView = () => {
   const projectId = searchParams.get("id");
 
   const [project, setProject] = useState<any>(null);
-  const [versions, setVersions] = useState<any[]>([]);
-  const [comments, setComments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const isAdmin = user?.role === "admin";
   const isPesquisador = user?.role === "pesquisador";
-  const navItems = isAdmin ? ADMIN_NAV.slice(0, 2) : isPesquisador ? PESQUISADOR_NAV : BOLSISTA_NAV;
+  const navItems = isAdmin ? ADMIN_NAV : isPesquisador ? PESQUISADOR_NAV : BOLSISTA_NAV;
 
   useEffect(() => {
     if (!projectId) return;
@@ -29,40 +28,24 @@ const ProjectDetailView = () => {
       try {
         const data = await api.getProject(Number(projectId));
         setProject(data);
-        setVersions(data.versions || []);
-        setComments(data.comments || []);
       } catch {
-        // mock fallback
-        setProject({
-          id: projectId,
-          title: "Análise de Bioinsumos para Agricultura Sustentável",
-          category: "Pesquisa",
-          academic_level: "Mestrado",
-          status: "pendente",
-          owner_name: "Dr. Maria Santos",
-          summary: "Este projeto visa analisar a eficácia de bioinsumos na agricultura sustentável, com foco em produtividade e impacto ambiental.",
-          target_audience: "Agricultores familiares e pesquisadores da área de agronomia sustentável.",
-          start_date: "2024-03-01",
-          end_date: "2025-02-28",
-          created_at: "2024-01-15T10:30:00Z",
-          updated_at: "2024-01-20T14:00:00Z",
-          authors: [
-            { name: "Dr. Maria Santos", cpf: "123.456.789-00", institution: "IF Goiano", academic_level: "Doutorado", role: "Coordenador", is_main: true },
-            { name: "João Silva", cpf: "987.654.321-00", institution: "IF Goiano", academic_level: "Mestrado", role: "Pesquisador", is_main: false },
-          ],
-          files: [
-            { id: 1, original_name: "foto_laboratorio.jpg", file_type: "foto", size_bytes: 2048000 },
-            { id: 2, original_name: "relatorio_parcial.pdf", file_type: "documento", size_bytes: 5120000 },
-          ],
-          links: [
-            { title: "Repositório GitHub", url: "https://github.com/example", link_type: "repositório", description: "Código fonte" },
-          ],
-        });
-        setVersions([
-          { version_number: 1, change_type: "Criação", description: "Versão inicial do projeto", created_at: "2024-01-15T10:30:00Z", author_name: "Dr. Maria Santos" },
-          { version_number: 2, change_type: "Atualização", description: "Atualização do resumo e metodologia", created_at: "2024-01-18T09:00:00Z", author_name: "Dr. Maria Santos" },
-        ]);
-        setComments([]);
+        // fallback to mock
+        const mock = mockProjects.find(p => p.id === Number(projectId));
+        if (mock) {
+          setProject({
+            ...mock,
+            description: mock.description || mock.summary,
+            authors: mock.authors || [
+              { name: mock.owner_name, institution: "CEBIO", academic_level: mock.academic_level, role_in_project: "Coordenador", is_main: true, approval_status: "aprovado" },
+            ],
+            files: [],
+            links: [],
+            comments: [],
+            versions: [
+              { version_number: 1, change_type: "Criação", description: "Versão inicial do projeto", created_at: mock.created_at, author_name: mock.owner_name },
+            ],
+          });
+        }
       } finally {
         setLoading(false);
       }
@@ -103,48 +86,55 @@ const ProjectDetailView = () => {
   }
 
   const photos = (project.files || []).filter((f: any) => f.file_type === "foto");
-  const documents = (project.files || []).filter((f: any) => f.file_type === "documento");
+  const documents = (project.files || []).filter((f: any) => f.file_type === "documento" || f.file_type === "pdf");
   const statusColor = statusColors[project.status as keyof typeof statusColors] || "bg-muted text-muted-foreground";
   const statusLabel = statusLabels[project.status as keyof typeof statusLabels] || project.status;
+  const versions = project.versions || [];
+  const comments = project.comments || [];
+
+  const statusIcon = {
+    aprovado: <CheckCircle className="w-5 h-5" />,
+    rejeitado: <XCircle className="w-5 h-5" />,
+    pendente: <Clock className="w-5 h-5" />,
+    em_revisao: <AlertTriangle className="w-5 h-5" />,
+  }[project.status] || <Clock className="w-5 h-5" />;
 
   return (
     <AppLayout pageName="Detalhes do Projeto" navItems={navItems}>
-      {/* Back button + PDF */}
+      {/* Back button */}
       <div className="flex justify-between items-center mb-4">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors">
           <ArrowLeft className="w-4 h-4" /> Voltar
-        </button>
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2">
-          📄 Gerar PDF
         </button>
       </div>
 
       {/* Project Header */}
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-6 mb-6">
-        <h1 className="text-[28px] font-bold mb-3">{project.title}</h1>
-        <div className="flex gap-6 flex-wrap text-sm opacity-80">
-          <span>{project.category || "—"}</span>
-          <span>•</span>
-          <span>{project.academic_level || "—"}</span>
-          <span>•</span>
-          <span>{project.owner_name || "—"}</span>
-          <span>•</span>
-          <span>{formatDate(project.created_at)}</span>
-        </div>
-        <div className="mt-4">
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColor}`}>
-            {statusLabel}
-          </span>
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold mb-3">{project.title}</h1>
+            <div className="flex gap-4 flex-wrap text-sm opacity-80">
+              <span>📁 {project.category || "—"}</span>
+              <span>🎓 {project.academic_level || "—"}</span>
+              <span>👤 {project.owner_name || project.owner?.name || "—"}</span>
+              <span>📅 {formatDate(project.created_at)}</span>
+            </div>
+          </div>
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold ${statusColor}`}>
+            {statusIcon} {statusLabel}
+          </div>
         </div>
       </div>
 
-      {/* Informações Básicas */}
+      {/* Info Grid */}
       <div className="bg-card border border-border rounded-xl p-5 mb-5">
-        <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">📋 Informações Básicas</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <h3 className="text-base font-semibold text-primary mb-4">📋 Informações do Projeto</h3>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "ID do Projeto", value: `#${project.id}` },
+            { label: "ID", value: `#${project.id}` },
             { label: "Status", value: statusLabel },
+            { label: "Categoria", value: project.category || "—" },
+            { label: "Nível Acadêmico", value: project.academic_level || "—" },
             { label: "Data de Início", value: formatDate(project.start_date) },
             { label: "Data de Término", value: formatDate(project.end_date) },
             { label: "Criado em", value: formatDateTime(project.created_at) },
@@ -152,42 +142,73 @@ const ProjectDetailView = () => {
           ].map((item, i) => (
             <div key={i} className="bg-muted/50 rounded-lg p-3">
               <div className="text-xs text-muted-foreground mb-1">{item.label}</div>
-              <div className="text-sm text-foreground">{item.value}</div>
+              <div className="text-sm font-medium text-foreground">{item.value}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Resumo */}
-      <div className="bg-card border border-border rounded-xl p-5 mb-5">
-        <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">📝 Resumo</h3>
-        <p className="text-sm text-muted-foreground leading-relaxed">{project.summary || "Sem resumo"}</p>
-      </div>
-
-      {/* Público-Alvo */}
-      {project.target_audience && (
+      {/* Keywords */}
+      {project.keywords && project.keywords.length > 0 && (
         <div className="bg-card border border-border rounded-xl p-5 mb-5">
-          <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">🎯 Público-Alvo</h3>
-          <p className="text-sm text-muted-foreground leading-relaxed">{project.target_audience}</p>
+          <h3 className="text-base font-semibold text-primary mb-3">🏷️ Palavras-chave</h3>
+          <div className="flex gap-2 flex-wrap">
+            {project.keywords.map((kw: string, i: number) => (
+              <span key={i} className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">{kw}</span>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Autores */}
+      {/* Summary */}
       <div className="bg-card border border-border rounded-xl p-5 mb-5">
-        <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">👥 Autores/Colaboradores</h3>
+        <h3 className="text-base font-semibold text-primary mb-3">📝 Resumo</h3>
+        <p className="text-sm text-muted-foreground leading-relaxed">{project.summary || "Sem resumo"}</p>
+      </div>
+
+      {/* Description */}
+      {project.description && project.description !== project.summary && (
+        <div className="bg-card border border-border rounded-xl p-5 mb-5">
+          <h3 className="text-base font-semibold text-primary mb-3">📄 Descrição Completa</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{project.description}</p>
+        </div>
+      )}
+
+      {/* Rejection Reason */}
+      {project.status === "rejeitado" && (project.rejection_reason || project.review_comment) && (
+        <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-5 mb-5">
+          <h3 className="text-base font-semibold text-destructive mb-3">❌ Motivo da Rejeição</h3>
+          <p className="text-sm text-destructive/80 leading-relaxed">{project.rejection_reason || project.review_comment}</p>
+        </div>
+      )}
+
+      {/* Authors */}
+      <div className="bg-card border border-border rounded-xl p-5 mb-5">
+        <h3 className="text-base font-semibold text-primary mb-4">👥 Autores/Colaboradores</h3>
         {(project.authors || []).length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum autor cadastrado</p>
         ) : (
           <div className="space-y-3">
             {project.authors.map((author: any, i: number) => (
               <div key={i} className="bg-muted/50 border border-border rounded-lg p-4">
-                <div className="text-base font-semibold text-foreground mb-2">
-                  {author.is_main && "⭐ "}{author.name}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-semibold text-foreground">
+                    {author.is_main && "⭐ "}{author.name}
+                  </div>
+                  {author.approval_status && (
+                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                      author.approval_status === "aprovado" ? "bg-cebio-green-bg text-primary" :
+                      author.approval_status === "rejeitado" ? "bg-cebio-red-bg text-cebio-red" :
+                      "bg-cebio-yellow-bg text-cebio-yellow"
+                    }`}>
+                      {author.approval_status === "aprovado" ? "✓ Aprovado" : author.approval_status === "rejeitado" ? "✗ Rejeitado" : "⏳ Pendente"}
+                    </span>
+                  )}
                 </div>
-                <div className="text-[13px] text-muted-foreground space-y-1">
-                  <div>📧 CPF: {author.cpf || "—"}</div>
-                  <div>🏛️ {author.institution || "—"}</div>
-                  <div>🎓 {author.academic_level || "—"} • {author.role || "—"}</div>
+                <div className="text-[13px] text-muted-foreground space-y-0.5">
+                  {author.cpf && <div>CPF: {author.cpf}</div>}
+                  {author.institution && <div>🏛️ {author.institution}</div>}
+                  <div>🎓 {author.academic_level || "—"} • {author.role_in_project || author.role || "—"}</div>
                 </div>
               </div>
             ))}
@@ -195,117 +216,106 @@ const ProjectDetailView = () => {
         )}
       </div>
 
-      {/* Arquivos Anexados */}
+      {/* Files */}
       <div className="bg-card border border-border rounded-xl p-5 mb-5">
-        <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">📎 Arquivos Anexados</h3>
-
-        <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-          <Image className="w-4 h-4" /> Fotos
-        </h4>
-        {photos.length === 0 ? (
-          <p className="text-sm text-muted-foreground mb-4">Nenhuma foto anexada</p>
+        <h3 className="text-base font-semibold text-primary mb-4">📎 Arquivos Anexados</h3>
+        {photos.length === 0 && documents.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhum arquivo anexado</p>
         ) : (
-          <div className="space-y-2 mb-4">
-            {photos.map((file: any) => (
-              <div key={file.id} className="flex items-center gap-3 bg-muted/50 border border-border rounded-lg p-3">
-                <div className="w-10 h-10 bg-green-100 rounded flex items-center justify-center">
-                  <Image className="w-5 h-5 text-primary" />
+          <>
+            {photos.length > 0 && (
+              <>
+                <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2"><Image className="w-4 h-4" /> Fotos</h4>
+                <div className="space-y-2 mb-4">
+                  {photos.map((file: any, i: number) => (
+                    <div key={i} className="flex items-center gap-3 bg-muted/50 border border-border rounded-lg p-3">
+                      <div className="w-10 h-10 bg-cebio-green-bg rounded flex items-center justify-center"><Image className="w-5 h-5 text-primary" /></div>
+                      <div className="flex-1">
+                        <div className="text-sm text-foreground">{file.original_name}</div>
+                        <div className="text-xs text-muted-foreground">{formatFileSize(file.size_bytes || 0)}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex-1">
-                  <div className="text-sm text-foreground">{file.original_name}</div>
-                  <div className="text-xs text-muted-foreground">{formatFileSize(file.size_bytes)}</div>
+              </>
+            )}
+            {documents.length > 0 && (
+              <>
+                <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2"><FileText className="w-4 h-4" /> Documentos</h4>
+                <div className="space-y-2">
+                  {documents.map((file: any, i: number) => (
+                    <div key={i} className="flex items-center gap-3 bg-muted/50 border border-border rounded-lg p-3">
+                      <div className="w-10 h-10 bg-cebio-red-bg rounded flex items-center justify-center"><FileText className="w-5 h-5 text-cebio-red" /></div>
+                      <div className="flex-1">
+                        <div className="text-sm text-foreground">{file.original_name}</div>
+                        <div className="text-xs text-muted-foreground">{formatFileSize(file.size_bytes || 0)}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <button className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700">Download</button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-          <FileText className="w-4 h-4" /> Documentos PDF
-        </h4>
-        {documents.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhum documento anexado</p>
-        ) : (
-          <div className="space-y-2">
-            {documents.map((file: any) => (
-              <div key={file.id} className="flex items-center gap-3 bg-muted/50 border border-border rounded-lg p-3">
-                <div className="w-10 h-10 bg-red-100 rounded flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-red-600" />
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm text-foreground">{file.original_name}</div>
-                  <div className="text-xs text-muted-foreground">{formatFileSize(file.size_bytes)} • PDF</div>
-                </div>
-                <button className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700">Download</button>
-              </div>
-            ))}
-          </div>
+              </>
+            )}
+          </>
         )}
       </div>
 
-      {/* Links Externos */}
+      {/* Links */}
       {(project.links || []).length > 0 && (
         <div className="bg-card border border-border rounded-xl p-5 mb-5">
-          <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">🔗 Links Externos</h3>
+          <h3 className="text-base font-semibold text-primary mb-4">🔗 Links Externos</h3>
           <div className="space-y-2">
             {project.links.map((link: any, i: number) => (
               <div key={i} className="flex items-center gap-3 bg-muted/50 border border-border rounded-lg p-3">
-                <div className="w-10 h-10 bg-blue-100 rounded flex items-center justify-center">
-                  <ExternalLink className="w-5 h-5 text-blue-600" />
-                </div>
+                <div className="w-10 h-10 bg-cebio-blue-bg rounded flex items-center justify-center"><ExternalLink className="w-5 h-5 text-cebio-blue" /></div>
                 <div className="flex-1">
                   <div className="text-sm text-foreground">{link.title || link.url}</div>
-                  <div className="text-xs text-muted-foreground">{link.link_type}{link.description ? ` • ${link.description}` : ""}</div>
+                  <div className="text-xs text-muted-foreground">{link.link_type || link.type}{link.description ? ` • ${link.description}` : ""}</div>
                 </div>
-                <a href={link.url} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700">Abrir</a>
+                <a href={link.url} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-secondary transition-colors">Abrir</a>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Histórico de Versões */}
+      {/* Version History */}
       <div className="bg-card border border-border rounded-xl p-5 mb-5">
-        <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">📜 Histórico de Versões</h3>
+        <h3 className="text-base font-semibold text-primary mb-4">📜 Histórico de Versões</h3>
         {versions.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhuma versão registrada</p>
         ) : (
           <div className="space-y-3">
             {versions.map((v: any, i: number) => (
-              <div key={i} className="bg-muted/50 border-l-[3px] border-l-blue-400 rounded-r-lg p-3">
-                <div className="flex justify-between items-center mb-2">
-                  <div>
-                    <span className="font-semibold text-primary text-sm">Versão #{v.version_number}</span>
-                    <span className="text-muted-foreground ml-3 text-sm">{v.change_type}</span>
-                  </div>
+              <div key={i} className="bg-muted/50 border-l-[3px] border-l-primary rounded-r-lg p-3">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="font-semibold text-primary text-sm">Versão #{v.version_number} — {v.change_type || v.field_changed || "Atualização"}</span>
                   <span className="text-xs text-muted-foreground">{formatDateTime(v.created_at)}</span>
                 </div>
-                <div className="text-sm text-muted-foreground mb-1">{v.description}</div>
-                <div className="text-xs text-muted-foreground">Por: {v.author_name || "Sistema"}</div>
+                <div className="text-sm text-muted-foreground">{v.description || v.new_value || "—"}</div>
+                <div className="text-xs text-muted-foreground mt-1">Por: {v.author_name || "Sistema"}</div>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Comentários */}
-      <div className="bg-card border border-border rounded-xl p-5 mb-5">
-        <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">💬 Comentários</h3>
+      {/* Comments */}
+      <div className="bg-card border border-border rounded-xl p-5">
+        <h3 className="text-base font-semibold text-primary mb-4">💬 Comentários</h3>
         {comments.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum comentário</p>
         ) : (
           <div className="space-y-3">
             {comments.map((c: any, i: number) => (
-              <div key={i} className={`bg-muted/50 border-l-[3px] rounded-r-lg p-3 ${c.is_admin_comment ? "border-l-red-500" : "border-l-blue-400"}`}>
-                <div className="flex justify-between items-center mb-2">
+              <div key={i} className={`bg-muted/50 border-l-[3px] rounded-r-lg p-3 ${c.is_admin_comment ? "border-l-destructive" : "border-l-primary"}`}>
+                <div className="flex justify-between items-center mb-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-foreground text-sm">{c.author_name}</span>
-                    {c.is_admin_comment && <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-semibold">Admin</span>}
+                    <span className="font-semibold text-foreground text-sm">{c.author_name || c.user_name || "Usuário"}</span>
+                    {c.is_admin_comment && <span className="bg-destructive/10 text-destructive px-2 py-0.5 rounded text-[10px] font-semibold">Admin</span>}
                   </div>
                   <span className="text-xs text-muted-foreground">{formatDateTime(c.created_at)}</span>
                 </div>
-                <div className="text-sm text-muted-foreground mt-2">{c.content}</div>
+                <div className="text-sm text-muted-foreground">{c.content}</div>
               </div>
             ))}
           </div>
