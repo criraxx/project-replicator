@@ -74,8 +74,21 @@ const SubmissionForm = () => {
       await api.createProject({
         title, summary, category, academic_level: academicLevel, description: summary,
         start_date: startDate || undefined, end_date: endDate || undefined,
+        authors: authors.map((a, i) => ({
+          name: a.name,
+          cpf: a.cpf,
+          institution: a.institution,
+          academic_level: a.level,
+          role_in_project: a.role,
+        })),
       });
-      toast({ title: "Projeto enviado com sucesso!", description: "Seu projeto foi enviado para análise." });
+      const hasCoAuthors = authors.length > 1;
+      toast({
+        title: "Projeto enviado com sucesso!",
+        description: hasCoAuthors
+          ? "Aguardando aprovação dos coautores antes de ir para análise."
+          : "Seu projeto foi enviado para análise.",
+      });
       const basePath = isAdmin ? "/admin" : isPesquisador ? "/pesquisador" : "/bolsista";
       setTimeout(() => navigate(`${basePath}/projetos`), 1500);
     } catch (err: any) {
