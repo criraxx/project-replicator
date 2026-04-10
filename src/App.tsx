@@ -12,7 +12,6 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminActions from "./pages/admin/AdminActions";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminAudit from "./pages/admin/AdminAudit";
-import AdminCategories from "./pages/admin/AdminCategories";
 import AdminBatchApproval from "./pages/admin/AdminBatchApproval";
 import AdminBatchRejection from "./pages/admin/AdminBatchRejection";
 import AdminMassNotification from "./pages/admin/AdminMassNotification";
@@ -43,7 +42,6 @@ const App = () => (
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/projetos" element={<AdminProjects />} />
             <Route path="/admin/usuarios" element={<AdminUsers />} />
-            <Route path="/admin/categorias" element={<AdminCategories />} />
             <Route path="/admin/acoes" element={<AdminActions />} />
             <Route path="/admin/relatorios" element={<AdminReports />} />
             <Route path="/admin/auditoria" element={<AdminAudit />} />
