@@ -48,6 +48,7 @@ const App = () => (
             <Route path="/admin/relatorios" element={<AdminReports />} />
             <Route path="/admin/auditoria" element={<AdminAudit />} />
             <Route path="/admin/aprovacao-lote" element={<AdminBatchApproval />} />
+            <Route path="/admin/rejeicao-lote" element={<AdminBatchRejection />} />
             <Route path="/admin/notificacao-massa" element={<AdminMassNotification />} />
             
             {/* Pesquisador */}

@@ -54,7 +54,7 @@ const Pictogram = ({ data }: { data: { name: string; value: number; color: strin
     <div>
       <div className="flex flex-wrap gap-1 justify-center mb-4">
         {icons.map((ic, i) => (
-          <User key={i} className="w-4 h-4" style={{ color: ic.color }} title={ic.label} />
+          <User key={i} className="w-4 h-4" style={{ color: ic.color }} />
         ))}
       </div>
       <div className="flex gap-4 justify-center">
