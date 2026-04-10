@@ -5,6 +5,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { mockUsers, mockProjects, mockCategories, mockAcademicLevels } from "@/data/mockData";
 
 const autoSlug = (name: string) => name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
@@ -32,15 +33,20 @@ const AdminActions = () => {
           api.listAcademicLevels(),
           api.listProjects({ limit: 10000 }),
         ]);
-        const pending = projectStats.status === "fulfilled" ? projectStats.value.pending : 0;
-        const usersData = usersRes.status === "fulfilled" ? usersRes.value : [];
+        const usersData = usersRes.status === "fulfilled" && usersRes.value?.length ? usersRes.value : mockUsers;
+        const pending = projectStats.status === "fulfilled" ? projectStats.value.pending : mockProjects.filter(p => p.status === "pendente").length;
         const inactive = usersData.filter((u: any) => !u.is_active).length;
         const temp = usersData.filter((u: any) => u.is_temp_password).length;
         setStats({ pending, inactive, tempPasswords: temp });
-        if (catsRes.status === "fulfilled") setCategories(catsRes.value);
-        if (lvlsRes.status === "fulfilled") setLevels(lvlsRes.value);
-        if (projsRes.status === "fulfilled") setProjects(projsRes.value.projects || []);
-      } catch { /* silent */ }
+        setCategories(catsRes.status === "fulfilled" && catsRes.value?.length ? catsRes.value : mockCategories);
+        setLevels(lvlsRes.status === "fulfilled" && lvlsRes.value?.length ? lvlsRes.value : mockAcademicLevels);
+        setProjects(projsRes.status === "fulfilled" && projsRes.value.projects?.length ? projsRes.value.projects : mockProjects);
+      } catch {
+        setStats({ pending: mockProjects.filter(p => p.status === "pendente").length, inactive: mockUsers.filter(u => !u.is_active).length, tempPasswords: 0 });
+        setCategories(mockCategories);
+        setLevels(mockAcademicLevels);
+        setProjects(mockProjects);
+      }
       setLoadingCats(false);
     };
     fetchAll();
