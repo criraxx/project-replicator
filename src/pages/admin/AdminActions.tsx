@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle, XCircle, KeyRound, Bell, Shield, Download, Clock, Users, Settings } from "lucide-react";
+import { CheckCircle, XCircle, KeyRound, Bell, Shield, Download, Clock, Users, Settings, Tag, GraduationCap } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
 import api from "@/services/api";
@@ -28,6 +28,8 @@ const AdminActions = () => {
   const actions = [
     { icon: CheckCircle, title: "Aprovação em Lote", desc: "Aprovar múltiplos projetos simultaneamente", tag: "Projects", iconBg: "bg-cebio-green-bg", iconColor: "text-primary", path: "/admin/aprovacao-lote" },
     { icon: XCircle, title: "Rejeição em Lote", desc: "Rejeitar múltiplos projetos com comentários", tag: "Projects", iconBg: "bg-cebio-red-bg", iconColor: "text-cebio-red", path: "/admin/rejeicao-lote" },
+    { icon: Tag, title: "Gerenciar Categorias", desc: "Criar e editar categorias de projetos", tag: "Settings", iconBg: "bg-cebio-blue-bg", iconColor: "text-cebio-blue", path: "/admin/categorias" },
+    { icon: GraduationCap, title: "Gerenciar Níveis Acadêmicos", desc: "Configurar níveis acadêmicos disponíveis", tag: "Settings", iconBg: "bg-cebio-purple-bg", iconColor: "text-cebio-purple", path: "/admin/categorias" },
     { icon: KeyRound, title: "Reset de Senhas em Lote", desc: "Redefinir senhas para usuários selecionados", tag: "Users", iconBg: "bg-cebio-yellow-bg", iconColor: "text-cebio-yellow", path: "/admin/usuarios" },
     { icon: Download, title: "Exportação Completa", desc: "Exportar todos os dados do sistema", tag: "Data", iconBg: "bg-cebio-blue-bg", iconColor: "text-cebio-blue", path: "" },
     { icon: Bell, title: "Notificações em Massa", desc: "Enviar notificações para grupos de usuários", tag: "Communication", iconBg: "bg-cebio-yellow-bg", iconColor: "text-cebio-yellow", path: "/admin/notificacao-massa", badge: 3 },

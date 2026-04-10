@@ -180,8 +180,8 @@ class ApiClient {
     return this.request<void>('POST', '/projects/batch/approve', { project_ids: projectIds });
   }
 
-  async batchReject(projectIds: number[]) {
-    return this.request<void>('POST', '/projects/batch/reject', { project_ids: projectIds });
+  async batchReject(projectIds: number[], comment?: string) {
+    return this.request<void>('POST', '/projects/batch/reject', { project_ids: projectIds, comment });
   }
 
   // ============================================

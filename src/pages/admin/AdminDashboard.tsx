@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, FolderOpen, Clock, CheckCircle, Shield, LayoutGrid, Activity, Inbox, Tag, GraduationCap, Plus, FileText, Eye, BarChart3 } from "lucide-react";
+import { Users, FolderOpen, Clock, CheckCircle, Shield, LayoutGrid, Activity, Inbox, Tag, Eye, BarChart3 } from "lucide-react";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
@@ -88,11 +88,9 @@ const AdminDashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-3 gap-3 mb-6">
         {[
           { label: "Novo Usuário", icon: Users, path: "/admin/usuarios" },
-          { label: "Nova Categoria", icon: Tag, path: "/admin/categorias" },
-          { label: "Novo Nível", icon: GraduationCap, path: "/admin/niveis-academicos" },
           { label: "Pendentes", icon: Clock, path: "/admin/projetos" },
           { label: "Auditoria", icon: Eye, path: "/admin/auditoria" },
         ].map((a, i) => (
