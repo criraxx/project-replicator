@@ -164,7 +164,7 @@ const AdminReports = () => {
 
   const filtered = useMemo(() => {
     return projects.filter(p => {
-      if (statusFilter !== "all" && p.status !== statusFilter) return false;
+      if (statusFilters.length > 0 && !statusFilters.includes(p.status)) return false;
       if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
       if (userTypeFilter !== "all") {
         const owner = users.find(u => u.id === p.owner_id);
@@ -175,7 +175,7 @@ const AdminReports = () => {
       if (endDate && new Date(p.created_at) > endDate) return false;
       return true;
     });
-  }, [projects, statusFilter, categoryFilter, userTypeFilter, ownerFilter, startDate, endDate, users]);
+  }, [projects, statusFilters, categoryFilter, userTypeFilter, ownerFilter, startDate, endDate, users]);
 
   const byStatus = useMemo(() => {
     const map: Record<string, number> = {};
@@ -221,7 +221,7 @@ const AdminReports = () => {
   const approvalRate = filtered.length > 0 ? Math.round((filtered.filter(p => p.status === "aprovado").length / filtered.length) * 100) : 0;
 
   const clearFilters = () => {
-    setStatusFilter("all");
+    setStatusFilters([]);
     setCategoryFilter("all");
     setUserTypeFilter("all");
     setOwnerFilter("all");
@@ -242,7 +242,7 @@ const AdminReports = () => {
   }, [projects, users]);
 
   const exportPDF = () => {
-    const statusLabel = STATUS_OPTIONS.find(o => o.value === statusFilter)?.label || "Todos";
+    const statusLabel = statusFilters.length > 0 ? statusFilters.map(s => STATUS_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos";
     const userTypeLabel = USER_TYPE_OPTIONS.find(o => o.value === userTypeFilter)?.label || "Todos";
     const catLabel = categoryFilter === "all" ? "Todas" : categoryFilter;
     const ownerLabel = ownerFilter === "all" ? "Todos" : uniqueOwners.find(o => String(o.id) === ownerFilter)?.name || "Todos";
