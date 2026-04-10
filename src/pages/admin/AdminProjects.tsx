@@ -163,9 +163,16 @@ const AdminProjects = () => {
                     </td>
                     <td className="p-3 text-muted-foreground">{p.category || "—"}</td>
                     <td className="p-3">
-                      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${statusColors[p.status as keyof typeof statusColors] || ""}`}>
-                        {statusLabels[p.status as keyof typeof statusLabels] || p.status}
-                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full inline-block w-fit ${statusColors[p.status as keyof typeof statusColors] || ""}`}>
+                          {statusLabels[p.status as keyof typeof statusLabels] || p.status}
+                        </span>
+                        {p.authors && p.authors.length > 0 && p.authors.some((a: any) => a.approval_status === 'pendente') && (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cebio-yellow-bg text-cebio-yellow inline-block w-fit">
+                            ⏳ Aguardando autores
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-3 text-muted-foreground">{p.owner?.name || "Sem informação"}</td>
                     <td className="p-3 text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>

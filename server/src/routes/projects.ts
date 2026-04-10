@@ -118,9 +118,7 @@ router.post('/projects', authMiddleware, async (req: Request, res: Response) => 
   try {
     const { title, summary, description, category, academic_level, start_date, end_date, authors } = req.body;
 
-    // Determine initial status: if there are co-authors, start as 'aguardando_autores'
-    const hasCoAuthors = authors && authors.length > 1;
-
+    // Project always goes to admin as 'pendente', but authors may still be pending approval
     const project = await projectService.createProject(
       title,
       summary,
@@ -130,7 +128,7 @@ router.post('/projects', authMiddleware, async (req: Request, res: Response) => 
       req.user!.id,
       start_date ? new Date(start_date) : undefined,
       end_date ? new Date(end_date) : undefined,
-      hasCoAuthors ? 'aguardando_autores' : 'pendente'
+      'pendente'
     );
 
     // Add authors if provided
@@ -145,6 +143,7 @@ router.post('/projects', authMiddleware, async (req: Request, res: Response) => 
       );
     }
 
+    const hasCoAuthors = authors && authors.length > 1;
     await auditService.logAction(
       'CREATE_PROJECT',
       req.user!.id,

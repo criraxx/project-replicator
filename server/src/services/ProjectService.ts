@@ -62,6 +62,7 @@ export class ProjectService {
     const total = await query.getCount();
     const projects = await query
       .leftJoinAndSelect('project.owner', 'owner')
+      .leftJoinAndSelect('project.authors', 'authors')
       .orderBy('project.created_at', 'DESC')
       .limit(limit)
       .offset(offset)
