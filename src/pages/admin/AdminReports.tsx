@@ -128,7 +128,7 @@ const RenderChart = ({ type, data, dataKey = "value", nameKey = "name" }: { type
 };
 
 const AdminReports = () => {
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [userTypeFilter, setUserTypeFilter] = useState("all");
   const [ownerFilter, setOwnerFilter] = useState("all");
