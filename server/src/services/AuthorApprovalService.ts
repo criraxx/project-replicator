@@ -139,24 +139,21 @@ export class AuthorApprovalService {
   }
 
   /**
-   * Check if all co-authors approved. If yes, advance project to 'pendente' (for admin review).
+   * Check if all co-authors approved. If yes, notify the owner.
+   * The project is already 'pendente' for admin — this just updates notifications.
    */
   private async checkAndAdvanceProject(projectId: number): Promise<void> {
     const allAuthors = await this.authorRepository.find({ where: { project_id: projectId } });
 
     const allApproved = allAuthors.every(a => a.approval_status === 'aprovado');
-    const anyRejected = allAuthors.some(a => a.approval_status === 'rejeitado');
 
     if (allApproved) {
-      await this.projectRepository.update(projectId, { status: 'pendente' });
-
-      // Notify the owner
       const project = await this.projectRepository.findOne({ where: { id: projectId } });
       if (project) {
         await this.notificationService.createNotification(
           project.owner_id,
           'Todos os Coautores Aprovaram',
-          `Todos os coautores do projeto "${project.title}" aprovaram sua participação. O projeto foi enviado para análise do administrador.`,
+          `Todos os coautores do projeto "${project.title}" aprovaram sua participação.`,
           'success',
           'coautoria',
           projectId
