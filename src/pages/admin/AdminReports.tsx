@@ -236,6 +236,82 @@ const AdminReports = () => {
     }, []);
   }, [projects, users]);
 
+  const exportPDF = () => {
+    const statusLabel = STATUS_OPTIONS.find(o => o.value === statusFilter)?.label || "Todos";
+    const userTypeLabel = USER_TYPE_OPTIONS.find(o => o.value === userTypeFilter)?.label || "Todos";
+    const catLabel = categoryFilter === "all" ? "Todas" : categoryFilter;
+    const ownerLabel = ownerFilter === "all" ? "Todos" : uniqueOwners.find(o => String(o.id) === ownerFilter)?.name || "Todos";
+    const startLabel = startDate ? format(startDate, "dd/MM/yyyy") : "—";
+    const endLabel = endDate ? format(endDate, "dd/MM/yyyy") : "—";
+
+    const printWin = window.open("", "_blank");
+    if (!printWin) return;
+
+    const rows = filtered.map(p => {
+      const owner = users.find(u => u.id === p.owner_id);
+      return `<tr>
+        <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb">${p.title}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb">${owner?.name || p.owner?.name || "—"}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb">${p.category || "—"}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb">${p.status}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb">${new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
+      </tr>`;
+    }).join("");
+
+    const statusRows = byStatus.map(d => `<tr><td style="padding:4px 8px">${d.name}</td><td style="padding:4px 8px;text-align:right">${d.value}</td></tr>`).join("");
+    const catRows = byCategory.map(d => `<tr><td style="padding:4px 8px">${d.name}</td><td style="padding:4px 8px;text-align:right">${d.value}</td></tr>`).join("");
+    const userRows = byUser.map(d => `<tr><td style="padding:4px 8px">${d.name}</td><td style="padding:4px 8px;text-align:right">${d.value}</td></tr>`).join("");
+
+    printWin.document.write(`<!DOCTYPE html><html><head><title>Relatório CEBIO</title>
+      <style>body{font-family:Arial,sans-serif;margin:40px;color:#1a1a1a}
+      h1{color:#2d5f4a;margin-bottom:4px}h2{color:#2d5f4a;margin-top:28px;font-size:16px;border-bottom:2px solid #2d5f4a;padding-bottom:4px}
+      table{border-collapse:collapse;width:100%;margin-top:8px;font-size:13px}
+      th{text-align:left;padding:8px;background:#f0f7f4;border-bottom:2px solid #2d5f4a;font-size:12px}
+      .filters{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;background:#f9fafb;padding:12px;border-radius:8px;font-size:13px;margin-top:8px}
+      .filter-item span:first-child{font-weight:600;color:#555}
+      .kpi-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-top:12px}
+      .kpi{border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center}
+      .kpi .val{font-size:28px;font-weight:700;color:#2d5f4a}.kpi .lab{font-size:11px;color:#888}
+      .summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:8px}
+      .summary-grid table{font-size:12px}
+      @media print{body{margin:20px}}</style></head><body>
+      <h1>Relatório CEBIO Brasil</h1>
+      <p style="color:#888;font-size:13px">Gerado em ${new Date().toLocaleString("pt-BR")}</p>
+
+      <h2>Filtros Aplicados</h2>
+      <div class="filters">
+        <div class="filter-item"><span>Status:</span> ${statusLabel}</div>
+        <div class="filter-item"><span>Categoria:</span> ${catLabel}</div>
+        <div class="filter-item"><span>Tipo Usuário:</span> ${userTypeLabel}</div>
+        <div class="filter-item"><span>Proprietário:</span> ${ownerLabel}</div>
+        <div class="filter-item"><span>Data Início:</span> ${startLabel}</div>
+        <div class="filter-item"><span>Data Fim:</span> ${endLabel}</div>
+      </div>
+
+      <h2>Indicadores</h2>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="val">${filtered.length}</div><div class="lab">Projetos Filtrados</div></div>
+        <div class="kpi"><div class="val">${users.length}</div><div class="lab">Usuários no Sistema</div></div>
+        <div class="kpi"><div class="val">${approvalRate}%</div><div class="lab">Taxa de Aprovação</div></div>
+        <div class="kpi"><div class="val">${categories.length}</div><div class="lab">Categorias</div></div>
+      </div>
+
+      <h2>Resumos</h2>
+      <div class="summary-grid">
+        <div><strong style="font-size:13px">Por Status</strong><table>${statusRows}</table></div>
+        <div><strong style="font-size:13px">Por Categoria</strong><table>${catRows}</table></div>
+        <div><strong style="font-size:13px">Top Usuários</strong><table>${userRows}</table></div>
+      </div>
+
+      <h2>Projetos (${filtered.length})</h2>
+      <table><thead><tr><th>Título</th><th>Proprietário</th><th>Categoria</th><th>Status</th><th>Data</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888">Nenhum projeto encontrado</td></tr>'}</tbody></table>
+      </body></html>`);
+
+    printWin.document.close();
+    setTimeout(() => { printWin.print(); }, 500);
+  };
+
   return (
     <AppLayout pageName="Relatórios e Analytics" navItems={ADMIN_NAV} notificationCount={0}>
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6 flex justify-between items-center">
@@ -243,7 +319,7 @@ const AdminReports = () => {
           <h2 className="text-[22px] font-semibold mb-1.5">Relatórios e Analytics</h2>
           <p className="text-sm opacity-90">Visão detalhada e personalizável do desempenho da plataforma</p>
         </div>
-        <button className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors">
+        <button onClick={exportPDF} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors">
           <Download className="w-4 h-4" /> Exportar PDF
         </button>
       </div>
