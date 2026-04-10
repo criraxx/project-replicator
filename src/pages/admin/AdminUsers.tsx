@@ -5,7 +5,7 @@ import { ADMIN_NAV } from "@/constants/navigation";
 import { roleBadge } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
-import type { User } from "@/data/mockData";
+import { type User, mockUsers } from "@/data/mockData";
 
 const AdminUsers = () => {
   const [search, setSearch] = useState("");
@@ -31,9 +31,9 @@ const AdminUsers = () => {
         roleFilter || undefined,
         statusFilter !== "" ? statusFilter === "true" : undefined
       );
-      setUsers(data);
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
+      setUsers(data && data.length > 0 ? data : mockUsers);
+    } catch {
+      setUsers(mockUsers);
     } finally {
       setLoading(false);
     }

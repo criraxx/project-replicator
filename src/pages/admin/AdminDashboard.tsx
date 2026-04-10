@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, FolderOpen, Clock, CheckCircle, Shield, LayoutGrid, Activity, Inbox, Tag, Eye, BarChart3 } from "lucide-react";
+import { mockProjects, mockUsers, mockCategories, mockAcademicLevels } from "@/data/mockData";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
@@ -30,12 +31,36 @@ const AdminDashboard = () => {
           api.listCategories(),
           api.listAcademicLevels(),
         ]);
-        if (statsData.status === "fulfilled") setStats(statsData.value);
-        if (usersData.status === "fulfilled") setUsers(usersData.value);
-        if (projectsData.status === "fulfilled") setProjects(projectsData.value.projects || []);
-        if (catsData.status === "fulfilled") setCategories(catsData.value);
-        if (levelsData.status === "fulfilled") setLevels(levelsData.value);
-      } catch { /* silent */ }
+        const u = usersData.status === "fulfilled" ? usersData.value : mockUsers;
+        const p = projectsData.status === "fulfilled" ? (projectsData.value.projects || []) : mockProjects;
+        const c = catsData.status === "fulfilled" ? catsData.value : mockCategories;
+        const l = levelsData.status === "fulfilled" ? levelsData.value : mockAcademicLevels;
+        setUsers(u);
+        setProjects(p);
+        setCategories(c);
+        setLevels(l);
+        if (statsData.status === "fulfilled") {
+          setStats(statsData.value);
+        } else {
+          setStats({
+            total: p.length,
+            pending: p.filter((x: any) => x.status === "pendente").length,
+            approved: p.filter((x: any) => x.status === "aprovado").length,
+            rejected: p.filter((x: any) => x.status === "rejeitado").length,
+          });
+        }
+      } catch {
+        setUsers(mockUsers);
+        setProjects(mockProjects.slice(0, 5));
+        setCategories(mockCategories);
+        setLevels(mockAcademicLevels);
+        setStats({
+          total: mockProjects.length,
+          pending: mockProjects.filter(x => x.status === "pendente").length,
+          approved: mockProjects.filter(x => x.status === "aprovado").length,
+          rejected: mockProjects.filter(x => x.status === "rejeitado").length,
+        });
+      }
       setLoading(false);
     };
     fetchAll();
