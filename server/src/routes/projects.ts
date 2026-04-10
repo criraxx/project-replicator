@@ -59,8 +59,8 @@ router.post('/projects/batch/approve', authMiddleware, requireRole('admin'), asy
 // POST /api/projects/batch/reject (must be before :id)
 router.post('/projects/batch/reject', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
   try {
-    const { project_ids } = req.body;
-    await projectService.batchReject(project_ids, req.user!.id);
+    const { project_ids, comment } = req.body;
+    await projectService.batchReject(project_ids, req.user!.id, comment);
 
     await auditService.logAction(
       'BATCH_REJECT',

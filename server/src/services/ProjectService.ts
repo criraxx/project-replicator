@@ -154,9 +154,9 @@ export class ProjectService {
     }
   }
 
-  async batchReject(projectIds: number[], reviewedBy: number): Promise<void> {
+  async batchReject(projectIds: number[], reviewedBy: number, comment?: string): Promise<void> {
     for (const id of projectIds) {
-      await this.rejectProject(id, reviewedBy);
+      await this.rejectProject(id, reviewedBy, comment);
     }
   }
 }
