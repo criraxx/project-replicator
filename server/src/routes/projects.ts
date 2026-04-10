@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { ProjectService } from '../services/ProjectService';
+import { AuthorApprovalService } from '../services/AuthorApprovalService';
 import { authMiddleware, requireRole } from '../utils/auth';
 import { AuditService } from '../services/AuditService';
 import { ProjectStatus } from '../entities/Project';
@@ -7,6 +8,7 @@ import { ProjectStatus } from '../entities/Project';
 const router = Router();
 const projectService = new ProjectService();
 const auditService = new AuditService();
+const authorApprovalService = new AuthorApprovalService();
 
 // GET /api/projects/stats (must be before :id)
 router.get('/projects/stats', authMiddleware, async (req: Request, res: Response) => {
@@ -114,7 +116,10 @@ router.get('/projects/:id', authMiddleware, async (req: Request, res: Response) 
 // POST /api/projects
 router.post('/projects', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { title, summary, description, category, academic_level, start_date, end_date } = req.body;
+    const { title, summary, description, category, academic_level, start_date, end_date, authors } = req.body;
+
+    // Determine initial status: if there are co-authors, start as 'aguardando_autores'
+    const hasCoAuthors = authors && authors.length > 1;
 
     const project = await projectService.createProject(
       title,
@@ -124,15 +129,28 @@ router.post('/projects', authMiddleware, async (req: Request, res: Response) => 
       academic_level,
       req.user!.id,
       start_date ? new Date(start_date) : undefined,
-      end_date ? new Date(end_date) : undefined
+      end_date ? new Date(end_date) : undefined,
+      hasCoAuthors ? 'aguardando_autores' : 'pendente'
     );
+
+    // Add authors if provided
+    if (authors && authors.length > 0) {
+      await authorApprovalService.addAuthorsToProject(
+        project.id,
+        authors.map((a: any, i: number) => ({
+          ...a,
+          is_owner: i === 0, // First author is the owner
+        })),
+        req.user!.id
+      );
+    }
 
     await auditService.logAction(
       'CREATE_PROJECT',
       req.user!.id,
       undefined,
       project.id,
-      `Projeto criado: ${project.title}`,
+      `Projeto criado: ${project.title}${hasCoAuthors ? ' (aguardando aprovação de coautores)' : ''}`,
       req.ip || 'unknown',
       'low'
     );

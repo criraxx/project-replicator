@@ -19,6 +19,7 @@ import categoryRoutes from './routes/categories';
 import auditRoutes from './routes/audit';
 import notificationRoutes from './routes/notifications';
 import adminRoutes from './routes/admin';
+import authorApprovalRoutes from './routes/authorApproval';
 
 dotenv.config();
 
@@ -86,6 +87,7 @@ app.use('/api', categoryRoutes);
 app.use('/api', auditRoutes);
 app.use('/api', notificationRoutes);
 app.use('/api', adminRoutes);
+app.use('/api', authorApprovalRoutes);
 
 // ============================================
 // HEALTH CHECK

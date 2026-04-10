@@ -5,6 +5,7 @@ export const statusColors: Record<string, string> = {
   pendente: "bg-cebio-yellow-bg text-cebio-yellow",
   rejeitado: "bg-cebio-red-bg text-cebio-red",
   em_revisao: "bg-cebio-blue-bg text-cebio-blue",
+  aguardando_autores: "bg-cebio-purple/10 text-cebio-purple",
 };
 
 export const statusLabels: Record<string, string> = {
@@ -12,6 +13,7 @@ export const statusLabels: Record<string, string> = {
   pendente: "Pendente",
   rejeitado: "Rejeitado",
   em_revisao: "Em Revisão",
+  aguardando_autores: "Aguardando Autores",
 };
 
 export const roleBadge: Record<UserRole, { label: string; className: string }> = {

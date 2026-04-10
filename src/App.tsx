@@ -23,6 +23,7 @@ import BolsistaProjects from "./pages/bolsista/BolsistaProjects";
 import BolsistaHistory from "./pages/bolsista/BolsistaHistory";
 import SubmissionForm from "./pages/shared/SubmissionForm";
 import ProjectDetailView from "./pages/shared/ProjectDetailView";
+import CoAuthorApprovals from "./pages/shared/CoAuthorApprovals";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,12 +54,14 @@ const App = () => (
             <Route path="/pesquisador/dashboard" element={<PesquisadorDashboard />} />
             <Route path="/pesquisador/projetos" element={<PesquisadorProjects />} />
             <Route path="/pesquisador/submissao" element={<SubmissionForm />} />
+            <Route path="/pesquisador/coautorias" element={<CoAuthorApprovals />} />
             <Route path="/pesquisador/historico" element={<PesquisadorHistory />} />
             
             {/* Bolsista */}
             <Route path="/bolsista/dashboard" element={<BolsistaDashboard />} />
             <Route path="/bolsista/projetos" element={<BolsistaProjects />} />
             <Route path="/bolsista/submissao" element={<SubmissionForm />} />
+            <Route path="/bolsista/coautorias" element={<CoAuthorApprovals />} />
             <Route path="/bolsista/historico" element={<BolsistaHistory />} />
             
             {/* Shared */}

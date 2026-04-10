@@ -16,6 +16,7 @@ export const ADMIN_NAV: NavItem[] = [
 export const PESQUISADOR_NAV: NavItem[] = [
   { label: "Dashboard", path: "/pesquisador/dashboard" },
   { label: "Meus Projetos", path: "/pesquisador/projetos" },
+  { label: "Coautorias", path: "/pesquisador/coautorias" },
   { label: "Nova Submissão", path: "/pesquisador/submissao" },
   { label: "Histórico", path: "/pesquisador/historico" },
 ];
@@ -23,6 +24,7 @@ export const PESQUISADOR_NAV: NavItem[] = [
 export const BOLSISTA_NAV: NavItem[] = [
   { label: "Dashboard", path: "/bolsista/dashboard" },
   { label: "Meus Projetos", path: "/bolsista/projetos" },
+  { label: "Coautorias", path: "/bolsista/coautorias" },
   { label: "Nova Submissão", path: "/bolsista/submissao" },
   { label: "Histórico", path: "/bolsista/historico" },
 ];

@@ -17,7 +17,8 @@ export class ProjectService {
     academicLevel: string,
     ownerId: number,
     startDate?: Date,
-    endDate?: Date
+    endDate?: Date,
+    initialStatus: ProjectStatus = 'pendente'
   ): Promise<Project> {
     const project = this.projectRepository.create({
       title,
@@ -26,7 +27,7 @@ export class ProjectService {
       category,
       academic_level: academicLevel,
       owner_id: ownerId,
-      status: 'pendente',
+      status: initialStatus,
       start_date: startDate,
       end_date: endDate,
     });
