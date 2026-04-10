@@ -5,6 +5,7 @@ import { ADMIN_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { mockProjects, mockCategories, mockAcademicLevels } from "@/data/mockData";
 
 const AdminProjects = () => {
   const [search, setSearch] = useState("");
@@ -28,11 +29,21 @@ const AdminProjects = () => {
           api.listCategories(),
           api.listAcademicLevels(),
         ]);
-        if (projData.status === "fulfilled") setProjects(projData.value.projects || []);
-        if (statsData.status === "fulfilled") setStats(statsData.value);
-        if (catsData.status === "fulfilled") setCategories(catsData.value);
-        if (lvlsData.status === "fulfilled") setLevels(lvlsData.value);
-      } catch { /* silent */ }
+        const p = projData.status === "fulfilled" ? (projData.value.projects || []) : mockProjects;
+        setProjects(p);
+        if (statsData.status === "fulfilled") {
+          setStats(statsData.value);
+        } else {
+          setStats({ total: p.length, pending: p.filter((x: any) => x.status === "pendente").length, approved: p.filter((x: any) => x.status === "aprovado").length, rejected: p.filter((x: any) => x.status === "rejeitado").length });
+        }
+        setCategories(catsData.status === "fulfilled" ? catsData.value : mockCategories);
+        setLevels(lvlsData.status === "fulfilled" ? lvlsData.value : mockAcademicLevels);
+      } catch {
+        setProjects(mockProjects);
+        setStats({ total: mockProjects.length, pending: mockProjects.filter(x => x.status === "pendente").length, approved: mockProjects.filter(x => x.status === "aprovado").length, rejected: mockProjects.filter(x => x.status === "rejeitado").length });
+        setCategories(mockCategories);
+        setLevels(mockAcademicLevels);
+      }
       setLoading(false);
     };
     fetchAll();

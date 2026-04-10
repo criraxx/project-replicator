@@ -5,6 +5,7 @@ import { ADMIN_NAV } from "@/constants/navigation";
 import { severityColors } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { mockAuditLogs } from "@/data/mockData";
 
 const AdminAudit = () => {
   const [search, setSearch] = useState("");
@@ -18,8 +19,11 @@ const AdminAudit = () => {
     const fetchLogs = async () => {
       try {
         const data = await api.listAuditLogs(200);
-        setLogs(data.logs || []);
-      } catch { /* silent */ }
+        const l = data.logs && data.logs.length > 0 ? data.logs : mockAuditLogs;
+        setLogs(l);
+      } catch {
+        setLogs(mockAuditLogs);
+      }
       setLoading(false);
     };
     fetchLogs();
