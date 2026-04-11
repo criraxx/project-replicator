@@ -7,7 +7,7 @@ import { roleBadge } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
-import { type User, mockUsers } from "@/data/mockData";
+import { type User } from "@/data/mockData";
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
 
 const AdminUsers = () => {
@@ -69,9 +69,9 @@ const AdminUsers = () => {
         roleFilter || undefined,
         statusFilter !== "" ? statusFilter === "true" : undefined
       );
-      setUsers(data && data.length > 0 ? data : mockUsers);
+      setUsers(data && data.length > 0 ? data : []);
     } catch {
-      setUsers(mockUsers);
+      setUsers([]);
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, FolderOpen, Clock, CheckCircle, Shield, LayoutGrid, Activity, Inbox, Tag, Eye, BarChart3 } from "lucide-react";
-import { mockProjects, mockUsers, mockCategories, mockAcademicLevels } from "@/data/mockData";
+
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
@@ -31,10 +31,10 @@ const AdminDashboard = () => {
           api.listCategories(),
           api.listAcademicLevels(),
         ]);
-        const u = usersData.status === "fulfilled" ? usersData.value : mockUsers;
-        const p = projectsData.status === "fulfilled" ? (projectsData.value.projects || []) : mockProjects;
-        const c = catsData.status === "fulfilled" ? catsData.value : mockCategories;
-        const l = levelsData.status === "fulfilled" ? levelsData.value : mockAcademicLevels;
+        const u = usersData.status === "fulfilled" ? usersData.value : [];
+        const p = projectsData.status === "fulfilled" ? (projectsData.value.projects || []) : [];
+        const c = catsData.status === "fulfilled" ? catsData.value : [];
+        const l = levelsData.status === "fulfilled" ? levelsData.value : [];
         setUsers(u);
         setProjects(p);
         setCategories(c);
@@ -50,16 +50,11 @@ const AdminDashboard = () => {
           });
         }
       } catch {
-        setUsers(mockUsers);
-        setProjects(mockProjects.slice(0, 5));
-        setCategories(mockCategories);
-        setLevels(mockAcademicLevels);
-        setStats({
-          total: mockProjects.length,
-          pending: mockProjects.filter(x => x.status === "pendente").length,
-          approved: mockProjects.filter(x => x.status === "aprovado").length,
-          rejected: mockProjects.filter(x => x.status === "rejeitado").length,
-        });
+        setUsers([]);
+        setProjects([]);
+        setCategories([]);
+        setLevels([]);
+        setStats({ total: 0, pending: 0, approved: 0, rejected: 0 });
       }
       setLoading(false);
     };

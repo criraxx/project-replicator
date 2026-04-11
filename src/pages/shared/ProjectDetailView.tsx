@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import api from "@/services/api";
 import { ADMIN_NAV, PESQUISADOR_NAV, BOLSISTA_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
-import { mockProjects } from "@/data/mockData";
+
 import { useToast } from "@/hooks/use-toast";
 
 interface ProjectDetailViewProps {
@@ -37,22 +37,7 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
         const data = await api.getProject(Number(projectId));
         setProject(data);
       } catch {
-        const mock = mockProjects.find(p => p.id === Number(projectId));
-        if (mock) {
-          setProject({
-            ...mock,
-            description: mock.description || mock.summary,
-            authors: mock.authors || [
-              { name: mock.owner_name, institution: "CEBIO", academic_level: mock.academic_level, role_in_project: "Coordenador", is_main: true, approval_status: "aprovado" },
-            ],
-            files: [],
-            links: [],
-            comments: [],
-            versions: [
-              { version_number: 1, change_type: "Criacao", description: "Versao inicial do projeto", created_at: mock.created_at, author_name: mock.owner_name },
-            ],
-          });
-        }
+        setProject(null);
       } finally {
         setLoading(false);
       }

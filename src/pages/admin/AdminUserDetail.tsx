@@ -7,7 +7,7 @@ import { roleBadge } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
-import { mockUsers, mockProjects } from "@/data/mockData";
+
 
 const AdminUserDetail = () => {
   const [searchParams] = useSearchParams();
@@ -27,12 +27,12 @@ const AdminUserDetail = () => {
           api.getUser(userId),
           api.listProjects({ limit: 10000 }),
         ]);
-        setUser(u.status === "fulfilled" ? u.value : mockUsers.find(mu => mu.id === userId) || null);
-        const allProjects = p.status === "fulfilled" && p.value.projects?.length ? p.value.projects : mockProjects;
+        setUser(u.status === "fulfilled" ? u.value : null);
+        const allProjects = p.status === "fulfilled" && p.value.projects?.length ? p.value.projects : [];
         setProjects(allProjects.filter((proj: any) => proj.owner_id === userId));
       } catch {
-        setUser(mockUsers.find(mu => mu.id === userId) || null);
-        setProjects(mockProjects.filter(p => p.owner_id === userId));
+        setUser(null);
+        setProjects([]);
       } finally {
         setLoading(false);
       }

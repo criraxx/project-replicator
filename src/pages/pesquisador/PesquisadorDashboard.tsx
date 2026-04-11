@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { PESQUISADOR_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
-import { mockProjects } from "@/data/mockData";
+
 
 const PesquisadorDashboard = () => {
   const { user } = useAuth();
@@ -18,9 +18,9 @@ const PesquisadorDashboard = () => {
     const fetchProjects = async () => {
       try {
         const data = await api.listProjects({ limit: 100 });
-        setProjects(data.projects?.length ? data.projects : mockProjects.filter(p => p.owner_id === 2 || p.owner_id === 3));
+        setProjects(data.projects?.length ? data.projects : []);
       } catch {
-        setProjects(mockProjects.filter(p => p.owner_id === 2 || p.owner_id === 3));
+        setProjects([]);
       }
       setLoading(false);
     };

@@ -17,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import api from "@/services/api";
-import { mockProjects, mockUsers, mockCategories } from "@/data/mockData";
+
 
 const COLORS = ["hsl(170,37%,30%)", "hsl(43,96%,56%)", "hsl(210,72%,46%)", "hsl(3,81%,55%)", "hsl(270,50%,50%)", "hsl(30,80%,55%)"];
 const STATUS_OPTIONS = [
@@ -151,13 +151,13 @@ const AdminReports = () => {
           api.listUsers(),
           api.listCategories(),
         ]);
-        setProjects(p.status === "fulfilled" && p.value.projects?.length ? p.value.projects : mockProjects);
-        setUsers(u.status === "fulfilled" && u.value?.length ? u.value : mockUsers);
-        setCategories(c.status === "fulfilled" && c.value?.length ? c.value : mockCategories);
+        setProjects(p.status === "fulfilled" && p.value.projects?.length ? p.value.projects : []);
+        setUsers(u.status === "fulfilled" && u.value?.length ? u.value : []);
+        setCategories(c.status === "fulfilled" && c.value?.length ? c.value : []);
       } catch {
-        setProjects(mockProjects);
-        setUsers(mockUsers);
-        setCategories(mockCategories);
+        setProjects([]);
+        setUsers([]);
+        setCategories([]);
       }
       setLoading(false);
     };
