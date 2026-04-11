@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Eye, CheckCircle, XCircle, Trash2, Inbox, FileText } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
@@ -7,10 +7,11 @@ import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { mockProjects, mockCategories, mockAcademicLevels } from "@/data/mockData";
+import MultiSelectFilter from "@/components/ui/multi-select-filter";
 
 const STATUS_OPTIONS = [
   { value: "pendente", label: "Pendente" },
-  { value: "em_revisao", label: "Em Revisão" },
+  { value: "em_revisao", label: "Em Revisao" },
   { value: "aprovado", label: "Aprovado" },
   { value: "rejeitado", label: "Rejeitado" },
 ];
@@ -19,8 +20,9 @@ const AdminProjects = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
-  const [categoryFilter, setCategoryFilter] = useState("");
-  const [levelFilter, setLevelFilter] = useState("");
+  const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
+  const [levelFilters, setLevelFilters] = useState<string[]>([]);
+  const [authorFilters, setAuthorFilters] = useState<string[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [levels, setLevels] = useState<any[]>([]);
@@ -58,19 +60,40 @@ const AdminProjects = () => {
     fetchAll();
   }, []);
 
-  const toggleStatus = (status: string) => {
-    setStatusFilters(prev => prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]);
-  };
+  const uniqueAuthors = useMemo(() => {
+    const seen = new Set<string>();
+    return projects.reduce<{ value: string; label: string }[]>((acc, p) => {
+      const name = p.owner?.name || p.owner_name || "";
+      if (name && !seen.has(name)) {
+        seen.add(name);
+        acc.push({ value: name, label: name });
+      }
+      return acc;
+    }, []);
+  }, [projects]);
+
+  const categoryOptions = useMemo(() => categories.map(c => ({ value: c.name, label: c.name })), [categories]);
+  const levelOptions = useMemo(() => levels.map(l => ({ value: l.name, label: l.name })), [levels]);
+
+  const normalize = (str: string) =>
+    str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/g, "");
 
   const filtered = projects.filter((p) => {
-    const matchSearch = !search || p.title.toLowerCase().includes(search.toLowerCase()) || (p.owner?.name || p.owner_name || "").toLowerCase().includes(search.toLowerCase());
+    const matchSearch = !search || normalize(p.title).includes(normalize(search)) || normalize(p.owner?.name || p.owner_name || "").includes(normalize(search));
     const matchStatus = statusFilters.length === 0 || statusFilters.includes(p.status);
-    const matchCategory = !categoryFilter || p.category === categoryFilter;
-    const matchLevel = !levelFilter || p.academic_level === levelFilter;
-    return matchSearch && matchStatus && matchCategory && matchLevel;
+    const matchCategory = categoryFilters.length === 0 || categoryFilters.includes(p.category);
+    const matchLevel = levelFilters.length === 0 || levelFilters.includes(p.academic_level);
+    const matchAuthor = authorFilters.length === 0 || authorFilters.includes(p.owner?.name || p.owner_name || "");
+    return matchSearch && matchStatus && matchCategory && matchLevel && matchAuthor;
   });
 
-  const clearFilters = () => { setSearch(""); setStatusFilters([]); setCategoryFilter(""); setLevelFilter(""); };
+  const clearFilters = () => {
+    setSearch("");
+    setStatusFilters([]);
+    setCategoryFilters([]);
+    setLevelFilters([]);
+    setAuthorFilters([]);
+  };
 
   const toggleSelect = (id: number) => setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   const toggleAll = () => setSelectedIds(selectedIds.length === filtered.length ? [] : filtered.map(p => p.id));
@@ -79,20 +102,20 @@ const AdminProjects = () => {
     if (!confirm("Tem certeza que deseja excluir este projeto?")) return;
     try {
       await api.deleteProject(id);
-      toast({ title: "Sucesso", description: "Projeto excluído!" });
+      toast({ title: "Sucesso", description: "Projeto excluido!" });
       setProjects(projects.filter(p => p.id !== id));
     } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
   };
 
   return (
-    <AppLayout pageName="Gestão de Projetos" navItems={ADMIN_NAV} notificationCount={0}>
+    <AppLayout pageName="Gestao de Projetos" navItems={ADMIN_NAV} notificationCount={0}>
       {/* Banner */}
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6">
-        <h2 className="text-[22px] font-semibold mb-1.5">Gestão Administrativa de Projetos</h2>
-        <p className="text-sm opacity-90 mb-3">Revisão, aprovação e controle completo de todos os projetos CEBIO</p>
+        <h2 className="text-[22px] font-semibold mb-1.5">Gestao Administrativa de Projetos</h2>
+        <p className="text-sm opacity-90 mb-3">Revisao, aprovacao e controle completo de todos os projetos CEBIO</p>
         <div className="flex gap-4 flex-wrap">
-          <span className="flex items-center gap-1.5 text-[13px] opacity-90"><CheckCircle className="w-4 h-4" /> Aprovação/Rejeição</span>
-          <span className="flex items-center gap-1.5 text-[13px] opacity-90"><FileText className="w-4 h-4" /> Comentários de Revisão</span>
+          <span className="flex items-center gap-1.5 text-[13px] opacity-90"><CheckCircle className="w-4 h-4" /> Aprovacao/Rejeicao</span>
+          <span className="flex items-center gap-1.5 text-[13px] opacity-90"><FileText className="w-4 h-4" /> Comentarios de Revisao</span>
         </div>
       </div>
 
@@ -100,7 +123,7 @@ const AdminProjects = () => {
       <div className="grid grid-cols-4 gap-4 mb-6">
         {[
           { label: "Total de Projetos", value: stats.total, icon: FileText, iconBg: "bg-cebio-green-bg", iconColor: "text-primary" },
-          { label: "Aguardando Revisão", value: stats.pending, icon: FileText, iconBg: "bg-cebio-yellow-bg", iconColor: "text-cebio-yellow" },
+          { label: "Aguardando Revisao", value: stats.pending, icon: FileText, iconBg: "bg-cebio-yellow-bg", iconColor: "text-cebio-yellow" },
           { label: "Aprovados", value: stats.approved, icon: CheckCircle, iconBg: "bg-cebio-green-bg", iconColor: "text-primary" },
           { label: "Rejeitados", value: stats.rejected, icon: XCircle, iconBg: "bg-cebio-red-bg", iconColor: "text-cebio-red" },
         ].map((s, i) => (
@@ -118,51 +141,20 @@ const AdminProjects = () => {
 
       {/* Filters */}
       <div className="bg-card rounded-xl shadow-sm border border-border p-4 mb-6">
-        <div className="grid grid-cols-4 gap-4 items-end mb-4">
+        <div className="grid grid-cols-5 gap-4 items-end mb-4">
           <div>
             <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Buscar</label>
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Título ou autor..." className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-card" />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Titulo ou autor..." className="w-full pl-9 pr-3 py-2.5 border border-border rounded-lg text-sm bg-card" />
+            </div>
           </div>
-          <div>
-            <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Categoria</label>
-            <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-card">
-              <option value="">Todas</option>
-              {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Nível</label>
-            <select value={levelFilter} onChange={(e) => setLevelFilter(e.target.value)} className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-card">
-              <option value="">Todos</option>
-              {levels.map(l => <option key={l.id} value={l.name}>{l.name}</option>)}
-            </select>
-          </div>
-          <button onClick={clearFilters} className="px-4 py-2.5 border border-border rounded-lg text-sm font-medium bg-muted hover:bg-muted/80">Limpar Filtros</button>
+          <MultiSelectFilter label="Status" options={STATUS_OPTIONS} selected={statusFilters} onChange={setStatusFilters} placeholder="Todos" />
+          <MultiSelectFilter label="Categoria" options={categoryOptions} selected={categoryFilters} onChange={setCategoryFilters} placeholder="Todas" />
+          <MultiSelectFilter label="Nivel" options={levelOptions} selected={levelFilters} onChange={setLevelFilters} placeholder="Todos" />
+          <MultiSelectFilter label="Autor" options={uniqueAuthors} selected={authorFilters} onChange={setAuthorFilters} placeholder="Todos" />
         </div>
-        {/* Multi-select status */}
-        <div>
-          <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Status (selecione um ou mais)</label>
-          <div className="flex gap-2 flex-wrap">
-            {STATUS_OPTIONS.map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => toggleStatus(opt.value)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                  statusFilters.includes(opt.value)
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-card text-muted-foreground border-border hover:bg-muted"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-            {statusFilters.length > 0 && (
-              <button onClick={() => setStatusFilters([])} className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground">
-                ✕ Limpar status
-              </button>
-            )}
-          </div>
-        </div>
+        <button onClick={clearFilters} className="px-4 py-2 border border-border rounded-lg text-sm font-medium bg-muted hover:bg-muted/80">Limpar Filtros</button>
       </div>
 
       {/* Table */}
@@ -189,7 +181,7 @@ const AdminProjects = () => {
                   <th className="p-3 text-left font-semibold text-muted-foreground uppercase text-xs">Status</th>
                   <th className="p-3 text-left font-semibold text-muted-foreground uppercase text-xs">Autor Principal</th>
                   <th className="p-3 text-left font-semibold text-muted-foreground uppercase text-xs">Data</th>
-                  <th className="p-3 text-left font-semibold text-muted-foreground uppercase text-xs">Ações</th>
+                  <th className="p-3 text-left font-semibold text-muted-foreground uppercase text-xs">Acoes</th>
                 </tr>
               </thead>
               <tbody>
@@ -208,7 +200,7 @@ const AdminProjects = () => {
                         </span>
                         {p.authors && p.authors.length > 0 && p.authors.some((a: any) => a.approval_status === 'pendente') && (
                           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cebio-yellow-bg text-cebio-yellow inline-block w-fit">
-                            ⏳ Aguardando autores
+                            Aguardando autores
                           </span>
                         )}
                       </div>
@@ -217,7 +209,7 @@ const AdminProjects = () => {
                     <td className="p-3 text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
                     <td className="p-3">
                       <div className="flex gap-1.5">
-                        <button onClick={() => navigate(`/projeto?id=${p.id}`)} className="px-2.5 py-1 text-xs font-semibold rounded bg-cebio-blue text-primary-foreground flex items-center gap-1">
+                        <button onClick={() => navigate(`/admin/projeto?id=${p.id}`)} className="px-2.5 py-1 text-xs font-semibold rounded bg-cebio-blue text-primary-foreground flex items-center gap-1">
                           <Eye className="w-3 h-3" /> Ver
                         </button>
                         <button onClick={() => handleDelete(p.id)} className="px-2.5 py-1 text-xs font-semibold rounded bg-destructive text-destructive-foreground">

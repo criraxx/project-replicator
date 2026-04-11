@@ -7,17 +7,25 @@ import api from "@/services/api";
 import { ADMIN_NAV, PESQUISADOR_NAV, BOLSISTA_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
 import { mockProjects } from "@/data/mockData";
+import { useToast } from "@/hooks/use-toast";
 
-const ProjectDetailView = () => {
+interface ProjectDetailViewProps {
+  isAdmin?: boolean;
+}
+
+const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get("id");
+  const { toast } = useToast();
 
   const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [reviewComment, setReviewComment] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const isAdmin = user?.role === "admin";
+  const isAdmin = isAdminProp ?? user?.role === "admin";
   const isPesquisador = user?.role === "pesquisador";
   const navItems = isAdmin ? ADMIN_NAV : isPesquisador ? PESQUISADOR_NAV : BOLSISTA_NAV;
 
@@ -29,7 +37,6 @@ const ProjectDetailView = () => {
         const data = await api.getProject(Number(projectId));
         setProject(data);
       } catch {
-        // fallback to mock
         const mock = mockProjects.find(p => p.id === Number(projectId));
         if (mock) {
           setProject({
@@ -42,7 +49,7 @@ const ProjectDetailView = () => {
             links: [],
             comments: [],
             versions: [
-              { version_number: 1, change_type: "Criação", description: "Versão inicial do projeto", created_at: mock.created_at, author_name: mock.owner_name },
+              { version_number: 1, change_type: "Criacao", description: "Versao inicial do projeto", created_at: mock.created_at, author_name: mock.owner_name },
             ],
           });
         }
@@ -69,6 +76,40 @@ const ProjectDetailView = () => {
     return (bytes / 1048576).toFixed(1) + " MB";
   };
 
+  const handleApprove = async () => {
+    if (!project) return;
+    setActionLoading(true);
+    try {
+      await api.updateProjectStatus(project.id, "aprovado", reviewComment || undefined);
+      setProject({ ...project, status: "aprovado" });
+      toast({ title: "Sucesso", description: "Projeto aprovado com sucesso!" });
+      setReviewComment("");
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!project) return;
+    if (!reviewComment.trim()) {
+      toast({ title: "Atencao", description: "Informe o motivo da rejeicao.", variant: "destructive" });
+      return;
+    }
+    setActionLoading(true);
+    try {
+      await api.updateProjectStatus(project.id, "rejeitado", reviewComment);
+      setProject({ ...project, status: "rejeitado", rejection_reason: reviewComment });
+      toast({ title: "Sucesso", description: "Projeto rejeitado." });
+      setReviewComment("");
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <AppLayout pageName="Detalhes do Projeto" navItems={navItems}>
@@ -80,7 +121,7 @@ const ProjectDetailView = () => {
   if (!project) {
     return (
       <AppLayout pageName="Detalhes do Projeto" navItems={navItems}>
-        <div className="text-center py-12 text-muted-foreground">Projeto não encontrado</div>
+        <div className="text-center py-12 text-muted-foreground">Projeto nao encontrado</div>
       </AppLayout>
     );
   }
@@ -114,10 +155,10 @@ const ProjectDetailView = () => {
           <div className="flex-1">
             <h1 className="text-2xl font-bold mb-3">{project.title}</h1>
             <div className="flex gap-4 flex-wrap text-sm opacity-80">
-              <span>📁 {project.category || "—"}</span>
-              <span>🎓 {project.academic_level || "—"}</span>
-              <span>👤 {project.owner_name || project.owner?.name || "—"}</span>
-              <span>📅 {formatDate(project.created_at)}</span>
+              <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5" /> {project.category || "—"}</span>
+              <span>{project.academic_level || "—"}</span>
+              <span>{project.owner_name || project.owner?.name || "—"}</span>
+              <span>{formatDate(project.created_at)}</span>
             </div>
           </div>
           <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold ${statusColor}`}>
@@ -126,19 +167,52 @@ const ProjectDetailView = () => {
         </div>
       </div>
 
+      {/* Admin Actions */}
+      {isAdmin && (project.status === "pendente" || project.status === "em_revisao") && (
+        <div className="bg-card border border-border rounded-xl p-5 mb-5">
+          <h3 className="text-base font-semibold text-primary mb-4">Acoes do Administrador</h3>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">Comentario de revisao (obrigatorio para rejeicao)</label>
+            <textarea
+              value={reviewComment}
+              onChange={e => setReviewComment(e.target.value)}
+              placeholder="Escreva um comentario sobre sua decisao..."
+              rows={3}
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card resize-none"
+            />
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={handleApprove}
+              disabled={actionLoading}
+              className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:bg-secondary transition-colors disabled:opacity-50"
+            >
+              <CheckCircle className="w-4 h-4" /> Aprovar Projeto
+            </button>
+            <button
+              onClick={handleReject}
+              disabled={actionLoading}
+              className="flex items-center gap-2 px-5 py-2.5 bg-destructive text-destructive-foreground rounded-lg text-sm font-semibold hover:bg-destructive/90 transition-colors disabled:opacity-50"
+            >
+              <XCircle className="w-4 h-4" /> Rejeitar Projeto
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Info Grid */}
       <div className="bg-card border border-border rounded-xl p-5 mb-5">
-        <h3 className="text-base font-semibold text-primary mb-4">📋 Informações do Projeto</h3>
+        <h3 className="text-base font-semibold text-primary mb-4">Informacoes do Projeto</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: "ID", value: `#${project.id}` },
             { label: "Status", value: statusLabel },
             { label: "Categoria", value: project.category || "—" },
-            { label: "Nível Acadêmico", value: project.academic_level || "—" },
-            { label: "Data de Início", value: formatDate(project.start_date) },
-            { label: "Data de Término", value: formatDate(project.end_date) },
+            { label: "Nivel Academico", value: project.academic_level || "—" },
+            { label: "Data de Inicio", value: formatDate(project.start_date) },
+            { label: "Data de Termino", value: formatDate(project.end_date) },
             { label: "Criado em", value: formatDateTime(project.created_at) },
-            { label: "Última Atualização", value: formatDateTime(project.updated_at) },
+            { label: "Ultima Atualizacao", value: formatDateTime(project.updated_at) },
           ].map((item, i) => (
             <div key={i} className="bg-muted/50 rounded-lg p-3">
               <div className="text-xs text-muted-foreground mb-1">{item.label}</div>
@@ -151,7 +225,7 @@ const ProjectDetailView = () => {
       {/* Keywords */}
       {project.keywords && project.keywords.length > 0 && (
         <div className="bg-card border border-border rounded-xl p-5 mb-5">
-          <h3 className="text-base font-semibold text-primary mb-3">🏷️ Palavras-chave</h3>
+          <h3 className="text-base font-semibold text-primary mb-3">Palavras-chave</h3>
           <div className="flex gap-2 flex-wrap">
             {project.keywords.map((kw: string, i: number) => (
               <span key={i} className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">{kw}</span>
@@ -162,14 +236,14 @@ const ProjectDetailView = () => {
 
       {/* Summary */}
       <div className="bg-card border border-border rounded-xl p-5 mb-5">
-        <h3 className="text-base font-semibold text-primary mb-3">📝 Resumo</h3>
+        <h3 className="text-base font-semibold text-primary mb-3">Resumo</h3>
         <p className="text-sm text-muted-foreground leading-relaxed">{project.summary || "Sem resumo"}</p>
       </div>
 
       {/* Description */}
       {project.description && project.description !== project.summary && (
         <div className="bg-card border border-border rounded-xl p-5 mb-5">
-          <h3 className="text-base font-semibold text-primary mb-3">📄 Descrição Completa</h3>
+          <h3 className="text-base font-semibold text-primary mb-3">Descricao Completa</h3>
           <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{project.description}</p>
         </div>
       )}
@@ -177,14 +251,14 @@ const ProjectDetailView = () => {
       {/* Rejection Reason */}
       {project.status === "rejeitado" && (project.rejection_reason || project.review_comment) && (
         <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-5 mb-5">
-          <h3 className="text-base font-semibold text-destructive mb-3">❌ Motivo da Rejeição</h3>
+          <h3 className="text-base font-semibold text-destructive mb-3">Motivo da Rejeicao</h3>
           <p className="text-sm text-destructive/80 leading-relaxed">{project.rejection_reason || project.review_comment}</p>
         </div>
       )}
 
       {/* Authors */}
       <div className="bg-card border border-border rounded-xl p-5 mb-5">
-        <h3 className="text-base font-semibold text-primary mb-4">👥 Autores/Colaboradores</h3>
+        <h3 className="text-base font-semibold text-primary mb-4">Autores/Colaboradores</h3>
         {(project.authors || []).length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum autor cadastrado</p>
         ) : (
@@ -193,7 +267,7 @@ const ProjectDetailView = () => {
               <div key={i} className="bg-muted/50 border border-border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-sm font-semibold text-foreground">
-                    {author.is_main && "⭐ "}{author.name}
+                    {author.is_main && <span className="text-primary mr-1">[Principal]</span>}{author.name}
                   </div>
                   {author.approval_status && (
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
@@ -201,14 +275,14 @@ const ProjectDetailView = () => {
                       author.approval_status === "rejeitado" ? "bg-cebio-red-bg text-cebio-red" :
                       "bg-cebio-yellow-bg text-cebio-yellow"
                     }`}>
-                      {author.approval_status === "aprovado" ? "✓ Aprovado" : author.approval_status === "rejeitado" ? "✗ Rejeitado" : "⏳ Pendente"}
+                      {author.approval_status === "aprovado" ? "Aprovado" : author.approval_status === "rejeitado" ? "Rejeitado" : "Pendente"}
                     </span>
                   )}
                 </div>
                 <div className="text-[13px] text-muted-foreground space-y-0.5">
                   {author.cpf && <div>CPF: {author.cpf}</div>}
-                  {author.institution && <div>🏛️ {author.institution}</div>}
-                  <div>🎓 {author.academic_level || "—"} • {author.role_in_project || author.role || "—"}</div>
+                  {author.institution && <div>Instituicao: {author.institution}</div>}
+                  <div>{author.academic_level || "—"} - {author.role_in_project || author.role || "—"}</div>
                 </div>
               </div>
             ))}
@@ -218,7 +292,7 @@ const ProjectDetailView = () => {
 
       {/* Files */}
       <div className="bg-card border border-border rounded-xl p-5 mb-5">
-        <h3 className="text-base font-semibold text-primary mb-4">📎 Arquivos Anexados</h3>
+        <h3 className="text-base font-semibold text-primary mb-4">Arquivos Anexados</h3>
         {photos.length === 0 && documents.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum arquivo anexado</p>
         ) : (
@@ -262,14 +336,14 @@ const ProjectDetailView = () => {
       {/* Links */}
       {(project.links || []).length > 0 && (
         <div className="bg-card border border-border rounded-xl p-5 mb-5">
-          <h3 className="text-base font-semibold text-primary mb-4">🔗 Links Externos</h3>
+          <h3 className="text-base font-semibold text-primary mb-4">Links Externos</h3>
           <div className="space-y-2">
             {project.links.map((link: any, i: number) => (
               <div key={i} className="flex items-center gap-3 bg-muted/50 border border-border rounded-lg p-3">
                 <div className="w-10 h-10 bg-cebio-blue-bg rounded flex items-center justify-center"><ExternalLink className="w-5 h-5 text-cebio-blue" /></div>
                 <div className="flex-1">
                   <div className="text-sm text-foreground">{link.title || link.url}</div>
-                  <div className="text-xs text-muted-foreground">{link.link_type || link.type}{link.description ? ` • ${link.description}` : ""}</div>
+                  <div className="text-xs text-muted-foreground">{link.link_type || link.type}{link.description ? ` - ${link.description}` : ""}</div>
                 </div>
                 <a href={link.url} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-secondary transition-colors">Abrir</a>
               </div>
@@ -280,15 +354,15 @@ const ProjectDetailView = () => {
 
       {/* Version History */}
       <div className="bg-card border border-border rounded-xl p-5 mb-5">
-        <h3 className="text-base font-semibold text-primary mb-4">📜 Histórico de Versões</h3>
+        <h3 className="text-base font-semibold text-primary mb-4">Historico de Versoes</h3>
         {versions.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma versão registrada</p>
+          <p className="text-sm text-muted-foreground">Nenhuma versao registrada</p>
         ) : (
           <div className="space-y-3">
             {versions.map((v: any, i: number) => (
               <div key={i} className="bg-muted/50 border-l-[3px] border-l-primary rounded-r-lg p-3">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="font-semibold text-primary text-sm">Versão #{v.version_number} — {v.change_type || v.field_changed || "Atualização"}</span>
+                  <span className="font-semibold text-primary text-sm">Versao #{v.version_number} - {v.change_type || v.field_changed || "Atualizacao"}</span>
                   <span className="text-xs text-muted-foreground">{formatDateTime(v.created_at)}</span>
                 </div>
                 <div className="text-sm text-muted-foreground">{v.description || v.new_value || "—"}</div>
@@ -301,16 +375,16 @@ const ProjectDetailView = () => {
 
       {/* Comments */}
       <div className="bg-card border border-border rounded-xl p-5">
-        <h3 className="text-base font-semibold text-primary mb-4">💬 Comentários</h3>
+        <h3 className="text-base font-semibold text-primary mb-4">Comentarios</h3>
         {comments.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhum comentário</p>
+          <p className="text-sm text-muted-foreground">Nenhum comentario</p>
         ) : (
           <div className="space-y-3">
             {comments.map((c: any, i: number) => (
               <div key={i} className={`bg-muted/50 border-l-[3px] rounded-r-lg p-3 ${c.is_admin_comment ? "border-l-destructive" : "border-l-primary"}`}>
                 <div className="flex justify-between items-center mb-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-foreground text-sm">{c.author_name || c.user_name || "Usuário"}</span>
+                    <span className="font-semibold text-foreground text-sm">{c.author_name || c.user_name || "Usuario"}</span>
                     {c.is_admin_comment && <span className="bg-destructive/10 text-destructive px-2 py-0.5 rounded text-[10px] font-semibold">Admin</span>}
                   </div>
                   <span className="text-xs text-muted-foreground">{formatDateTime(c.created_at)}</span>
