@@ -21,6 +21,7 @@ import notificationRoutes from './routes/notifications';
 import adminRoutes from './routes/admin';
 import authorApprovalRoutes from './routes/authorApproval';
 import exportRoutes from './routes/exports';
+import fullExportRoutes from './routes/fullExport';
 
 dotenv.config();
 
@@ -90,6 +91,7 @@ app.use('/api', notificationRoutes);
 app.use('/api', adminRoutes);
 app.use('/api', authorApprovalRoutes);
 app.use('/api', exportRoutes);
+app.use('/api', fullExportRoutes);
 
 // ============================================
 // HEALTH CHECK
