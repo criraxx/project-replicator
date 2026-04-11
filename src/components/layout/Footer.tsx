@@ -1,5 +1,7 @@
+import logoCebio from "@/assets/logo-cebio-color.png";
 import logoIf from "@/assets/logo-if.png";
-import logoCebio from "@/assets/logo-cebio.png";
+import logoFapeg from "@/assets/logo-fapeg.png";
+import logoUtt from "@/assets/logo-utt.png";
 
 const Footer = () => {
   const year = new Date().getFullYear();
@@ -9,10 +11,11 @@ const Footer = () => {
       <div className="max-w-[1360px] mx-auto px-6 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Logos */}
-          <div className="flex items-center gap-4">
-            <img src={logoIf} alt="IF Goiano" className="h-10 w-auto brightness-0 invert opacity-90" />
-            <span className="text-primary-foreground/40 font-light text-2xl">×</span>
-            <img src={logoCebio} alt="CEBIO" className="h-10 w-auto brightness-0 invert opacity-90" />
+          <div className="flex items-center gap-5 flex-wrap justify-center">
+            <img src={logoCebio} alt="CEBIO" className="h-12 w-auto" />
+            <img src={logoIf} alt="IF Goiano" className="h-12 w-auto" />
+            <img src={logoFapeg} alt="FAPEG" className="h-12 w-auto" />
+            <img src={logoUtt} alt="UTT Campus Iporá" className="h-12 w-auto" />
           </div>
 
           {/* Info */}
