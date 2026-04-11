@@ -537,28 +537,51 @@ const AdminReports = () => {
 
       {/* Charts Grid */}
       <div ref={chartsRef} className="grid grid-cols-2 gap-6 mb-6">
-        <div className="bg-card rounded-xl shadow-sm border border-border p-5">
-          <h3 className="text-sm font-semibold mb-4">Projetos por Status</h3>
+        <div data-chart-id="status" className="bg-card rounded-xl shadow-sm border border-border p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold">Projetos por Status</h3>
+            <button onClick={() => exportSingleChart("status")} className="px-2.5 py-1 text-xs font-medium rounded bg-muted hover:bg-muted/80 text-muted-foreground flex items-center gap-1">
+              <Download className="w-3 h-3" /> Exportar
+            </button>
+          </div>
           <RenderChart type={chartType} data={byStatus} />
         </div>
-        <div className="bg-card rounded-xl shadow-sm border border-border p-5">
-          <h3 className="text-sm font-semibold mb-4">Projetos por Categoria</h3>
+        <div data-chart-id="category" className="bg-card rounded-xl shadow-sm border border-border p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold">Projetos por Categoria</h3>
+            <button onClick={() => exportSingleChart("category")} className="px-2.5 py-1 text-xs font-medium rounded bg-muted hover:bg-muted/80 text-muted-foreground flex items-center gap-1">
+              <Download className="w-3 h-3" /> Exportar
+            </button>
+          </div>
           <RenderChart type={chartType} data={byCategory} />
         </div>
-        <div className="bg-card rounded-xl shadow-sm border border-border p-5">
-          <h3 className="text-sm font-semibold mb-4">Top 10 Usuários</h3>
+        <div data-chart-id="users" className="bg-card rounded-xl shadow-sm border border-border p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold">Top 10 Usuarios</h3>
+            <button onClick={() => exportSingleChart("users")} className="px-2.5 py-1 text-xs font-medium rounded bg-muted hover:bg-muted/80 text-muted-foreground flex items-center gap-1">
+              <Download className="w-3 h-3" /> Exportar
+            </button>
+          </div>
           <RenderChart type={chartType === "columns" ? "bars" : chartType} data={byUser} />
         </div>
-        <div className="bg-card rounded-xl shadow-sm border border-border p-5">
-          <h3 className="text-sm font-semibold mb-4">Evolução Temporal</h3>
+        <div data-chart-id="timeline" className="bg-card rounded-xl shadow-sm border border-border p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold">Evolucao Temporal</h3>
+            <button onClick={() => exportSingleChart("timeline")} className="px-2.5 py-1 text-xs font-medium rounded bg-muted hover:bg-muted/80 text-muted-foreground flex items-center gap-1">
+              <Download className="w-3 h-3" /> Exportar
+            </button>
+          </div>
           <RenderChart type={chartType === "pie" || chartType === "pictogram" ? "lines" : chartType} data={byMonth} />
         </div>
-      </div>
-
-      {/* Pictogram - User Types */}
-      <div className="bg-card rounded-xl shadow-sm border border-border p-5 mb-6">
-        <h3 className="text-sm font-semibold mb-4">Proporção Pesquisadores vs Bolsistas</h3>
-        <Pictogram data={byUserType.map((d, i) => ({ ...d, color: COLORS[i % COLORS.length] }))} />
+        <div data-chart-id="usertype" className="bg-card rounded-xl shadow-sm border border-border p-5 col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold">Proporcao Pesquisadores vs Bolsistas</h3>
+            <button onClick={() => exportSingleChart("usertype")} className="px-2.5 py-1 text-xs font-medium rounded bg-muted hover:bg-muted/80 text-muted-foreground flex items-center gap-1">
+              <Download className="w-3 h-3" /> Exportar
+            </button>
+          </div>
+          <Pictogram data={byUserType.map((d, i) => ({ ...d, color: COLORS[i % COLORS.length] }))} />
+        </div>
       </div>
 
       {/* Summary Table */}
