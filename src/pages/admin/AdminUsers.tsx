@@ -263,10 +263,6 @@ const AdminUsers = () => {
                     <input type="text" required placeholder="Ex: 2024001" value={newUser.registration_number} onChange={(e) => setNewUser({ ...newUser, registration_number: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium mb-1">Instituicao *</label>
-                    <input type="text" required placeholder="Ex: IF Goiano" value={newUser.institution} onChange={(e) => setNewUser({ ...newUser, institution: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
-                  </div>
-                  <div className="col-span-2">
                     <label className="block text-sm font-medium mb-1">Senha inicial *</label>
                     <input type="text" required value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
                   </div>
