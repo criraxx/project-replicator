@@ -133,7 +133,7 @@ const AdminProjects = () => {
 
       {/* Filters */}
       <div className="bg-card rounded-xl shadow-sm border border-border p-4 mb-6">
-        <div className="grid grid-cols-5 gap-4 items-end mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 items-end mb-4">
           <div>
             <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Buscar</label>
             <div className="relative">

@@ -127,7 +127,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
         <div className="bg-card rounded-xl shadow-sm border border-border p-5">
           <h3 className="text-base font-semibold mb-4">Projetos por Status</h3>
           {projectsByStatus.length > 0 ? (
@@ -161,7 +161,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Recent Items */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
           <div className="flex justify-between items-center p-5 pb-0">
             <h3 className="text-base font-semibold">Projetos Recentes</h3>
