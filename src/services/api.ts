@@ -113,11 +113,18 @@ class ApiClient {
     return this.request<any>('GET', `/users/${id}`);
   }
 
-  async createUser(data: { email: string; name: string; password: string; role: string; institution?: string }) {
+  async createUser(data: {
+    email: string; name: string; password: string; role: string;
+    cpf: string; birth_date: string;
+    institution?: string; phone?: string; department?: string; registration_number?: string;
+  }) {
     return this.request<any>('POST', '/users', data);
   }
 
-  async updateUser(id: number, data: Partial<{ name: string; institution: string; role: string; is_active: boolean }>) {
+  async updateUser(id: number, data: Partial<{
+    name: string; email: string; institution: string; role: string; is_active: boolean;
+    cpf: string; birth_date: string; phone: string; department: string; registration_number: string;
+  }>) {
     return this.request<any>('PUT', `/users/${id}`, data);
   }
 
@@ -131,10 +138,22 @@ class ApiClient {
     });
   }
 
-  async batchCreateUsers(users: { email: string; name: string; role?: string; institution?: string }[], defaultPassword?: string) {
+  async getUserByCpf(cpf: string) {
+    return this.request<{ id: number; name: string; email: string; cpf: string; institution?: string; role: string }>('GET', `/users/by-cpf/${cpf}`);
+  }
+
+  async batchResetPasswords(userIds: number[], newPassword: string) {
+    return this.request<{ success: number; errors: number; temporary_password: string }>('POST', '/users/batch-reset-password', {
+      user_ids: userIds, new_password: newPassword,
+    });
+  }
+
+  async batchCreateUsers(users: {
+    email: string; name: string; cpf: string; birth_date: string; role: string;
+    institution?: string; phone?: string; department?: string; registration_number?: string;
+  }[], defaultPassword?: string) {
     return this.request<{ success: any[]; errors: any[] }>('POST', '/users/batch', {
-      users,
-      default_password: defaultPassword,
+      users, default_password: defaultPassword,
     });
   }
 
