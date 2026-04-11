@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { type User, mockUsers } from "@/data/mockData";
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
+import InstitutionAutocomplete from "@/components/ui/institution-autocomplete";
 
 const AdminUsers = () => {
   const navigate = useNavigate();
