@@ -176,6 +176,18 @@ class ApiClient {
     return this.request<{ projects: any[]; total: number }>('GET', '/projects/pending');
   }
 
+  async listPendingEdits() {
+    return this.request<any[]>('GET', '/projects/pending-edits');
+  }
+
+  async approvePendingEdit(id: number, comment?: string) {
+    return this.request<any>('POST', `/projects/${id}/approve-edit`, { comment });
+  }
+
+  async rejectPendingEdit(id: number, comment?: string) {
+    return this.request<any>('POST', `/projects/${id}/reject-edit`, { comment });
+  }
+
   async batchApprove(projectIds: number[]) {
     return this.request<void>('POST', '/projects/batch/approve', { project_ids: projectIds });
   }
