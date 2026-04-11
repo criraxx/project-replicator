@@ -12,19 +12,36 @@ export class UserService {
     password: string,
     role: UserRole = 'bolsista',
     institution?: string,
-    createdBy?: number
+    createdBy?: number,
+    cpf?: string,
+    birth_date?: string,
+    phone?: string,
+    department?: string,
+    registration_number?: string,
   ): Promise<User> {
     const existing = await this.userRepository.findOne({ where: { email } });
     if (existing) {
       throw new AppError(400, 'Email já cadastrado');
     }
 
+    if (cpf) {
+      const existingCpf = await this.userRepository.findOne({ where: { cpf } });
+      if (existingCpf) {
+        throw new AppError(400, 'CPF já cadastrado');
+      }
+    }
+
     const user = this.userRepository.create({
       email: email.toLowerCase().trim(),
       name,
+      cpf,
       hashed_password: hashPassword(password),
       role,
       institution,
+      birth_date: birth_date ? new Date(birth_date) : undefined,
+      phone,
+      department,
+      registration_number,
       created_by: createdBy,
       is_temp_password: false,
       must_change_password: false,
