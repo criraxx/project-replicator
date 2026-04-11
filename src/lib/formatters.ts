@@ -38,12 +38,25 @@ export const validatePassword = (password: string): string | null => {
 // Formatação de datas com timezone de Brasília (America/Sao_Paulo)
 const BRASILIA_TZ = 'America/Sao_Paulo';
 
+// Garante que a data seja interpretada como UTC antes de converter
+const toUTCDate = (dateStr: string): Date => {
+  if (!dateStr) return new Date();
+  // Se já tem Z ou offset (+/-), usar direto
+  if (/Z$/.test(dateStr) || /[+-]\d{2}:\d{2}$/.test(dateStr)) {
+    return new Date(dateStr);
+  }
+  // Caso contrário, tratar como UTC adicionando Z
+  // Substituir espaço por T para formato ISO válido
+  const normalized = dateStr.replace(' ', 'T');
+  return new Date(normalized + 'Z');
+};
+
 export const formatDateBrasilia = (dateStr: string): string => {
   if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("pt-BR", { timeZone: BRASILIA_TZ });
+  return toUTCDate(dateStr).toLocaleDateString("pt-BR", { timeZone: BRASILIA_TZ });
 };
 
 export const formatDateTimeBrasilia = (dateStr: string): string => {
   if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleString("pt-BR", { timeZone: BRASILIA_TZ });
+  return toUTCDate(dateStr).toLocaleString("pt-BR", { timeZone: BRASILIA_TZ });
 };
