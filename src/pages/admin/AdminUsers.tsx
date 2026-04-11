@@ -85,7 +85,7 @@ const AdminUsers = () => {
       });
       toast({ title: "Sucesso", description: "Usuario criado com sucesso!" });
       setShowNewUser(false);
-      setNewUser({ name: "", email: "", role: "bolsista", institution: "", password: "cebio2024", cpf: "", birth_date: "", phone: "", registration_number: "" });
+      setNewUser({ name: "", email: "", role: "bolsista", institution: "", password: "Cebio@2024", cpf: "", birth_date: "", phone: "", registration_number: "" });
       fetchUsers();
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
