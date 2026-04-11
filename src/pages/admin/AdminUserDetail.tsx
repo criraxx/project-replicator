@@ -169,7 +169,7 @@ const AdminUserDetail = () => {
             { icon: Calendar, label: "Data de Nascimento", value: user.birth_date ? new Date(user.birth_date).toLocaleDateString("pt-BR") : "Não informado" },
             { icon: Phone, label: "Telefone", value: user.phone ? user.phone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3") : "Não informado" },
             { icon: Building2, label: "Instituição", value: user.institution || "Não informada" },
-            { icon: Building2, label: "Departamento/Campus", value: user.department || "Não informado" },
+            { icon: Building2, label: "Campus/Instituição", value: user.department || "Não informado" },
             { icon: Hash, label: "Matrícula/Registro", value: user.registration_number || "Não informado" },
             { icon: Shield, label: "Função/Perfil", value: badge?.label || user.role },
             { icon: Calendar, label: "Cadastrado em", value: user.created_at ? new Date(user.created_at).toLocaleDateString("pt-BR") : "---" },

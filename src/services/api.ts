@@ -157,6 +157,10 @@ class ApiClient {
     });
   }
 
+  async listInstitutions() {
+    return this.request<string[]>('GET', '/users/institutions');
+  }
+
   // ============================================
   // PROJECTS
   // ============================================

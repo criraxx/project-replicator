@@ -104,7 +104,7 @@ const ProfilePage = ({ backPath }: ProfilePageProps) => {
               { label: "CPF", value: profile.cpf ? profile.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : "—" },
               { label: "Data de Nascimento", value: profile.birth_date ? new Date(profile.birth_date).toLocaleDateString("pt-BR") : "—" },
               { label: "Instituicao", value: profile.institution || "—" },
-              { label: "Departamento", value: profile.department || "—" },
+              { label: "Campus/Instituição", value: profile.department || "—" },
               { label: "Matricula", value: profile.registration_number || "—" },
             ].map((item, i) => (
               <div key={i}>
