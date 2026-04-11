@@ -318,18 +318,20 @@ const AdminReports = () => {
 
   return (
     <AppLayout pageName="Relatórios e Analytics" navItems={ADMIN_NAV} notificationCount={0}>
-      <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6 flex justify-between items-center">
-        <div>
-          <h2 className="text-lg sm:text-[22px] font-semibold mb-1.5">Relatórios e Analytics</h2>
-          <p className="text-sm opacity-90">Visão detalhada e personalizável do desempenho da plataforma</p>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={exportExcel} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors">
-            <FileSpreadsheet className="w-4 h-4" /> Exportar Excel
-          </button>
-          <button onClick={exportPDF} disabled={exporting} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 disabled:opacity-50 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors">
-            <Download className="w-4 h-4" /> {exporting ? "Gerando..." : "Exportar PDF"}
-          </button>
+      <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-5 sm:p-7 mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+          <div>
+            <h2 className="text-lg sm:text-[22px] font-semibold mb-1.5">Relatórios e Analytics</h2>
+            <p className="text-sm opacity-90">Visão detalhada e personalizável do desempenho da plataforma</p>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={exportExcel} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors">
+              <FileSpreadsheet className="w-4 h-4" /> Exportar Excel
+            </button>
+            <button onClick={exportPDF} disabled={exporting} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 disabled:opacity-50 text-primary-foreground px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors">
+              <Download className="w-4 h-4" /> {exporting ? "Gerando..." : "Exportar PDF"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -426,9 +428,9 @@ const AdminReports = () => {
 
       {/* Chart Type Selector */}
       <div className="bg-card rounded-xl shadow-sm border border-border p-5 mb-6">
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
           <h3 className="text-sm font-semibold">Tipo de Gráfico</h3>
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-wrap">
             {CHART_TYPES.map(ct => (
               <button
                 key={ct.value}
@@ -446,7 +448,7 @@ const AdminReports = () => {
       </div>
 
       {/* Charts Grid */}
-      <div ref={chartsRef} className="grid grid-cols-2 gap-6 mb-6">
+      <div ref={chartsRef} className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
         {[
           { title: "Projetos por Status", data: byStatus, type: chartType },
           { title: "Projetos por Categoria", data: byCategory, type: chartType },

@@ -63,19 +63,21 @@ const AdminAudit = () => {
   return (
     <AppLayout pageName="Auditoria" navItems={ADMIN_NAV} notificationCount={0}>
       {/* Banner */}
-      <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6 flex justify-between items-start">
-        <div>
-          <h2 className="text-lg sm:text-[22px] font-semibold mb-1.5">Sistema de Auditoria - CEBIO</h2>
-          <p className="text-sm opacity-90 mb-3">Auditoria completa do Centro de Excelência em Bioinsumos</p>
-          <div className="flex gap-4 flex-wrap">
-            <span className="flex items-center gap-1.5 text-[13px] opacity-90"><Clock className="w-4 h-4" /> Logs Estruturados</span>
-            <span className="flex items-center gap-1.5 text-[13px] opacity-90"><Shield className="w-4 h-4" /> Monitoramento em Tempo Real</span>
-            <span className="flex items-center gap-1.5 text-[13px] opacity-90"><Download className="w-4 h-4" /> Exportação Completa</span>
+      <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-5 sm:p-7 mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+          <div>
+            <h2 className="text-lg sm:text-[22px] font-semibold mb-1.5">Sistema de Auditoria - CEBIO</h2>
+            <p className="text-sm opacity-90 mb-3">Auditoria completa do Centro de Excelência em Bioinsumos</p>
+            <div className="flex gap-3 sm:gap-4 flex-wrap">
+              <span className="flex items-center gap-1.5 text-[12px] sm:text-[13px] opacity-90"><Clock className="w-4 h-4" /> Logs Estruturados</span>
+              <span className="flex items-center gap-1.5 text-[12px] sm:text-[13px] opacity-90"><Shield className="w-4 h-4" /> Monitoramento</span>
+              <span className="flex items-center gap-1.5 text-[12px] sm:text-[13px] opacity-90"><Download className="w-4 h-4" /> Exportação</span>
+            </div>
           </div>
+          <button className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 self-start">
+            <Download className="w-4 h-4" /> Exportar Logs
+          </button>
         </div>
-        <button className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors">
-          <Download className="w-4 h-4" /> Exportar Logs
-        </button>
       </div>
 
       {/* Stat Cards */}
@@ -100,8 +102,8 @@ const AdminAudit = () => {
 
       {/* Filters */}
       <div className="bg-card rounded-xl shadow-sm border border-border p-4 mb-6">
-        <div className="grid grid-cols-5 gap-4 items-end">
-          <div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 items-end">
+          <div className="col-span-2 sm:col-span-1">
             <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Buscar</label>
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Ação, detalhes ou usuário..." className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-card" />
           </div>
@@ -132,8 +134,26 @@ const AdminAudit = () => {
             <p className="text-sm font-medium">Nenhum log de auditoria encontrado.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <div className="overflow-x-auto"><table className="w-full text-sm">
+          <>
+            {/* Mobile: Card layout */}
+            <div className="md:hidden divide-y divide-border">
+              {filtered.map((log: any) => (
+                <div key={log.id} className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium text-foreground">{log.action?.replace(/_/g, " ")}</p>
+                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0 ${severityColors[log.severity as keyof typeof severityColors] || ""}`}>{log.severity}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{log.details}</p>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{log.user?.name || `User #${log.user_id}`}</span>
+                    <span>{new Date(log.created_at).toLocaleString("pt-BR")}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop: Table layout */}
+            <div className="hidden md:block overflow-x-auto"><table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
                   <th className="p-3 text-left font-semibold text-muted-foreground uppercase text-xs">Timestamp</th>
@@ -159,7 +179,7 @@ const AdminAudit = () => {
                 ))}
               </tbody>
             </table></div>
-          </div>
+          </>
         )}
       </div>
 
