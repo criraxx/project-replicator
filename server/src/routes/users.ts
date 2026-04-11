@@ -124,8 +124,8 @@ router.post('/users/batch', authMiddleware, requireRole('admin'), async (req: Re
 
     for (const userData of usersData) {
       try {
-        if (!userData.email || !userData.name) {
-          results.errors.push({ email: userData.email, error: 'Email e nome são obrigatórios' });
+        if (!userData.email || !userData.name || !userData.cpf || !userData.birth_date) {
+          results.errors.push({ email: userData.email, error: 'Nome, email, CPF e data de nascimento sao obrigatorios' });
           continue;
         }
 
@@ -135,7 +135,12 @@ router.post('/users/batch', authMiddleware, requireRole('admin'), async (req: Re
           defaultPassword,
           userData.role || 'bolsista',
           userData.institution,
-          req.user!.id
+          req.user!.id,
+          userData.cpf?.replace(/\D/g, ''),
+          userData.birth_date,
+          userData.phone,
+          userData.department,
+          userData.registration_number,
         );
 
         results.success.push({
