@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { BarChart3, FileText, Users, TrendingUp, Download, Filter, RefreshCw, User } from "lucide-react";
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
 import {
