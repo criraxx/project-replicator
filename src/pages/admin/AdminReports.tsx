@@ -381,35 +381,27 @@ const AdminReports = () => {
           </div>
         </div>
         <div className="grid grid-cols-3 gap-4 mb-4">
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Categoria</label>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                {categories.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Tipo de Usuário</label>
-            <Select value={userTypeFilter} onValueChange={setUserTypeFilter}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {USER_TYPE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Proprietário</label>
-            <Select value={ownerFilter} onValueChange={setOwnerFilter}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {uniqueOwners.map(o => <SelectItem key={o.id} value={String(o.id)}>{o.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+          <MultiSelectFilter
+            label="Categoria"
+            options={categories.map(c => ({ value: c.name, label: c.name }))}
+            selected={categoryFilters}
+            onChange={setCategoryFilters}
+            placeholder="Todas"
+          />
+          <MultiSelectFilter
+            label="Tipo de Usuario"
+            options={USER_TYPE_OPTIONS.filter(o => o.value !== "all")}
+            selected={userTypeFilters}
+            onChange={setUserTypeFilters}
+            placeholder="Todos"
+          />
+          <MultiSelectFilter
+            label="Proprietario"
+            options={uniqueOwners.map(o => ({ value: String(o.id), label: o.name }))}
+            selected={ownerFilters}
+            onChange={setOwnerFilters}
+            placeholder="Todos"
+          />
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Data Início</label>
             <Popover>
