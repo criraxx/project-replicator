@@ -213,6 +213,20 @@ const SubHeader = ({ pageName, navItems }: SubHeaderProps) => {
                   ))
                 )}
               </div>
+
+              {/* Ver tudo */}
+              <div className="border-t border-border px-4 py-2.5">
+                <button
+                  onClick={() => {
+                    setShowNotifications(false);
+                    const base = user?.role === "admin" ? "/admin" : user?.role === "pesquisador" ? "/pesquisador" : "/bolsista";
+                    navigate(`${base}/notificacoes`);
+                  }}
+                  className="w-full text-center text-xs font-semibold text-primary hover:underline"
+                >
+                  Ver todas as notificações
+                </button>
+              </div>
             </div>
           )}
         </div>
