@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { BarChart3, FileText, Users, TrendingUp, Download, Filter, RefreshCw, User } from "lucide-react";
+import MultiSelectFilter from "@/components/ui/multi-select-filter";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
   PieChart, Pie, Cell,
@@ -129,9 +130,9 @@ const RenderChart = ({ type, data, dataKey = "value", nameKey = "name" }: { type
 
 const AdminReports = () => {
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [userTypeFilter, setUserTypeFilter] = useState("all");
-  const [ownerFilter, setOwnerFilter] = useState("all");
+  const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
+  const [userTypeFilters, setUserTypeFilters] = useState<string[]>([]);
+  const [ownerFilters, setOwnerFilters] = useState<string[]>([]);
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [chartType, setChartType] = useState<ChartType>("columns");
