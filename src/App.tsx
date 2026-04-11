@@ -69,6 +69,7 @@ const App = () => (
             
             {/* Shared */}
             <Route path="/projeto" element={<ProjectDetailView />} />
+            <Route path="/perfil" element={<ProfilePage />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
