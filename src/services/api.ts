@@ -82,6 +82,14 @@ class ApiClient {
     return this.request<any>('GET', '/auth/me');
   }
 
+  async getProfile() {
+    return this.request<any>('GET', '/auth/profile');
+  }
+
+  async updateProfile(data: { email?: string; phone?: string }) {
+    return this.request<any>('PUT', '/auth/profile', data);
+  }
+
   async changePassword(currentPassword: string, newPassword: string) {
     return this.request<any>('PUT', '/auth/change-password', {
       current_password: currentPassword,
