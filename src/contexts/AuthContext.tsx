@@ -28,6 +28,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const login = useCallback(async (email: string, password: string) => {
+    // Always clear previous session data before logging in
+    api.clearToken();
+    localStorage.removeItem("cebio_user");
+    localStorage.removeItem("cebio_token");
+    setUser(null);
+
     try {
       const data = await api.login(email, password);
       const userData: User = {
