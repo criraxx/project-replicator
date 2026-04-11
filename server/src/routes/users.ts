@@ -21,8 +21,13 @@ router.get('/users', authMiddleware, requireRole('admin'), async (req: Request, 
       id: u.id,
       name: u.name,
       email: u.email,
+      cpf: u.cpf,
       role: u.role,
       institution: u.institution,
+      birth_date: u.birth_date,
+      phone: u.phone,
+      department: u.department,
+      registration_number: u.registration_number,
       is_active: u.is_active,
       created_at: u.created_at,
       last_login: u.last_login,
@@ -43,8 +48,13 @@ router.get('/users/:id', authMiddleware, requireRole('admin'), async (req: Reque
       id: user.id,
       name: user.name,
       email: user.email,
+      cpf: user.cpf,
       role: user.role,
       institution: user.institution,
+      birth_date: user.birth_date,
+      phone: user.phone,
+      department: user.department,
+      registration_number: user.registration_number,
       is_active: user.is_active,
       created_at: user.created_at,
       last_login: user.last_login,
@@ -54,16 +64,29 @@ router.get('/users/:id', authMiddleware, requireRole('admin'), async (req: Reque
   }
 });
 
-// POST /api/users
+// GET /api/users/by-cpf/:cpf
+router.get('/users/by-cpf/:cpf', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const cpf = req.params.cpf.replace(/\D/g, '');
+    const user = await userService.getUserByCpf(cpf);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario nao encontrado' });
+    }
+    res.json({ id: user.id, name: user.name, institution: user.institution, cpf: user.cpf });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Erro interno' });
+  }
+});
+
 router.post('/users', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
   try {
-    const { email, name, password, role, institution } = req.body;
+    const { email, name, password, role, institution, cpf, birth_date, phone, department, registration_number } = req.body;
 
-    if (!email || !name || !password) {
-      return res.status(400).json({ error: 'Email, nome e senha são obrigatórios' });
+    if (!email || !name || !password || !cpf || !birth_date) {
+      return res.status(400).json({ error: 'Email, nome, senha, CPF e data de nascimento sao obrigatorios' });
     }
 
-    const user = await userService.createUser(email, name, password, role, institution, req.user!.id);
+    const user = await userService.createUser(email, name, password, role, institution, req.user!.id, cpf, birth_date, phone, department, registration_number);
 
     await auditService.logAction(
       'CREATE_USER',
@@ -101,8 +124,8 @@ router.post('/users/batch', authMiddleware, requireRole('admin'), async (req: Re
 
     for (const userData of usersData) {
       try {
-        if (!userData.email || !userData.name) {
-          results.errors.push({ email: userData.email, error: 'Email e nome são obrigatórios' });
+        if (!userData.email || !userData.name || !userData.cpf || !userData.birth_date) {
+          results.errors.push({ email: userData.email, error: 'Nome, email, CPF e data de nascimento sao obrigatorios' });
           continue;
         }
 
@@ -112,7 +135,12 @@ router.post('/users/batch', authMiddleware, requireRole('admin'), async (req: Re
           defaultPassword,
           userData.role || 'bolsista',
           userData.institution,
-          req.user!.id
+          req.user!.id,
+          userData.cpf?.replace(/\D/g, ''),
+          userData.birth_date,
+          userData.phone,
+          userData.department,
+          userData.registration_number,
         );
 
         results.success.push({
