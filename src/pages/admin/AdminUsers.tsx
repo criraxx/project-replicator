@@ -29,7 +29,7 @@ const AdminUsers = () => {
   // Form state for new user
   const [newUser, setNewUser] = useState({
     name: "", email: "", role: "bolsista", institution: "", password: "cebio2024",
-    cpf: "", birth_date: "", phone: "", department: "", registration_number: "",
+    cpf: "", birth_date: "", phone: "", registration_number: "",
   });
 
   // Batch creation state
@@ -100,11 +100,11 @@ const AdminUsers = () => {
         email: newUser.email, name: newUser.name, password: newUser.password, role: newUser.role,
         cpf: newUser.cpf.replace(/\D/g, ""), birth_date: isoDate,
         institution: newUser.institution, phone: newUser.phone.replace(/\D/g, ""),
-        department: newUser.department, registration_number: newUser.registration_number,
+        registration_number: newUser.registration_number,
       });
       toast({ title: "Sucesso", description: "Usuario criado com sucesso!" });
       setShowNewUser(false);
-      setNewUser({ name: "", email: "", role: "bolsista", institution: "", password: "cebio2024", cpf: "", birth_date: "", phone: "", department: "", registration_number: "" });
+      setNewUser({ name: "", email: "", role: "bolsista", institution: "", password: "cebio2024", cpf: "", birth_date: "", phone: "", registration_number: "" });
       fetchUsers();
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
@@ -122,8 +122,8 @@ const AdminUsers = () => {
           name: p[0] || "", email: p[1] || "",
           cpf: (p[2] || "").replace(/\D/g, ""), birth_date: isoDate,
           role: p[4] || "bolsista", institution: p[5] || "",
-          phone: (p[6] || "").replace(/\D/g, ""), department: p[7] || "",
-          registration_number: p[8] || "",
+          phone: (p[6] || "").replace(/\D/g, ""),
+          registration_number: p[7] || "",
         };
       });
       if (usersData.length === 0) {
@@ -290,17 +290,17 @@ const AdminUsers = () => {
               Cole os dados dos usuarios, um por linha, no formato:
             </p>
             <code className="text-xs bg-muted px-2 py-1 rounded block mb-2 font-mono">
-              Nome;Email;CPF;DataNasc(dd/mm/aaaa);Perfil;Instituicao;Telefone;Depto;Matricula
+              Nome;Email;CPF;DataNasc(dd/mm/aaaa);Perfil;Campus/Instituicao;Telefone;Matricula
             </code>
             <p className="text-xs text-muted-foreground mb-1">Campos obrigatorios: Nome, Email, CPF, Data de Nascimento, Perfil</p>
             <p className="text-xs text-muted-foreground mb-3">
-              Exemplo: <code className="bg-muted px-1 py-0.5 rounded font-mono text-[11px]">Maria Santos;maria@ifgoiano.edu.br;123.456.789-00;15/03/1990;bolsista;IF Goiano;(64) 99999-9999;Campus Ipora;2024001</code>
+              Exemplo: <code className="bg-muted px-1 py-0.5 rounded font-mono text-[11px]">Maria Santos;maria@ifgoiano.edu.br;123.456.789-00;15/03/1990;bolsista;IF Goiano - Campus Ipora;(64) 99999-9999;2024001</code>
             </p>
             <textarea
               rows={8}
               value={batchText}
               onChange={(e) => setBatchText(e.target.value)}
-              placeholder="Nome;Email;CPF;DataNasc;Perfil;Instituicao;Telefone;Depto;Matricula"
+              placeholder="Nome;Email;CPF;DataNasc;Perfil;Campus/Instituicao;Telefone;Matricula"
               className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card font-mono mb-3"
             />
             <div className="mb-4">
