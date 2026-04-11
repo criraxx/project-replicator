@@ -199,6 +199,10 @@ class ApiClient {
     return this.request<{ total: number; pending: number; approved: number; rejected: number }>('GET', '/projects/stats');
   }
 
+  async searchProjects(query: string) {
+    return this.request<Array<{ id: number; title: string; status: string; category: string }>>('GET', `/projects/search?q=${encodeURIComponent(query)}`);
+  }
+
   async getPendingProjects() {
     return this.request<{ projects: any[]; total: number }>('GET', '/projects/pending');
   }
