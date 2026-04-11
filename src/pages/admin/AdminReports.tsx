@@ -252,7 +252,43 @@ const AdminReports = () => {
     }, []);
   }, [projects, users]);
 
-  const exportPDF = () => {
+  const captureSvgFromContainer = (container: HTMLElement): string => {
+    const svg = container.querySelector("svg.recharts-surface");
+    if (!svg) return "";
+    const clone = svg.cloneNode(true) as SVGElement;
+    const parent = svg.parentElement;
+    const w = parent?.clientWidth || 500;
+    const h = parent?.clientHeight || 280;
+    clone.setAttribute("width", String(w));
+    clone.setAttribute("height", String(h));
+    clone.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    return new XMLSerializer().serializeToString(clone);
+  };
+
+  const exportSingleChart = (chartId: string) => {
+    if (!chartsRef.current) return;
+    const el = chartsRef.current.querySelector(`[data-chart-id="${chartId}"]`) as HTMLElement;
+    if (!el) return;
+    const svg = captureSvgFromContainer(el);
+    const title = CHART_CONFIGS.find(c => c.id === chartId)?.title || "Grafico";
+    if (!svg) return;
+    const printWin = window.open("", "_blank");
+    if (!printWin) return;
+    printWin.document.write(`<!DOCTYPE html><html><head><title>${title} - CEBIO</title>
+      <style>body{font-family:Arial,sans-serif;margin:40px;text-align:center}
+      h1{color:#2d5f4a;font-size:18px;margin-bottom:16px}
+      svg{max-width:100%;height:auto}
+      p{color:#888;font-size:12px}
+      @media print{body{margin:20px}}</style></head><body>
+      <h1>${title}</h1>
+      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:16px;display:inline-block">${svg}</div>
+      <p>CEBIO Brasil - Gerado em ${new Date().toLocaleString("pt-BR")}</p>
+      </body></html>`);
+    printWin.document.close();
+    setTimeout(() => printWin.print(), 400);
+  };
+
+  const exportPDF = (chartIds?: string[]) => {
     const statusLabel = statusFilters.length > 0 ? statusFilters.map(s => STATUS_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos";
     const userTypeLabel = userTypeFilters.length > 0 ? userTypeFilters.map(s => USER_TYPE_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos";
     const catLabel = categoryFilters.length > 0 ? categoryFilters.join(", ") : "Todas";
@@ -260,29 +296,24 @@ const AdminReports = () => {
     const startLabel = startDate ? format(startDate, "dd/MM/yyyy") : "---";
     const endLabel = endDate ? format(endDate, "dd/MM/yyyy") : "---";
 
-    // Capture chart SVGs from the DOM
-    const chartSvgs: string[] = [];
+    const idsToExport = chartIds || CHART_CONFIGS.map(c => c.id);
+
+    // Capture selected chart SVGs
+    const chartsHtmlParts: string[] = [];
     if (chartsRef.current) {
-      const svgElements = chartsRef.current.querySelectorAll("svg.recharts-surface");
-      svgElements.forEach(svg => {
-        const clone = svg.cloneNode(true) as SVGElement;
-        const parent = svg.parentElement;
-        const w = parent?.clientWidth || 500;
-        const h = parent?.clientHeight || 280;
-        clone.setAttribute("width", String(w));
-        clone.setAttribute("height", String(h));
-        clone.setAttribute("viewBox", `0 0 ${w} ${h}`);
-        chartSvgs.push(new XMLSerializer().serializeToString(clone));
+      idsToExport.forEach(id => {
+        const el = chartsRef.current!.querySelector(`[data-chart-id="${id}"]`) as HTMLElement;
+        if (!el) return;
+        const svg = captureSvgFromContainer(el);
+        const title = CHART_CONFIGS.find(c => c.id === id)?.title || "Grafico";
+        if (svg) {
+          chartsHtmlParts.push(`<div style="margin-bottom:24px">
+            <h3 style="font-size:14px;color:#2d5f4a;margin-bottom:8px">${title}</h3>
+            <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center">${svg}</div>
+          </div>`);
+        }
       });
     }
-
-    const chartTitles = ["Projetos por Status", "Projetos por Categoria", "Top 10 Usuarios", "Evolucao Temporal"];
-    const chartsHtml = chartSvgs.map((svg, i) =>
-      `<div style="margin-bottom:24px">
-        <h3 style="font-size:14px;color:#2d5f4a;margin-bottom:8px">${chartTitles[i] || `Grafico ${i + 1}`}</h3>
-        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center">${svg}</div>
-      </div>`
-    ).join("");
 
     const printWin = window.open("", "_blank");
     if (!printWin) return;
@@ -338,8 +369,7 @@ const AdminReports = () => {
         <div class="kpi"><div class="val">${categories.length}</div><div class="lab">Categorias</div></div>
       </div>
 
-      <h2>Graficos</h2>
-      <div class="charts-grid">${chartsHtml || '<p style="color:#888">Nenhum grafico disponivel</p>'}</div>
+      ${chartsHtmlParts.length > 0 ? `<h2>Graficos (${chartsHtmlParts.length})</h2><div class="charts-grid">${chartsHtmlParts.join("")}</div>` : ''}
 
       <h2>Resumos</h2>
       <div class="summary-grid">
@@ -355,6 +385,10 @@ const AdminReports = () => {
 
     printWin.document.close();
     setTimeout(() => { printWin.print(); }, 500);
+  };
+
+  const toggleChartSelection = (id: string) => {
+    setSelectedCharts(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
   return (
