@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Image, ExternalLink, CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
+import { ArrowLeft, FileText, Image, ExternalLink, CheckCircle, XCircle, Clock, AlertTriangle, Download, Eye, X } from "lucide-react";
 import { formatDateBrasilia, formatDateTimeBrasilia } from "@/lib/formatters";
 import AppLayout from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,7 +25,7 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
   const [loading, setLoading] = useState(true);
   const [reviewComment, setReviewComment] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
-
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const isAdmin = isAdminProp ?? user?.role === "admin";
   const isPesquisador = user?.role === "pesquisador";
   const navItems = isAdmin ? ADMIN_NAV : isPesquisador ? PESQUISADOR_NAV : BOLSISTA_NAV;
@@ -279,15 +279,32 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
             {photos.length > 0 && (
               <>
                 <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2"><Image className="w-4 h-4" /> Fotos</h4>
-                <div className="space-y-2 mb-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
                   {photos.map((file: any, i: number) => (
-                    <div key={i} className="flex items-center gap-3 bg-muted/50 border border-border rounded-lg p-3">
-                      <div className="w-10 h-10 bg-cebio-green-bg rounded flex items-center justify-center"><Image className="w-5 h-5 text-primary" /></div>
-                      <div className="flex-1">
-                        <div className="text-sm text-foreground">{file.original_name}</div>
-                        <div className="text-xs text-muted-foreground">{formatFileSize(file.file_size || 0)}</div>
+                    <div key={i} className="bg-muted/50 border border-border rounded-lg overflow-hidden group">
+                      <div className="relative aspect-square bg-muted">
+                        <img
+                          src={`/api/projects/${project.id}/files/${file.id}/download`}
+                          alt={file.original_name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <button
+                            onClick={() => setPreviewImage(`/api/projects/${project.id}/files/${file.id}/download`)}
+                            className="p-2 bg-white/90 rounded-full mr-2"
+                          >
+                            <Eye className="w-4 h-4 text-foreground" />
+                          </button>
+                          <a href={`/api/projects/${project.id}/files/${file.id}/download`} download className="p-2 bg-white/90 rounded-full">
+                            <Download className="w-4 h-4 text-foreground" />
+                          </a>
+                        </div>
                       </div>
-                      <a href={`/api/projects/${project.id}/files/${file.id}/download`} className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-secondary transition-colors">Baixar</a>
+                      <div className="p-2">
+                        <div className="text-xs text-foreground truncate">{file.original_name}</div>
+                        <div className="text-[10px] text-muted-foreground">{formatFileSize(file.file_size || 0)}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -304,7 +321,12 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
                         <div className="text-sm text-foreground">{file.original_name}</div>
                         <div className="text-xs text-muted-foreground">{formatFileSize(file.file_size || 0)}</div>
                       </div>
-                      <a href={`/api/projects/${project.id}/files/${file.id}/download`} className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-secondary transition-colors">Baixar</a>
+                      <a href={`/api/projects/${project.id}/files/${file.id}/download`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-muted border border-border text-foreground rounded text-xs font-medium hover:bg-accent transition-colors flex items-center gap-1">
+                        <Eye className="w-3.5 h-3.5" /> Ver
+                      </a>
+                      <a href={`/api/projects/${project.id}/files/${file.id}/download`} download className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-secondary transition-colors flex items-center gap-1">
+                        <Download className="w-3.5 h-3.5" /> Baixar
+                      </a>
                     </div>
                   ))}
                 </div>
@@ -377,6 +399,19 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
           </div>
         )}
       </div>
+
+      {/* Image Lightbox */}
+      {previewImage && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setPreviewImage(null)}>
+          <button onClick={() => setPreviewImage(null)} className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors">
+            <X className="w-6 h-6 text-white" />
+          </button>
+          <img src={previewImage} alt="Preview" className="max-w-full max-h-[90vh] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
+          <a href={previewImage} download className="absolute bottom-4 right-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-secondary transition-colors" onClick={(e) => e.stopPropagation()}>
+            <Download className="w-4 h-4" /> Baixar
+          </a>
+        </div>
+      )}
     </AppLayout>
   );
 };
