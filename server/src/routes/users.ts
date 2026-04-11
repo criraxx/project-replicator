@@ -64,7 +64,20 @@ router.get('/users/:id', authMiddleware, requireRole('admin'), async (req: Reque
   }
 });
 
-// POST /api/users
+// GET /api/users/by-cpf/:cpf
+router.get('/users/by-cpf/:cpf', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const cpf = req.params.cpf.replace(/\D/g, '');
+    const user = await userService.getUserByCpf(cpf);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario nao encontrado' });
+    }
+    res.json({ id: user.id, name: user.name, institution: user.institution, cpf: user.cpf });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Erro interno' });
+  }
+});
+
 router.post('/users', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
   try {
     const { email, name, password, role, institution, cpf, birth_date, phone, department, registration_number } = req.body;
