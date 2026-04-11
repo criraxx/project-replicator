@@ -280,12 +280,12 @@ class ApiClient {
     return this.request<void>('POST', '/notifications/broadcast', data);
   }
 
-  // ============================================
-  // ADMIN
-  // ============================================
+  async sendNotification(data: { user_id: number; title: string; message: string; type?: string; related_project_id?: number }) {
+    return this.request<any>('POST', '/notifications/send', data);
+  }
 
-  async getAdminStatus() {
-    return this.request<any>('GET', '/admin/status');
+  async markAllNotificationsRead() {
+    return this.request<void>('PUT', '/notifications/read-all');
   }
 
   async getAdminConfig() {

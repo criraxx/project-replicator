@@ -39,8 +39,11 @@ export class NotificationService {
     await this.notificationRepository.update(notificationId, { is_read: true });
   }
 
+  async markAllAsRead(userId: number): Promise<void> {
+    await this.notificationRepository.update({ user_id: userId, is_read: false }, { is_read: true });
+  }
+
   async broadcastNotification(title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info'): Promise<void> {
-    // Send to all users (could be improved with WebSocket)
     const users = await AppDataSource.getRepository('User').find();
     for (const user of users) {
       await this.createNotification(user.id, title, message, type);
