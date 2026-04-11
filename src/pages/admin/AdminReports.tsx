@@ -136,7 +136,6 @@ const AdminReports = () => {
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [chartType, setChartType] = useState<ChartType>("columns");
   const chartsRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
 
   const [projects, setProjects] = useState<any[]>([]);
