@@ -79,8 +79,8 @@ const App = () => (
             <Route path="/bolsista/perfil" element={<ProtectedRoute requiredRole="bolsista"><ProfilePage backPath="/bolsista/dashboard" /></ProtectedRoute>} />
             <Route path="/bolsista/notificacoes" element={<ProtectedRoute requiredRole="bolsista"><NotificationsPage /></ProtectedRoute>} />
             
-            {/* Shared */}
-            <Route path="/projeto" element={<ProjectDetailView />} />
+            {/* Shared - protected, any authenticated role */}
+            <Route path="/projeto" element={<ProtectedRoute requiredRole="any"><ProjectDetailView /></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
