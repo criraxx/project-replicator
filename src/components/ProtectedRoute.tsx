@@ -13,7 +13,16 @@ const roleDashboard: Record<UserRole, string> = {
 };
 
 const ProtectedRoute = ({ requiredRole, children }: ProtectedRouteProps) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  // Wait for session validation before deciding
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-muted-foreground text-sm">Verificando sessão...</p>
+      </div>
+    );
+  }
 
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;

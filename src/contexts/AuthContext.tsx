@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import api from "@/services/api";
 
 export type UserRole = "admin" | "pesquisador" | "bolsista";
@@ -15,6 +15,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
@@ -22,13 +23,51 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem("cebio_user");
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // On mount, validate cached session against the backend
+  useEffect(() => {
+    const validateSession = async () => {
+      const savedToken = localStorage.getItem("cebio_token");
+      const savedUser = localStorage.getItem("cebio_user");
+
+      if (!savedToken || !savedUser) {
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        // Restore token so API client can use it
+        api.setToken(savedToken);
+        // Validate with backend — returns real user data
+        const me = await api.getMe();
+        const userData: User = {
+          id: me.id,
+          name: me.name,
+          email: me.email,
+          role: me.role,
+          institution: me.institution || "",
+          must_change_password: me.must_change_password,
+        };
+        localStorage.setItem("cebio_user", JSON.stringify(userData));
+        setUser(userData);
+      } catch {
+        // Token invalid/expired — clear everything
+        api.clearToken();
+        localStorage.removeItem("cebio_user");
+        localStorage.removeItem("cebio_token");
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    validateSession();
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    // Always clear previous session data before logging in
     api.clearToken();
     localStorage.removeItem("cebio_user");
     localStorage.removeItem("cebio_token");
@@ -54,11 +93,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = useCallback(() => {
     api.clearToken();
     localStorage.removeItem("cebio_user");
+    localStorage.removeItem("cebio_token");
     setUser(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
