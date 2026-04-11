@@ -620,6 +620,53 @@ const AdminReports = () => {
           )}
         </div>
       </div>
+
+      {/* Custom Export Modal */}
+      {showCustomExport && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={() => setShowCustomExport(false)}>
+          <div className="bg-card border border-border rounded-xl p-6 w-[420px] shadow-xl" onClick={e => e.stopPropagation()}>
+            <h3 className="text-base font-semibold text-foreground mb-1">Exportar Personalizado</h3>
+            <p className="text-xs text-muted-foreground mb-4">Selecione os graficos que deseja incluir no PDF</p>
+
+            <div className="space-y-2 mb-5">
+              {CHART_CONFIGS.map(c => (
+                <label key={c.id} className="flex items-center gap-3 p-2.5 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={selectedCharts.includes(c.id)}
+                    onChange={() => toggleChartSelection(c.id)}
+                    className="accent-primary w-4 h-4"
+                  />
+                  <span className="text-sm text-foreground">{c.title}</span>
+                </label>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex gap-2">
+                <button onClick={() => setSelectedCharts(CHART_CONFIGS.map(c => c.id))} className="text-xs text-primary hover:underline">
+                  Selecionar todos
+                </button>
+                <button onClick={() => setSelectedCharts([])} className="text-xs text-muted-foreground hover:underline">
+                  Limpar
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setShowCustomExport(false)} className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-muted">
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => { exportPDF(selectedCharts); setShowCustomExport(false); }}
+                  disabled={selectedCharts.length === 0}
+                  className="px-4 py-2 text-sm font-semibold bg-primary text-primary-foreground rounded-lg hover:bg-secondary transition-colors disabled:opacity-50"
+                >
+                  Exportar ({selectedCharts.length})
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 };
