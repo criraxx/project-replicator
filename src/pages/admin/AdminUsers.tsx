@@ -8,6 +8,7 @@ import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { type User, mockUsers } from "@/data/mockData";
+import MultiSelectFilter from "@/components/ui/multi-select-filter";
 
 const AdminUsers = () => {
   const navigate = useNavigate();
@@ -189,17 +190,20 @@ const AdminUsers = () => {
           <Search className="w-4 h-4 text-muted-foreground" />
           <input type="text" placeholder="Buscar por nome ou email..." value={search} onChange={(e) => setSearch(e.target.value)} className="bg-transparent border-none outline-none text-sm w-full" />
         </div>
-        <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="border border-border rounded-lg px-3 py-2 text-sm bg-card">
-          <option value="">Todos os perfis</option>
-          <option value="admin">Admin</option>
-          <option value="pesquisador">Pesquisador</option>
-          <option value="bolsista">Bolsista</option>
-        </select>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="border border-border rounded-lg px-3 py-2 text-sm bg-card">
-          <option value="">Todos os status</option>
-          <option value="true">Ativos</option>
-          <option value="false">Inativos</option>
-        </select>
+        <MultiSelectFilter
+          label="Perfil"
+          options={[{ value: "admin", label: "Admin" }, { value: "pesquisador", label: "Pesquisador" }, { value: "bolsista", label: "Bolsista" }]}
+          selected={roleFilter ? [roleFilter] : []}
+          onChange={(vals) => setRoleFilter(vals.length === 1 ? vals[0] : "")}
+          placeholder="Todos"
+        />
+        <MultiSelectFilter
+          label="Status"
+          options={[{ value: "true", label: "Ativos" }, { value: "false", label: "Inativos" }]}
+          selected={statusFilter ? [statusFilter] : []}
+          onChange={(vals) => setStatusFilter(vals.length === 1 ? vals[0] : "")}
+          placeholder="Todos"
+        />
         <button onClick={() => setShowNewUser(true)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5">
           <UserPlus className="w-4 h-4" /> Novo Usuário
         </button>
