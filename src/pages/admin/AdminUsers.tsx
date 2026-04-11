@@ -6,6 +6,7 @@ import { ADMIN_NAV } from "@/constants/navigation";
 import { roleBadge } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { type User, mockUsers } from "@/data/mockData";
 
 const AdminUsers = () => {
@@ -18,6 +19,7 @@ const AdminUsers = () => {
   const [showNewUser, setShowNewUser] = useState(false);
   const [showBatchModal, setShowBatchModal] = useState(false);
   const { toast } = useToast();
+  const confirm = useConfirmDialog();
 
   // Form state for new user
   const [newUser, setNewUser] = useState({ name: "", email: "", role: "bolsista", institution: "", password: "cebio2024" });
@@ -101,7 +103,8 @@ const AdminUsers = () => {
   };
 
   const handleResetPassword = async (userId: number, userName: string) => {
-    if (!confirm(`Deseja resetar a senha de ${userName}?`)) return;
+    const ok = await confirm({ title: "Resetar Senha", description: `Deseja resetar a senha de ${userName}?`, confirmLabel: "Resetar", variant: "warning" });
+    if (!ok) return;
     try {
       const result = await api.resetUserPassword(userId);
       toast({
@@ -114,6 +117,9 @@ const AdminUsers = () => {
   };
 
   const handleToggleActive = async (userId: number, currentActive: boolean) => {
+    const action = currentActive ? "desativar" : "ativar";
+    const ok = await confirm({ title: `${currentActive ? "Desativar" : "Ativar"} Usuario`, description: `Deseja ${action} este usuario?`, confirmLabel: currentActive ? "Desativar" : "Ativar", variant: currentActive ? "warning" : "default" });
+    if (!ok) return;
     try {
       await api.updateUser(userId, { is_active: !currentActive });
       toast({ title: "Sucesso", description: `Usuário ${currentActive ? "desativado" : "ativado"}` });
@@ -298,10 +304,10 @@ const AdminUsers = () => {
                           <button onClick={() => handleToggleActive(u.id, u.is_active)} className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors ${u.is_active ? "bg-amber-600 text-white hover:bg-amber-700" : "bg-cebio-green-bg text-primary hover:bg-cebio-green-bg/80"}`}>
                             {u.is_active ? "Desativar" : "Ativar"}
                           </button>
-                          <button onClick={() => {
-                            if (confirm(`Tem certeza que deseja EXCLUIR permanentemente ${u.name}?`)) {
-                              api.deleteUser(u.id).then(() => { toast({ title: "Sucesso", description: "Usuario excluido" }); fetchUsers(); }).catch((err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }));
-                            }
+                          <button onClick={async () => {
+                            const ok = await confirm({ title: "Excluir Usuario", description: `Tem certeza que deseja EXCLUIR permanentemente ${u.name}? Esta acao nao pode ser desfeita.`, confirmLabel: "Excluir", variant: "danger" });
+                            if (!ok) return;
+                            api.deleteUser(u.id).then(() => { toast({ title: "Sucesso", description: "Usuario excluido" }); fetchUsers(); }).catch((err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }));
                           }} className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-cebio-red-bg text-cebio-red hover:bg-cebio-red-bg/80 transition-colors">
                             Excluir
                           </button>

@@ -6,12 +6,14 @@ import { ADMIN_NAV } from "@/constants/navigation";
 import { roleBadge } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { mockUsers, mockProjects } from "@/data/mockData";
 
 const AdminUserDetail = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const confirm = useConfirmDialog();
   const userId = Number(searchParams.get("id"));
 
   const [user, setUser] = useState<any>(null);
@@ -41,7 +43,8 @@ const AdminUserDetail = () => {
   const handleToggleActive = async () => {
     if (!user) return;
     const action = user.is_active ? "desativar" : "ativar";
-    if (!confirm(`Deseja ${action} o usuario ${user.name}?`)) return;
+    const ok = await confirm({ title: `${user.is_active ? "Desativar" : "Ativar"} Usuario`, description: `Deseja ${action} o usuario ${user.name}?`, confirmLabel: user.is_active ? "Desativar" : "Ativar", variant: user.is_active ? "warning" : "default" });
+    if (!ok) return;
     try {
       await api.updateUser(user.id, { is_active: !user.is_active });
       setUser({ ...user, is_active: !user.is_active });
@@ -53,7 +56,8 @@ const AdminUserDetail = () => {
 
   const handleDelete = async () => {
     if (!user) return;
-    if (!confirm(`Tem certeza que deseja EXCLUIR permanentemente o usuario ${user.name}? Esta acao nao pode ser desfeita.`)) return;
+    const ok = await confirm({ title: "Excluir Usuario", description: `Tem certeza que deseja EXCLUIR permanentemente o usuario ${user.name}? Esta acao nao pode ser desfeita.`, confirmLabel: "Excluir", variant: "danger" });
+    if (!ok) return;
     try {
       await api.deleteUser(user.id);
       toast({ title: "Sucesso", description: "Usuario excluido permanentemente" });
@@ -65,7 +69,8 @@ const AdminUserDetail = () => {
 
   const handleResetPassword = async () => {
     if (!user) return;
-    if (!confirm(`Deseja resetar a senha de ${user.name}?`)) return;
+    const ok = await confirm({ title: "Resetar Senha", description: `Deseja resetar a senha de ${user.name}?`, confirmLabel: "Resetar", variant: "warning" });
+    if (!ok) return;
     try {
       const result = await api.resetUserPassword(user.id);
       toast({ title: "Senha resetada", description: `Nova senha temporaria: ${result.temporary_password}` });

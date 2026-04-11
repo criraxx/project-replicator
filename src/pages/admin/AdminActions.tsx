@@ -5,6 +5,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { mockUsers, mockProjects, mockCategories, mockAcademicLevels } from "@/data/mockData";
 
 const autoSlug = (name: string) => name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -12,6 +13,7 @@ const autoSlug = (name: string) => name.toLowerCase().normalize("NFD").replace(/
 const AdminActions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const confirm = useConfirmDialog();
   const [stats, setStats] = useState({ pending: 0, inactive: 0, tempPasswords: 0 });
 
   // Categories & Levels inline management
@@ -71,7 +73,8 @@ const AdminActions = () => {
       toast({ title: "Não é possível remover", description: "Esta categoria possui projetos vinculados.", variant: "destructive" });
       return;
     }
-    if (!confirm(`Remover a categoria "${name}"?`)) return;
+    const ok = await confirm({ title: "Remover Categoria", description: `Remover a categoria "${name}"?`, confirmLabel: "Remover", variant: "danger" });
+    if (!ok) return;
     try {
       await api.deleteCategory(id);
       toast({ title: "Sucesso", description: "Categoria removida!" });
@@ -96,7 +99,8 @@ const AdminActions = () => {
       toast({ title: "Não é possível remover", description: "Este nível possui projetos vinculados.", variant: "destructive" });
       return;
     }
-    if (!confirm(`Remover o nível "${name}"?`)) return;
+    const ok = await confirm({ title: "Remover Nivel", description: `Remover o nivel "${name}"?`, confirmLabel: "Remover", variant: "danger" });
+    if (!ok) return;
     try {
       await api.deleteAcademicLevel(id);
       toast({ title: "Sucesso", description: "Nível removido!" });

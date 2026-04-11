@@ -4,6 +4,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface CategoryItem { id: number; name: string; slug: string; description?: string; color?: string; icon?: string; is_active: boolean; }
 interface LevelItem { id: number; name: string; slug: string; description?: string; order: number; is_active: boolean; }
@@ -16,6 +17,7 @@ const AdminCategories = () => {
   const [levels, setLevels] = useState<LevelItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const confirm = useConfirmDialog();
 
   // Category form
   const [catForm, setCatForm] = useState({ name: "", slug: "", description: "", color: "#1a9a4a", icon: "" });
@@ -50,7 +52,8 @@ const AdminCategories = () => {
   };
 
   const handleDeleteCategory = async (id: number) => {
-    if (!confirm("Deseja realmente remover esta categoria?")) return;
+    const ok = await confirm({ title: "Remover Categoria", description: "Deseja realmente remover esta categoria?", confirmLabel: "Remover", variant: "danger" });
+    if (!ok) return;
     try {
       await api.deleteCategory(id);
       toast({ title: "Sucesso", description: "Categoria removida!" });
@@ -70,7 +73,8 @@ const AdminCategories = () => {
   };
 
   const handleDeleteLevel = async (id: number) => {
-    if (!confirm("Deseja realmente remover este nível?")) return;
+    const ok = await confirm({ title: "Remover Nivel", description: "Deseja realmente remover este nivel?", confirmLabel: "Remover", variant: "danger" });
+    if (!ok) return;
     try {
       await api.deleteAcademicLevel(id);
       toast({ title: "Sucesso", description: "Nível removido!" });
