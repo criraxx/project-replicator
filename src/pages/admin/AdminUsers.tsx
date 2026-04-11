@@ -166,7 +166,7 @@ const AdminUsers = () => {
         description,
         variant: duplicates.length > 0 || otherErrors.length > 0 ? "destructive" : "default",
       });
-      setShowBatchModal(false); setBatchText(""); fetchUsers();
+      setShowBatchModal(false); setBatchText(""); fetchUsers(); fetchInstitutions();
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     }
