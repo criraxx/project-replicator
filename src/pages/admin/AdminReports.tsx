@@ -362,29 +362,13 @@ const AdminReports = () => {
           <h3 className="text-sm font-semibold">Filtros</h3>
         </div>
         <div className="grid grid-cols-3 gap-4 mb-4">
-          <div className="col-span-3">
-            <label className="text-xs text-muted-foreground mb-2 block">Status (selecione um ou mais)</label>
-            <div className="flex gap-2 flex-wrap">
-              {STATUS_OPTIONS.filter(o => o.value !== "all").map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setStatusFilters(prev => prev.includes(opt.value) ? prev.filter(s => s !== opt.value) : [...prev, opt.value])}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                    statusFilters.includes(opt.value)
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-card text-muted-foreground border-border hover:bg-muted"
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-              {statusFilters.length > 0 && (
-                <button onClick={() => setStatusFilters([])} className="px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground">✕ Limpar</button>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-4 mb-4">
+          <MultiSelectFilter
+            label="Status"
+            options={STATUS_OPTIONS.filter(o => o.value !== "all")}
+            selected={statusFilters}
+            onChange={setStatusFilters}
+            placeholder="Todos"
+          />
           <MultiSelectFilter
             label="Categoria"
             options={categories.map(c => ({ value: c.name, label: c.name }))}
