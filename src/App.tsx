@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProjects from "./pages/admin/AdminProjects";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminUserDetail from "./pages/admin/AdminUserDetail";
 import AdminActions from "./pages/admin/AdminActions";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminAudit from "./pages/admin/AdminAudit";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/projetos" element={<AdminProjects />} />
             <Route path="/admin/usuarios" element={<AdminUsers />} />
+            <Route path="/admin/usuario" element={<AdminUserDetail />} />
             <Route path="/admin/acoes" element={<AdminActions />} />
             <Route path="/admin/relatorios" element={<AdminReports />} />
             <Route path="/admin/auditoria" element={<AdminAudit />} />
