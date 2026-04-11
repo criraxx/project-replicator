@@ -11,11 +11,13 @@ const Footer = () => {
       <div className="max-w-[1360px] mx-auto px-6 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Logos */}
-          <div className="flex items-center gap-5 flex-wrap justify-center">
-            <img src={logoCebio} alt="CEBIO" className="h-12 w-auto" />
-            <img src={logoIf} alt="IF Goiano" className="h-12 w-auto" />
-            <img src={logoFapeg} alt="FAPEG" className="h-12 w-auto" />
-            <img src={logoUtt} alt="UTT Campus Iporá" className="h-12 w-auto" />
+          <div className="flex items-center gap-4 flex-wrap justify-center">
+            <div className="bg-white/95 rounded-lg px-4 py-2 flex items-center gap-5">
+              <img src={logoCebio} alt="CEBIO" className="h-12 w-auto object-contain" />
+              <img src={logoIf} alt="IF Goiano" className="h-12 w-auto object-contain" />
+              <img src={logoFapeg} alt="FAPEG" className="h-12 w-auto object-contain" />
+              <img src={logoUtt} alt="UTT Campus Iporá" className="h-12 w-auto object-contain" />
+            </div>
           </div>
 
           {/* Info */}
