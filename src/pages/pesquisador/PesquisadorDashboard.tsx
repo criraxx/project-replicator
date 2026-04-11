@@ -74,7 +74,7 @@ const PesquisadorDashboard = () => {
       {/* Main Grid: Projects (2/3) + Sidebar (1/3) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Projects - 2 cols */}
-        <div className="col-span-2">
+        <div className="lg:col-span-2">
           <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
             <div className="flex justify-between items-center p-5 pb-0">
               <h3 className="text-base font-semibold">Meus Projetos</h3>
