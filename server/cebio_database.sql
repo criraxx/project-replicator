@@ -166,6 +166,7 @@ CREATE TABLE `project_links` (
   `project_id` INT NOT NULL,
   `title` VARCHAR(255) NOT NULL,
   `url` VARCHAR(2048) NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_pl_project` (`project_id`),
   CONSTRAINT `fk_pl_project` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE CASCADE
@@ -177,12 +178,18 @@ CREATE TABLE `project_files` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `project_id` INT NOT NULL,
   `filename` VARCHAR(255) NOT NULL,
+  `original_name` VARCHAR(255) NOT NULL,
   `file_type` VARCHAR(100) NOT NULL,
   `file_path` VARCHAR(500) NOT NULL,
   `file_size` INT NOT NULL,
+  `file_category` VARCHAR(20) NOT NULL DEFAULT 'other',
+  `uploaded_by` INT DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_pf_project` (`project_id`),
-  CONSTRAINT `fk_pf_project` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE CASCADE
+  KEY `idx_pf_category` (`file_category`),
+  CONSTRAINT `fk_pf_project` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_pf_user` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Logs de Auditoria
