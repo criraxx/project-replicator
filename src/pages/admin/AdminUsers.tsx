@@ -87,17 +87,23 @@ const AdminUsers = () => {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newUser.cpf || newUser.cpf.replace(/\D/g, "").length !== 11) {
+      toast({ title: "Erro", description: "CPF invalido", variant: "destructive" }); return;
+    }
+    const isoDate = parseDateToISO(newUser.birth_date);
+    if (!isoDate) {
+      toast({ title: "Erro", description: "Data de nascimento invalida (dd/mm/aaaa)", variant: "destructive" }); return;
+    }
     try {
       await api.createUser({
-        email: newUser.email,
-        name: newUser.name,
-        password: newUser.password,
-        role: newUser.role,
-        institution: newUser.institution,
+        email: newUser.email, name: newUser.name, password: newUser.password, role: newUser.role,
+        cpf: newUser.cpf.replace(/\D/g, ""), birth_date: isoDate,
+        institution: newUser.institution, phone: newUser.phone.replace(/\D/g, ""),
+        department: newUser.department, registration_number: newUser.registration_number,
       });
-      toast({ title: "Sucesso", description: "Usuário criado com sucesso!" });
+      toast({ title: "Sucesso", description: "Usuario criado com sucesso!" });
       setShowNewUser(false);
-      setNewUser({ name: "", email: "", role: "bolsista", institution: "", password: "cebio2024" });
+      setNewUser({ name: "", email: "", role: "bolsista", institution: "", password: "cebio2024", cpf: "", birth_date: "", phone: "", department: "", registration_number: "" });
       fetchUsers();
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
@@ -108,28 +114,23 @@ const AdminUsers = () => {
     try {
       const lines = batchText.trim().split("\n").filter((l) => l.trim());
       const usersData = lines.map((line) => {
-        const parts = line.split(";").map((p) => p.trim());
+        const p = line.split(";").map((s) => s.trim());
+        const dateParts = (p[3] || "").split("/");
+        const isoDate = dateParts.length === 3 && dateParts[2]?.length === 4 ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}` : p[3] || "";
         return {
-          name: parts[0] || "",
-          email: parts[1] || "",
-          role: parts[2] || "bolsista",
-          institution: parts[3] || "",
+          name: p[0] || "", email: p[1] || "",
+          cpf: (p[2] || "").replace(/\D/g, ""), birth_date: isoDate,
+          role: p[4] || "bolsista", institution: p[5] || "",
+          phone: (p[6] || "").replace(/\D/g, ""), department: p[7] || "",
+          registration_number: p[8] || "",
         };
       });
-
       if (usersData.length === 0) {
-        toast({ title: "Erro", description: "Nenhum usuário para cadastrar", variant: "destructive" });
-        return;
+        toast({ title: "Erro", description: "Nenhum usuario para cadastrar", variant: "destructive" }); return;
       }
-
       const result = await api.batchCreateUsers(usersData, batchPassword);
-      toast({
-        title: "Criação em lote concluída",
-        description: `${result.success.length} criados, ${result.errors.length} erros`,
-      });
-      setShowBatchModal(false);
-      setBatchText("");
-      fetchUsers();
+      toast({ title: "Criacao em lote concluida", description: `${result.success.length} criados, ${result.errors.length} erros` });
+      setShowBatchModal(false); setBatchText(""); fetchUsers();
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     }
