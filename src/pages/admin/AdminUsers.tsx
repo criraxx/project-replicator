@@ -214,8 +214,8 @@ const AdminUsers = () => {
 
       {/* Modal: Novo Usuario */}
       {showNewUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-8">
-          <div className="bg-card rounded-xl p-6 w-full max-w-lg shadow-xl border border-border">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto p-3 sm:py-8">
+          <div className="bg-card rounded-xl p-5 sm:p-6 w-full max-w-lg shadow-xl border border-border max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Novo Usuario</h3>
               <button onClick={() => setShowNewUser(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
@@ -276,8 +276,8 @@ const AdminUsers = () => {
 
       {/* Modal: Cadastro em Lote */}
       {showBatchModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-8">
-          <div className="bg-card rounded-xl p-6 w-full max-w-2xl shadow-xl border border-border">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto p-3 sm:py-8">
+          <div className="bg-card rounded-xl p-5 sm:p-6 w-full max-w-2xl shadow-xl border border-border max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Cadastro em Lote</h3>
               <button onClick={() => setShowBatchModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
