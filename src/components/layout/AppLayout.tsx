@@ -19,7 +19,7 @@ const AppLayout = ({ children, pageName, navItems, notificationCount }: AppLayou
     <div className="min-h-screen bg-background flex flex-col">
       <TopHeader />
       <SubHeader pageName={pageName} navItems={navItems} notificationCount={notificationCount} />
-      <main className="max-w-[1360px] mx-auto p-6 flex-1 w-full">
+      <main className="max-w-[1360px] mx-auto px-3 py-4 sm:p-6 flex-1 w-full">
         {children}
       </main>
       <Footer />

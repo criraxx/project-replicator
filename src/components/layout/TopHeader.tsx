@@ -66,23 +66,23 @@ const TopHeader = () => {
   };
 
   return (
-    <header className="bg-primary text-primary-foreground h-12 px-6 flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <img src={logoIf} alt="IF Goiano" className="h-8 w-auto brightness-0 invert" />
-        <span className="text-primary-foreground/60 font-light text-xl">×</span>
-        <img src={logoCebio} alt="CEBIO" className="h-8 w-auto brightness-0 invert" />
+    <header className="bg-primary text-primary-foreground h-12 px-3 sm:px-6 flex items-center justify-between gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <img src={logoIf} alt="IF Goiano" className="h-6 sm:h-8 w-auto brightness-0 invert" />
+        <span className="text-primary-foreground/60 font-light text-lg sm:text-xl">×</span>
+        <img src={logoCebio} alt="CEBIO" className="h-6 sm:h-8 w-auto brightness-0 invert" />
       </div>
 
-      <div className="flex-1 max-w-[320px] mx-6 relative" ref={wrapperRef}>
-        <div className="flex items-center bg-primary-foreground/15 rounded-full px-3.5 py-1.5 gap-2">
-          <Search className="w-4 h-4 text-primary-foreground/70" />
+      <div className="flex-1 max-w-[320px] mx-2 sm:mx-6 relative" ref={wrapperRef}>
+        <div className="flex items-center bg-primary-foreground/15 rounded-full px-3 py-1.5 gap-2">
+          <Search className="w-4 h-4 text-primary-foreground/70 shrink-0" />
           <input
             type="text"
             placeholder="Buscar projetos..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => results.length > 0 && setShowDropdown(true)}
-            className="bg-transparent border-none text-primary-foreground text-[13px] w-full outline-none placeholder:text-primary-foreground/60"
+            className="bg-transparent border-none text-primary-foreground text-[13px] w-full outline-none placeholder:text-primary-foreground/60 min-w-0"
           />
         </div>
 
@@ -113,7 +113,8 @@ const TopHeader = () => {
         )}
       </div>
 
-      <div className="flex items-center gap-3">
+      {/* Desktop user info */}
+      <div className="hidden sm:flex items-center gap-3 shrink-0">
         <span className="text-[13px] font-medium">{user?.name}</span>
         {badge && (
           <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-medium ${badge.className}`}>
