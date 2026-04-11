@@ -5,6 +5,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { mockUsers, mockProjects, mockCategories, mockAcademicLevels } from "@/data/mockData";
 
 const autoSlug = (name: string) => name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
