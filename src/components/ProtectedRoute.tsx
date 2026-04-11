@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth, type UserRole } from "@/contexts/AuthContext";
 
 interface ProtectedRouteProps {
-  requiredRole: UserRole;
+  requiredRole: UserRole | "any";
   children: React.ReactNode;
 }
 
@@ -15,7 +15,6 @@ const roleDashboard: Record<UserRole, string> = {
 const ProtectedRoute = ({ requiredRole, children }: ProtectedRouteProps) => {
   const { user, isAuthenticated, isLoading } = useAuth();
 
-  // Wait for session validation before deciding
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -28,7 +27,7 @@ const ProtectedRoute = ({ requiredRole, children }: ProtectedRouteProps) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (user.role !== requiredRole) {
+  if (requiredRole !== "any" && user.role !== requiredRole) {
     return <Navigate to={roleDashboard[user.role]} replace />;
   }
 

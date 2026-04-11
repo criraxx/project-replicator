@@ -347,6 +347,41 @@ class ApiClient {
     return this.request<any>('POST', `/author-approvals/${authorId}/reject`, { reason });
   }
 
+  // ============================================
+  // FILE UPLOADS
+  // ============================================
+
+  async uploadProjectFile(projectId: number, file: File, fileType: string) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('file_type', fileType);
+
+    const headers: HeadersInit = {};
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/files`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (response.status === 401) {
+      this.clearToken();
+      localStorage.removeItem('cebio_user');
+      window.location.href = '/login';
+      throw new Error('Sessão expirada');
+    }
+
+    const text = await response.text();
+    if (!text) throw new Error('Servidor não respondeu.');
+    let data: any;
+    try { data = JSON.parse(text); } catch { throw new Error('Resposta inválida do servidor.'); }
+    if (!response.ok) throw new Error(data.error || 'Erro no upload');
+    return data;
+  }
+
 }
 
 export const api = new ApiClient();
