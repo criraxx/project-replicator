@@ -34,6 +34,11 @@ const SubmissionForm = () => {
   const [endDate, setEndDate] = useState("");
   const [summary, setSummary] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
+  const [institutions, setInstitutions] = useState<string[]>([]);
+
+  useEffect(() => {
+    api.listInstitutions().then(setInstitutions).catch(() => {});
+  }, []);
 
   const [authors, setAuthors] = useState<Author[]>([
     { name: user?.name || "", cpf: "", institution: "CEBIO Brasil - Centro de Excelência em Bioinsumos", level: "graduacao", role: "Autor Principal" },
