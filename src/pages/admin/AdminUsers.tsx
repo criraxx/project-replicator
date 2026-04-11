@@ -295,7 +295,7 @@ const AdminUsers = () => {
                           <button onClick={() => navigate(`/admin/usuario?id=${u.id}`)} className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
                             Detalhes
                           </button>
-                          <button onClick={() => handleToggleActive(u.id, u.is_active)} className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors ${u.is_active ? "bg-cebio-yellow-bg text-cebio-yellow hover:bg-cebio-yellow-bg/80" : "bg-cebio-green-bg text-primary hover:bg-cebio-green-bg/80"}`}>
+                          <button onClick={() => handleToggleActive(u.id, u.is_active)} className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors ${u.is_active ? "bg-amber-600 text-white hover:bg-amber-700" : "bg-cebio-green-bg text-primary hover:bg-cebio-green-bg/80"}`}>
                             {u.is_active ? "Desativar" : "Ativar"}
                           </button>
                           <button onClick={() => {
