@@ -25,7 +25,7 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
   const [loading, setLoading] = useState(true);
   const [reviewComment, setReviewComment] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
-
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const isAdmin = isAdminProp ?? user?.role === "admin";
   const isPesquisador = user?.role === "pesquisador";
   const navItems = isAdmin ? ADMIN_NAV : isPesquisador ? PESQUISADOR_NAV : BOLSISTA_NAV;
