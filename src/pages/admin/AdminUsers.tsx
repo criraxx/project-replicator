@@ -332,7 +332,7 @@ const AdminUsers = () => {
               Cole os dados dos usuarios, um por linha, no formato:
             </p>
             <code className="text-xs bg-muted px-2 py-1 rounded block mb-2 font-mono">
-              Nome;Email;CPF;DataNasc(dd/mm/aaaa);Perfil;Instituicao;Telefone;Depto;Matricula
+              Nome;Email;CPF;DataNasc(dd/mm/aaaa);Perfil;Instituicao;Telefone;Campus;Matricula
             </code>
             <p className="text-xs text-muted-foreground mb-1">Campos obrigatorios: Nome, Email, CPF, Data de Nascimento, Perfil</p>
             <p className="text-xs text-muted-foreground mb-3">
@@ -342,7 +342,7 @@ const AdminUsers = () => {
               rows={8}
               value={batchText}
               onChange={(e) => setBatchText(e.target.value)}
-              placeholder="Nome;Email;CPF;DataNasc;Perfil;Instituicao;Telefone;Depto;Matricula"
+              placeholder="Nome;Email;CPF;DataNasc;Perfil;Instituicao;Telefone;Campus;Matricula"
               className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card font-mono mb-3"
             />
             <div className="mb-4">
