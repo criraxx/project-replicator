@@ -287,6 +287,7 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
                         <div className="text-sm text-foreground">{file.original_name}</div>
                         <div className="text-xs text-muted-foreground">{formatFileSize(file.file_size || 0)}</div>
                       </div>
+                      <a href={`/api/projects/${project.id}/files/${file.id}/download`} className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-secondary transition-colors">Baixar</a>
                     </div>
                   ))}
                 </div>
@@ -303,6 +304,7 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
                         <div className="text-sm text-foreground">{file.original_name}</div>
                         <div className="text-xs text-muted-foreground">{formatFileSize(file.file_size || 0)}</div>
                       </div>
+                      <a href={`/api/projects/${project.id}/files/${file.id}/download`} className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-secondary transition-colors">Baixar</a>
                     </div>
                   ))}
                 </div>
@@ -313,9 +315,11 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
       </div>
 
       {/* Links */}
-      {(project.links || []).length > 0 && (
-        <div className="bg-card border border-border rounded-xl p-5 mb-5">
-          <h3 className="text-base font-semibold text-primary mb-4">Links Externos</h3>
+      <div className="bg-card border border-border rounded-xl p-5 mb-5">
+        <h3 className="text-base font-semibold text-primary mb-4">Links Externos</h3>
+        {(project.links || []).length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhum link adicionado</p>
+        ) : (
           <div className="space-y-2">
             {project.links.map((link: any, i: number) => (
               <div key={i} className="flex items-center gap-3 bg-muted/50 border border-border rounded-lg p-3">
@@ -328,9 +332,8 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
               </div>
             ))}
           </div>
-        </div>
-      )}
-
+        )}
+      </div>
       {/* Version History */}
       <div className="bg-card border border-border rounded-xl p-5 mb-5">
         <h3 className="text-base font-semibold text-primary mb-4">Historico de Versoes</h3>

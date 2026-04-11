@@ -4,6 +4,8 @@ import { AuthorApprovalService } from '../services/AuthorApprovalService';
 import { authMiddleware, requireRole } from '../utils/auth';
 import { AuditService } from '../services/AuditService';
 import { ProjectStatus } from '../entities/Project';
+import { AppDataSource } from '../config/database';
+import { ProjectLink } from '../entities/ProjectLink';
 import {
   validateCreateProject,
   validateUpdateProject,
@@ -160,7 +162,7 @@ router.get('/projects/:id', authMiddleware, async (req: Request, res: Response) 
 // POST /api/projects
 router.post('/projects', authMiddleware, ...validateCreateProject, handleValidationErrors, async (req: Request, res: Response) => {
   try {
-    const { title, summary, description, category, academic_level, start_date, end_date, authors } = req.body;
+    const { title, summary, description, category, academic_level, start_date, end_date, authors, links } = req.body;
 
     const project = await projectService.createProject(
       title,
@@ -183,6 +185,21 @@ router.post('/projects', authMiddleware, ...validateCreateProject, handleValidat
         })),
         req.user!.id
       );
+    }
+
+    // Save links
+    if (links && Array.isArray(links) && links.length > 0) {
+      const linkRepo = AppDataSource.getRepository(ProjectLink);
+      for (const l of links) {
+        if (l.url) {
+          const link = linkRepo.create({
+            project_id: project.id,
+            title: l.title || l.url,
+            url: l.url,
+          });
+          await linkRepo.save(link);
+        }
+      }
     }
 
     const hasCoAuthors = authors && authors.length > 1;

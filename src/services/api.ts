@@ -175,7 +175,7 @@ class ApiClient {
     return this.request<any>('GET', `/projects/${id}`);
   }
 
-  async createProject(data: { title: string; summary: string; description?: string; category: string; academic_level: string; start_date?: string; end_date?: string; authors?: Array<{ name: string; cpf: string; institution?: string; academic_level?: string; role_in_project?: string }> }) {
+  async createProject(data: { title: string; summary: string; description?: string; category: string; academic_level: string; start_date?: string; end_date?: string; authors?: Array<{ name: string; cpf: string; institution?: string; academic_level?: string; role_in_project?: string }>; links?: Array<{ url: string; title?: string; link_type?: string; description?: string }> }) {
     return this.request<any>('POST', '/projects', data);
   }
 
