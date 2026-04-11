@@ -21,8 +21,13 @@ router.get('/users', authMiddleware, requireRole('admin'), async (req: Request, 
       id: u.id,
       name: u.name,
       email: u.email,
+      cpf: u.cpf,
       role: u.role,
       institution: u.institution,
+      birth_date: u.birth_date,
+      phone: u.phone,
+      department: u.department,
+      registration_number: u.registration_number,
       is_active: u.is_active,
       created_at: u.created_at,
       last_login: u.last_login,
@@ -43,8 +48,13 @@ router.get('/users/:id', authMiddleware, requireRole('admin'), async (req: Reque
       id: user.id,
       name: user.name,
       email: user.email,
+      cpf: user.cpf,
       role: user.role,
       institution: user.institution,
+      birth_date: user.birth_date,
+      phone: user.phone,
+      department: user.department,
+      registration_number: user.registration_number,
       is_active: user.is_active,
       created_at: user.created_at,
       last_login: user.last_login,
@@ -57,13 +67,13 @@ router.get('/users/:id', authMiddleware, requireRole('admin'), async (req: Reque
 // POST /api/users
 router.post('/users', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
   try {
-    const { email, name, password, role, institution } = req.body;
+    const { email, name, password, role, institution, cpf, birth_date, phone, department, registration_number } = req.body;
 
-    if (!email || !name || !password) {
-      return res.status(400).json({ error: 'Email, nome e senha são obrigatórios' });
+    if (!email || !name || !password || !cpf || !birth_date) {
+      return res.status(400).json({ error: 'Email, nome, senha, CPF e data de nascimento sao obrigatorios' });
     }
 
-    const user = await userService.createUser(email, name, password, role, institution, req.user!.id);
+    const user = await userService.createUser(email, name, password, role, institution, req.user!.id, cpf, birth_date, phone, department, registration_number);
 
     await auditService.logAction(
       'CREATE_USER',
