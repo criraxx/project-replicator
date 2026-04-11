@@ -107,7 +107,12 @@ const AdminUsers = () => {
       setNewUser({ name: "", email: "", role: "bolsista", institution: "", password: "cebio2024", cpf: "", birth_date: "", phone: "", department: "", registration_number: "" });
       fetchUsers();
     } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
+      const msg = err.message || "";
+      if (msg.toLowerCase().includes("cadastrado") || msg.toLowerCase().includes("duplicate") || msg.toLowerCase().includes("already")) {
+        toast({ title: "Usuário já cadastrado", description: `O email ${newUser.email} já está cadastrado no sistema.`, variant: "destructive" });
+      } else {
+        toast({ title: "Erro", description: msg, variant: "destructive" });
+      }
     }
   };
 
@@ -130,7 +135,25 @@ const AdminUsers = () => {
         toast({ title: "Erro", description: "Nenhum usuario para cadastrar", variant: "destructive" }); return;
       }
       const result = await api.batchCreateUsers(usersData, batchPassword);
-      toast({ title: "Criacao em lote concluida", description: `${result.success.length} criados, ${result.errors.length} erros` });
+      const duplicates = result.errors.filter((e: any) =>
+        e.error?.toLowerCase().includes("cadastrado") || e.error?.toLowerCase().includes("duplicate") || e.error?.toLowerCase().includes("already")
+      );
+      const otherErrors = result.errors.filter((e: any) =>
+        !e.error?.toLowerCase().includes("cadastrado") && !e.error?.toLowerCase().includes("duplicate") && !e.error?.toLowerCase().includes("already")
+      );
+
+      let description = `${result.success.length} criado(s) com sucesso.`;
+      if (duplicates.length > 0) {
+        description += ` ${duplicates.length} já cadastrado(s): ${duplicates.map((e: any) => e.email).join(", ")}.`;
+      }
+      if (otherErrors.length > 0) {
+        description += ` ${otherErrors.length} erro(s).`;
+      }
+      toast({
+        title: "Criação em lote concluída",
+        description,
+        variant: duplicates.length > 0 || otherErrors.length > 0 ? "destructive" : "default",
+      });
       setShowBatchModal(false); setBatchText(""); fetchUsers();
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
