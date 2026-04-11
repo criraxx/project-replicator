@@ -132,7 +132,7 @@ const AdminActions = () => {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {[
           { label: "Projetos Pendentes", value: stats.pending, sub: "Aguardando revisão", subColor: "text-cebio-red", icon: Clock, iconBg: "bg-cebio-yellow-bg", iconColor: "text-cebio-yellow" },
           { label: "Usuários Inativos", value: stats.inactive, sub: "Requerem atenção", subColor: "text-cebio-red", icon: Users, iconBg: "bg-cebio-purple-bg", iconColor: "text-cebio-purple" },
@@ -153,7 +153,7 @@ const AdminActions = () => {
       </div>
 
       {/* Action Cards */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
         {actions.map((a, i) => (
           <div key={i} onClick={() => a.path && navigate(a.path)} className="bg-card rounded-xl p-6 shadow-sm border border-border flex flex-col relative hover:shadow-md transition-shadow cursor-pointer">
             {(a as any).badge && (

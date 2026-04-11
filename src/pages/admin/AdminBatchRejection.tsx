@@ -51,7 +51,7 @@ const AdminBatchRejection = () => {
         <p className="text-sm opacity-90">Rejeite múltiplos projetos com um motivo obrigatório</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
         <div className="bg-card rounded-xl p-5 shadow-sm border border-border flex justify-between items-start">
           <div><div className="text-[13px] text-muted-foreground mb-1">Pendentes</div><div className="text-[32px] font-bold text-foreground">{projects.length}</div></div>
           <div className="w-11 h-11 rounded-full bg-cebio-yellow-bg flex items-center justify-center"><Clock className="w-5 h-5 text-cebio-yellow" /></div>

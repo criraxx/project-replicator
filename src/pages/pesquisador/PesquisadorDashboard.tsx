@@ -51,7 +51,7 @@ const PesquisadorDashboard = () => {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {[
           { label: "Total de Projetos", value: projects.length, sub: `${projects.length} projetos no total`, subColor: "text-primary", icon: FolderOpen, iconBg: "bg-cebio-blue-bg", iconColor: "text-cebio-blue" },
           { label: "Em Revisão", value: pending, sub: "Aguardando aprovação", subColor: "text-cebio-yellow", icon: Clock, iconBg: "bg-cebio-yellow-bg", iconColor: "text-cebio-yellow" },
@@ -72,7 +72,7 @@ const PesquisadorDashboard = () => {
       </div>
 
       {/* Main Grid: Projects (2/3) + Sidebar (1/3) */}
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Projects - 2 cols */}
         <div className="col-span-2">
           <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">

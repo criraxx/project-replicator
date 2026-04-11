@@ -112,7 +112,7 @@ const AdminProjects = () => {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {[
           { label: "Total de Projetos", value: stats.total, icon: FileText, iconBg: "bg-cebio-green-bg", iconColor: "text-primary" },
           { label: "Aguardando Revisao", value: stats.pending, icon: FileText, iconBg: "bg-cebio-yellow-bg", iconColor: "text-cebio-yellow" },

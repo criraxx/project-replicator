@@ -50,7 +50,7 @@ const BolsistaHistory = () => {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {[
           { label: "Total de Atividades", value: activities.length, iconBg: "bg-cebio-blue-bg", iconColor: "text-cebio-blue" },
           { label: "Submissões", value: submissions, iconBg: "bg-cebio-green-bg", iconColor: "text-primary" },

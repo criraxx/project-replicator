@@ -335,7 +335,7 @@ const AdminReports = () => {
 
       <div>
       {/* KPIs */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {[
           { icon: FileText, label: "Projetos (filtrados)", value: filtered.length, sub: `de ${projects.length} totais`, iconBg: "bg-cebio-blue-bg", iconColor: "text-cebio-blue" },
           { icon: Users, label: "Usuários no Sistema", value: users.length, sub: `${users.filter(u => u.is_active).length} ativos`, iconBg: "bg-cebio-green-bg", iconColor: "text-primary" },
@@ -361,7 +361,7 @@ const AdminReports = () => {
           <Filter className="w-4 h-4 text-muted-foreground" />
           <h3 className="text-sm font-semibold">Filtros</h3>
         </div>
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
           <MultiSelectFilter
             label="Status"
             options={STATUS_OPTIONS.filter(o => o.value !== "all")}

@@ -171,7 +171,7 @@ const AdminUsers = () => {
         <p className="text-sm opacity-90">Gerencie todos os usuários da plataforma CEBIO</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {[
           { label: "Total", value: users.length, color: "text-cebio-blue" },
           { label: "Ativos", value: users.filter((u) => u.is_active).length, color: "text-primary" },

@@ -92,7 +92,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {[
           { label: "Total de Projetos", value: stats.total, sub: `${stats.pending} pendentes`, icon: FolderOpen, iconBg: "bg-cebio-blue-bg", iconColor: "text-cebio-blue" },
           { label: "Aprovados", value: stats.approved, sub: stats.total ? `${Math.round((stats.approved / stats.total) * 100)}% do total` : "0%", icon: CheckCircle, iconBg: "bg-cebio-green-bg", iconColor: "text-primary" },
@@ -113,7 +113,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
         {[
           { label: "Novo Usuário", icon: Users, path: "/admin/usuarios" },
           { label: "Pendentes", icon: Clock, path: "/admin/projetos" },

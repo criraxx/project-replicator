@@ -79,7 +79,7 @@ const AdminAudit = () => {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {[
           { label: "Total de Logs", value: logs.length, icon: Shield, iconBg: "bg-cebio-green-bg", iconColor: "text-primary" },
           { label: "Críticos", value: criticalCount, icon: AlertTriangle, iconBg: "bg-cebio-red-bg", iconColor: "text-cebio-red" },
