@@ -1,78 +1,79 @@
 
 
-## Plano de Implementacao
+# Plano de Revisão Completa do Backend CEBIO Brasil
 
-### Resumo
-3 tarefas principais:
-1. Criar pagina de Rejeicao em Lote
-2. Mover criacao de categorias/niveis do Dashboard para Acoes Admin
-3. Reconstruir pagina de Relatorios com filtros completos e graficos interativos
+## Problemas Encontrados
 
----
+### 1. BUG CRITICO: Erro de Sintaxe no ProjectService
+O arquivo `server/src/services/ProjectService.ts` tem uma chave `}` faltando no final do método `rejectPendingEdit` (linha 259). Os métodos `listUserProjects` e `searchProjects` estão aninhados dentro de `rejectPendingEdit`, o que causa erro de compilação e impede o servidor de iniciar.
 
-### 1. Pagina de Rejeicao em Lote (`AdminBatchRejection.tsx`)
+### 2. Entidade User Incompleta
+A entidade `User` está faltando 4 colunas que existem no SQL e são usadas nas rotas:
+- `phone` (VARCHAR 20)
+- `department` (VARCHAR 300)
+- `birth_date` (DATE)
+- `registration_number` (VARCHAR 100)
 
-Criar pagina similar a `AdminBatchApproval.tsx` mas para rejeicao:
-- Lista projetos pendentes com checkbox de selecao
-- Campo obrigatorio de motivo da rejeicao (textarea)
-- Botao "Rejeitar Selecionados" que envia os IDs + comentario
-- Atualizar `api.ts` para `batchReject` aceitar comentario
-- Registrar rota `/admin/rejeicao-lote` em `App.tsx`
+As rotas de criação/atualização de usuário enviam esses campos, mas a entidade não os declara, então serão silenciosamente ignorados pelo TypeORM.
 
-### 2. Mover Categorias/Niveis para Acoes Admin
+### 3. UserService Incompatível com as Rotas
+- O método `createUser` aceita apenas 6 parâmetros, mas a rota envia 11 (incluindo cpf, birth_date, phone, department, registration_number)
+- O método `getUserByCpf` não existe, mas a rota `/users/by-cpf/:cpf` tenta chamá-lo
+- O perfil (`/auth/profile`) retorna `user.birth_date`, `user.phone`, etc. que não existem na entidade
 
-**Dashboard (`AdminDashboard.tsx`):**
-- Remover botoes "Nova Categoria" e "Novo Nivel" da area de acoes rapidas
-- Manter apenas: Novo Usuario, Pendentes, Auditoria
+### 4. Rotas de Exportação sem Autenticação
+As rotas em `exports.ts` e `fullExport.ts` não usam `authMiddleware` nem `requireRole('admin')`. Qualquer pessoa pode acessar `/api/exports/full/excel` e exportar todos os dados do sistema, incluindo dados sensíveis.
 
-**Acoes Admin (`AdminActions.tsx`):**
-- Adicionar 2 novos cards: "Gerenciar Categorias" (link para `/admin/categorias`) e "Gerenciar Niveis Academicos" (link para `/admin/categorias` na tab niveis)
+### 5. Login sem Rate Limiting
+O `loginLimiter` está definido em `security.ts` mas nunca é aplicado na rota `/api/login` em `auth.ts`. Isso permite ataques de força bruta ilimitados.
 
-### 3. Pagina de Relatorios Completa (`AdminReports.tsx`)
+### 6. Hash de Senha Fraco (SHA256)
+O sistema usa `crypto.createHash('sha256')` puro para senhas, sem salt. Isso é vulnerável a rainbow tables. O ideal seria bcrypt ou argon2, mas como o projeto é uma replicação 1:1 e o SQL já tem os hashes SHA256, vou manter a consistência e apenas documentar.
 
-Reconstruir totalmente com:
-
-**Painel de Filtros:**
-- Status (pendente, aprovado, rejeitado, em revisao)
-- Categoria (dropdown com categorias do sistema)
-- Tipo de usuario (pesquisador, bolsista)
-- Data de inicio e termino (range picker)
-- Proprietario/autor especifico
-- Botao "Gerar Relatorio" e "Limpar Filtros"
-
-**KPIs dinamicos (cards no topo):**
-- Total de projetos (filtrado), usuarios ativos, taxa de aprovacao, tempo medio de revisao
-
-**Graficos interativos (Recharts, ja instalado):**
-- **Colunas**: Projetos por categoria
-- **Barras horizontais**: Projetos por usuario (top 10)
-- **Linhas**: Evolucao temporal de submissoes por mes
-- **Pizza/Setores**: Distribuicao por status
-- **Pictograma**: Proporcao pesquisadores vs bolsistas (grid de icones)
-
-**Seletor de tipo de grafico**: O admin pode alternar entre os 5 tipos para cada visualizacao
-
-**Tabela resumo**: Dados tabulares com totais, exportavel
-
-**Botao Exportar PDF**: Gera relatorio com os filtros aplicados
-
-**Backend**: Criar endpoint `GET /api/reports/advanced` que aceita query params de filtro e retorna dados agregados (por status, por categoria, por usuario, por mes, totais).
+### 7. Validadores Definidos mas Não Usados
+O arquivo `validation.ts` tem validadores completos (`validateLogin`, `validateCreateUser`, etc.), mas nenhuma rota os utiliza. Os dados passam direto sem validação/sanitização server-side.
 
 ---
 
-### Detalhes Tecnicos
+## Plano de Correções
 
-**Arquivos novos:**
-- `src/pages/admin/AdminBatchRejection.tsx`
+### Etapa 1: Corrigir User Entity
+Adicionar as 4 colunas faltantes (`phone`, `department`, `birth_date`, `registration_number`) à entidade `User.ts`.
 
-**Arquivos editados:**
-- `src/pages/admin/AdminReports.tsx` (reconstruido)
-- `src/pages/admin/AdminDashboard.tsx` (remover botoes categoria/nivel)
-- `src/pages/admin/AdminActions.tsx` (adicionar cards categoria/nivel)
-- `src/App.tsx` (rota rejeicao-lote)
-- `src/services/api.ts` (endpoint reports/advanced, batchReject com comment)
-- `server/src/routes/admin.ts` (endpoint reports/advanced)
-- `server/src/services/ProjectService.ts` (metodo getAdvancedReport com filtros)
+### Etapa 2: Corrigir UserService
+- Expandir `createUser` para aceitar todos os campos (cpf, birth_date, phone, department, registration_number)
+- Adicionar método `getUserByCpf`
 
-**Bibliotecas**: Recharts (ja instalado) para todos os graficos incluindo pictograma customizado.
+### Etapa 3: Corrigir ProjectService (Bug Crítico)
+Adicionar a chave `}` faltante para fechar corretamente o método `rejectPendingEdit` antes de `listUserProjects`.
+
+### Etapa 4: Proteger Rotas de Exportação
+Adicionar `authMiddleware` e `requireRole('admin')` em todas as rotas de `exports.ts` e `fullExport.ts`.
+
+### Etapa 5: Aplicar Rate Limiting no Login
+Importar e aplicar `loginLimiter` na rota POST `/login` em `auth.ts`.
+
+### Etapa 6: Aplicar Validadores nas Rotas
+Conectar os validadores já criados (`validateLogin`, `validateCreateUser`, `validateCreateProject`, etc.) às rotas correspondentes com `handleValidationErrors`.
+
+### Etapa 7: Atualizar SQL de Banco
+Atualizar `cebio_database.sql` para garantir total consistência com as entidades (já está correto - os campos existem no SQL mas faltavam na entidade TypeORM).
+
+### Etapa 8: Configuração de Produção
+- Desativar `synchronize: true` em produção no `database.ts`
+- Garantir que `JWT_SECRET` use valor seguro (já configurável via env)
+
+---
+
+## Como Hospedar
+
+Após as correções, para colocar tudo em produção:
+
+1. **Servidor (VPS ou Cloud)**: Alugue um servidor (DigitalOcean, AWS, Contabo, etc.)
+2. **MySQL**: Instale MySQL 8.x e importe o arquivo `cebio_database.sql`
+3. **Backend**: Copie a pasta `server/`, execute `npm install`, configure o `.env` com dados do banco, e execute `npm run build && npm start`
+4. **Frontend**: Execute `npm run build` na raiz e sirva a pasta `dist/` via Nginx
+5. **Nginx**: Configure como proxy reverso para o backend na porta 8000 e sirva o frontend estático, com redirecionamento de `/api` para o backend
+
+O frontend já usa `/api` como base URL relativa, então basta o Nginx rotear corretamente.
 
