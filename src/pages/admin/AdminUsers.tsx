@@ -26,11 +26,40 @@ const AdminUsers = () => {
   const confirm = useConfirmDialog();
 
   // Form state for new user
-  const [newUser, setNewUser] = useState({ name: "", email: "", role: "bolsista", institution: "", password: "cebio2024" });
+  const [newUser, setNewUser] = useState({
+    name: "", email: "", role: "bolsista", institution: "", password: "cebio2024",
+    cpf: "", birth_date: "", phone: "", department: "", registration_number: "",
+  });
 
   // Batch creation state
   const [batchText, setBatchText] = useState("");
   const [batchPassword, setBatchPassword] = useState("cebio2024");
+
+  // Auto-format helpers
+  const formatCpf = (v: string) => {
+    const d = v.replace(/\D/g, "").slice(0, 11);
+    if (d.length <= 3) return d;
+    if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
+    if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
+    return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+  };
+  const formatDate = (v: string) => {
+    const d = v.replace(/\D/g, "").slice(0, 8);
+    if (d.length <= 2) return d;
+    if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`;
+    return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
+  };
+  const formatPhone = (v: string) => {
+    const d = v.replace(/\D/g, "").slice(0, 11);
+    if (d.length <= 2) return d.length ? `(${d}` : "";
+    if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+    return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  };
+  const parseDateToISO = (v: string) => {
+    const p = v.split("/");
+    if (p.length === 3 && p[2].length === 4) return `${p[2]}-${p[1]}-${p[0]}`;
+    return "";
+  };
 
   const fetchUsers = async () => {
     try {
@@ -58,17 +87,23 @@ const AdminUsers = () => {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newUser.cpf || newUser.cpf.replace(/\D/g, "").length !== 11) {
+      toast({ title: "Erro", description: "CPF invalido", variant: "destructive" }); return;
+    }
+    const isoDate = parseDateToISO(newUser.birth_date);
+    if (!isoDate) {
+      toast({ title: "Erro", description: "Data de nascimento invalida (dd/mm/aaaa)", variant: "destructive" }); return;
+    }
     try {
       await api.createUser({
-        email: newUser.email,
-        name: newUser.name,
-        password: newUser.password,
-        role: newUser.role,
-        institution: newUser.institution,
+        email: newUser.email, name: newUser.name, password: newUser.password, role: newUser.role,
+        cpf: newUser.cpf.replace(/\D/g, ""), birth_date: isoDate,
+        institution: newUser.institution, phone: newUser.phone.replace(/\D/g, ""),
+        department: newUser.department, registration_number: newUser.registration_number,
       });
-      toast({ title: "Sucesso", description: "Usuário criado com sucesso!" });
+      toast({ title: "Sucesso", description: "Usuario criado com sucesso!" });
       setShowNewUser(false);
-      setNewUser({ name: "", email: "", role: "bolsista", institution: "", password: "cebio2024" });
+      setNewUser({ name: "", email: "", role: "bolsista", institution: "", password: "cebio2024", cpf: "", birth_date: "", phone: "", department: "", registration_number: "" });
       fetchUsers();
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
@@ -79,28 +114,23 @@ const AdminUsers = () => {
     try {
       const lines = batchText.trim().split("\n").filter((l) => l.trim());
       const usersData = lines.map((line) => {
-        const parts = line.split(";").map((p) => p.trim());
+        const p = line.split(";").map((s) => s.trim());
+        const dateParts = (p[3] || "").split("/");
+        const isoDate = dateParts.length === 3 && dateParts[2]?.length === 4 ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}` : p[3] || "";
         return {
-          name: parts[0] || "",
-          email: parts[1] || "",
-          role: parts[2] || "bolsista",
-          institution: parts[3] || "",
+          name: p[0] || "", email: p[1] || "",
+          cpf: (p[2] || "").replace(/\D/g, ""), birth_date: isoDate,
+          role: p[4] || "bolsista", institution: p[5] || "",
+          phone: (p[6] || "").replace(/\D/g, ""), department: p[7] || "",
+          registration_number: p[8] || "",
         };
       });
-
       if (usersData.length === 0) {
-        toast({ title: "Erro", description: "Nenhum usuário para cadastrar", variant: "destructive" });
-        return;
+        toast({ title: "Erro", description: "Nenhum usuario para cadastrar", variant: "destructive" }); return;
       }
-
       const result = await api.batchCreateUsers(usersData, batchPassword);
-      toast({
-        title: "Criação em lote concluída",
-        description: `${result.success.length} criados, ${result.errors.length} erros`,
-      });
-      setShowBatchModal(false);
-      setBatchText("");
-      fetchUsers();
+      toast({ title: "Criacao em lote concluida", description: `${result.success.length} criados, ${result.errors.length} erros` });
+      setShowBatchModal(false); setBatchText(""); fetchUsers();
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     }
@@ -178,40 +208,68 @@ const AdminUsers = () => {
         </button>
       </div>
 
-      {/* Modal: Novo Usuário */}
+      {/* Modal: Novo Usuario */}
       {showNewUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-xl p-6 w-full max-w-md shadow-xl border border-border">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-8">
+          <div className="bg-card rounded-xl p-6 w-full max-w-lg shadow-xl border border-border">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Novo Usuário</h3>
+              <h3 className="text-lg font-semibold">Novo Usuario</h3>
               <button onClick={() => setShowNewUser(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
             </div>
-            <form onSubmit={handleCreateUser} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Nome</label>
-                <input type="text" required value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+            <form onSubmit={handleCreateUser} className="space-y-3">
+              <p className="text-xs text-muted-foreground mb-1">Campos com * sao obrigatorios</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium mb-1">Nome Completo *</label>
+                  <input type="text" required placeholder="Ex: Joao da Silva" value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium mb-1">Email *</label>
+                  <input type="email" required placeholder="Ex: usuario@ifgoiano.edu.br" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">CPF *</label>
+                  <input type="text" required placeholder="000.000.000-00" value={newUser.cpf} onChange={(e) => setNewUser({ ...newUser, cpf: formatCpf(e.target.value) })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" maxLength={14} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Data de Nascimento *</label>
+                  <input type="text" required placeholder="dd/mm/aaaa" value={newUser.birth_date} onChange={(e) => setNewUser({ ...newUser, birth_date: formatDate(e.target.value) })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" maxLength={10} />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium mb-1">Funcao/Perfil *</label>
+                  <select value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card">
+                    <option value="pesquisador">Pesquisador</option>
+                    <option value="bolsista">Bolsista</option>
+                    <option value="admin">Administrador</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <input type="email" required value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+              <div className="border-t border-border pt-3 mt-3">
+                <p className="text-xs text-muted-foreground mb-2">Campos opcionais</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium mb-1">Departamento/Campus</label>
+                    <input type="text" placeholder="Ex: Campus Ipora" value={newUser.department} onChange={(e) => setNewUser({ ...newUser, department: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Telefone</label>
+                    <input type="text" placeholder="(XX) 9XXXX-XXXX" value={newUser.phone} onChange={(e) => setNewUser({ ...newUser, phone: formatPhone(e.target.value) })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" maxLength={16} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Matricula/Registro</label>
+                    <input type="text" placeholder="Ex: 2024001" value={newUser.registration_number} onChange={(e) => setNewUser({ ...newUser, registration_number: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium mb-1">Instituicao</label>
+                    <input type="text" placeholder="Ex: IF Goiano" value={newUser.institution} onChange={(e) => setNewUser({ ...newUser, institution: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium mb-1">Senha inicial</label>
+                    <input type="text" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Perfil</label>
-                <select value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card">
-                  <option value="bolsista">Bolsista</option>
-                  <option value="pesquisador">Pesquisador</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Instituição</label>
-                <input type="text" value={newUser.institution} onChange={(e) => setNewUser({ ...newUser, institution: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Senha inicial</label>
-                <input type="text" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
-              </div>
-              <button type="submit" className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg text-sm font-semibold">Criar Usuário</button>
+              <button type="submit" className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg text-sm font-semibold mt-2">Criar Usuario</button>
             </form>
           </div>
         </div>
@@ -219,28 +277,31 @@ const AdminUsers = () => {
 
       {/* Modal: Cadastro em Lote */}
       {showBatchModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-xl p-6 w-full max-w-lg shadow-xl border border-border">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-8">
+          <div className="bg-card rounded-xl p-6 w-full max-w-2xl shadow-xl border border-border">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Cadastro em Lote</h3>
               <button onClick={() => setShowBatchModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
             </div>
-            <p className="text-sm text-muted-foreground mb-3">
-              Cole os dados dos usuários, um por linha, no formato:<br />
-              <code className="text-xs bg-muted px-1.5 py-0.5 rounded">Nome;Email;Perfil;Instituição</code>
+            <p className="text-sm text-muted-foreground mb-2">
+              Cole os dados dos usuarios, um por linha, no formato:
             </p>
+            <code className="text-xs bg-muted px-2 py-1 rounded block mb-2 font-mono">
+              Nome;Email;CPF;DataNasc(dd/mm/aaaa);Perfil;Instituicao;Telefone;Depto;Matricula
+            </code>
+            <p className="text-xs text-muted-foreground mb-1">Campos obrigatorios: Nome, Email, CPF, Data de Nascimento, Perfil</p>
             <p className="text-xs text-muted-foreground mb-3">
-              Exemplo: <code className="bg-muted px-1 py-0.5 rounded">Maria Santos;maria@email.com;bolsista;IF Goiano</code>
+              Exemplo: <code className="bg-muted px-1 py-0.5 rounded font-mono text-[11px]">Maria Santos;maria@ifgoiano.edu.br;123.456.789-00;15/03/1990;bolsista;IF Goiano;(64) 99999-9999;Campus Ipora;2024001</code>
             </p>
             <textarea
               rows={8}
               value={batchText}
               onChange={(e) => setBatchText(e.target.value)}
-              placeholder="Nome;Email;Perfil;Instituição"
+              placeholder="Nome;Email;CPF;DataNasc;Perfil;Instituicao;Telefone;Depto;Matricula"
               className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card font-mono mb-3"
             />
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Senha padrão para todos</label>
+              <label className="block text-sm font-medium mb-1">Senha padrao para todos</label>
               <input type="text" value={batchPassword} onChange={(e) => setBatchPassword(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
             </div>
             <button onClick={handleBatchCreate} className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg text-sm font-semibold">
