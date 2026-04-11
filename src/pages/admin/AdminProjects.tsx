@@ -8,6 +8,7 @@ import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
+import { formatDateBrasilia } from "@/lib/formatters";
 
 const STATUS_OPTIONS = [
   { value: "pendente", label: "Pendente" },
@@ -178,7 +179,7 @@ const AdminProjects = () => {
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString("pt-BR")}</span>
+                    <span className="text-xs text-muted-foreground">{formatDateBrasilia(p.created_at)}</span>
                     <button onClick={() => navigate(`/admin/projeto?id=${p.id}`)} className="px-3 py-1.5 text-xs font-semibold rounded-md bg-primary text-primary-foreground">Ver Projeto</button>
                   </div>
                 </div>
@@ -220,7 +221,7 @@ const AdminProjects = () => {
                       </div>
                     </td>
                     <td className="p-3 text-muted-foreground">{p.owner?.name || p.owner_name || "—"}</td>
-                    <td className="p-3 text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
+                    <td className="p-3 text-muted-foreground text-xs">{formatDateBrasilia(p.created_at)}</td>
                     <td className="p-3">
                       <button onClick={() => navigate(`/admin/projeto?id=${p.id}`)} className="px-3 py-1.5 text-xs font-semibold rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">Ver Projeto</button>
                     </td>

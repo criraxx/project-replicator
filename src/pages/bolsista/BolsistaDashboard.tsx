@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { BOLSISTA_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
+import { formatDateBrasilia } from "@/lib/formatters";
 
 
 const BolsistaDashboard = () => {
@@ -103,7 +104,7 @@ const BolsistaDashboard = () => {
                       </div>
                       <p className="text-[13px] text-muted-foreground line-clamp-3 mb-2">{p.summary || p.description || "Sem resumo disponível"}</p>
                       <div className="text-xs text-muted-foreground">
-                        {p.category || "—"} • {p.owner?.name || user?.name} • {new Date(p.created_at).toLocaleDateString("pt-BR")}
+                        {p.category || "—"} • {p.owner?.name || user?.name} • {formatDateBrasilia(p.created_at)}
                       </div>
                     </div>
                   ))}

@@ -10,6 +10,7 @@ import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { type User } from "@/data/mockData";
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
 import { formatCpf, formatDate, formatPhone, parseDateToISO, validatePassword } from "@/lib/formatters";
+import { formatDateBrasilia } from "@/lib/formatters";
 
 const AdminUsers = () => {
   const navigate = useNavigate();
@@ -378,7 +379,7 @@ const AdminUsers = () => {
                           {u.is_active ? "Ativo" : "Inativo"}
                         </span>
                       </td>
-                      <td className="p-3 text-muted-foreground text-xs">{u.last_login ? new Date(u.last_login).toLocaleDateString("pt-BR") : "Nunca"}</td>
+                      <td className="p-3 text-muted-foreground text-xs">{u.last_login ? formatDateBrasilia(u.last_login) : "Nunca"}</td>
                       <td className="p-3">
                         <div className="flex justify-center gap-1.5">
                           <button onClick={() => navigate(`/admin/usuario?id=${u.id}`)} className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">Detalhes</button>

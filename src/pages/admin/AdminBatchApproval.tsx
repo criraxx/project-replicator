@@ -4,6 +4,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { formatDateBrasilia } from "@/lib/formatters";
 
 const AdminBatchApproval = () => {
   const [projects, setProjects] = useState<any[]>([]);
@@ -83,7 +84,7 @@ const AdminBatchApproval = () => {
                 <div className="flex gap-2.5 text-xs text-muted-foreground mb-2">
                   <span>{p.owner?.name || "—"}</span>
                   <span>{p.category || "—"}</span>
-                  <span>{new Date(p.created_at).toLocaleDateString("pt-BR")}</span>
+                  <span>{formatDateBrasilia(p.created_at)}</span>
                 </div>
                 <p className="text-[13px] text-muted-foreground">{p.summary || "Sem resumo"}</p>
               </div>
