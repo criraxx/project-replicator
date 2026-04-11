@@ -131,4 +131,14 @@ export class UserService {
       throw new AppError(404, 'Usuário não encontrado');
     }
   }
+
+  async listInstitutions(): Promise<string[]> {
+    const results = await this.userRepository
+      .createQueryBuilder('user')
+      .select('DISTINCT user.institution', 'institution')
+      .where('user.institution IS NOT NULL')
+      .andWhere("user.institution != ''")
+      .getRawMany();
+    return results.map((r: any) => r.institution).filter(Boolean).sort();
+  }
 }
