@@ -4,6 +4,14 @@ import { AuthorApprovalService } from '../services/AuthorApprovalService';
 import { authMiddleware, requireRole } from '../utils/auth';
 import { AuditService } from '../services/AuditService';
 import { ProjectStatus } from '../entities/Project';
+import {
+  validateCreateProject,
+  validateUpdateProject,
+  validateId,
+  validateProjectFilter,
+  validatePagination,
+  handleValidationErrors,
+} from '../middleware/validation';
 
 const router = Router();
 const projectService = new ProjectService();
@@ -150,7 +158,7 @@ router.get('/projects/:id', authMiddleware, async (req: Request, res: Response) 
 });
 
 // POST /api/projects
-router.post('/projects', authMiddleware, async (req: Request, res: Response) => {
+router.post('/projects', authMiddleware, ...validateCreateProject, handleValidationErrors, async (req: Request, res: Response) => {
   try {
     const { title, summary, description, category, academic_level, start_date, end_date, authors } = req.body;
 
@@ -195,7 +203,7 @@ router.post('/projects', authMiddleware, async (req: Request, res: Response) => 
 });
 
 // PUT /api/projects/:id
-router.put('/projects/:id', authMiddleware, async (req: Request, res: Response) => {
+router.put('/projects/:id', authMiddleware, ...validateUpdateProject, handleValidationErrors, async (req: Request, res: Response) => {
   try {
     const isAdmin = req.user!.role === 'admin';
     const project = await projectService.updateProject(Number(req.params.id), req.body, req.user!.id, isAdmin);
