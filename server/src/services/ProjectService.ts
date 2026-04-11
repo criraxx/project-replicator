@@ -2,12 +2,14 @@ import { AppDataSource } from '../config/database';
 import { Project, ProjectStatus } from '../entities/Project';
 import { ProjectVersion } from '../entities/ProjectVersion';
 import { ProjectComment } from '../entities/ProjectComment';
+import { ProjectAuthor } from '../entities/ProjectAuthor';
 import { AppError } from '../middleware/errorHandler';
 
 export class ProjectService {
   private projectRepository = AppDataSource.getRepository(Project);
   private versionRepository = AppDataSource.getRepository(ProjectVersion);
   private commentRepository = AppDataSource.getRepository(ProjectComment);
+  private authorRepository = AppDataSource.getRepository(ProjectAuthor);
 
   async createProject(
     title: string,
