@@ -291,18 +291,18 @@ const AdminUsers = () => {
                       </td>
                       <td className="p-3 text-muted-foreground text-xs">{u.last_login ? new Date(u.last_login).toLocaleDateString("pt-BR") : "Nunca"}</td>
                       <td className="p-3">
-                        <div className="flex justify-center gap-2">
-                          <button onClick={() => navigate(`/admin/usuario?id=${u.id}`)} className="text-xs font-medium text-primary hover:underline">
+                        <div className="flex justify-center gap-1.5">
+                          <button onClick={() => navigate(`/admin/usuario?id=${u.id}`)} className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
                             Detalhes
                           </button>
-                          <button onClick={() => handleToggleActive(u.id, u.is_active)} className={`text-xs font-medium hover:underline ${u.is_active ? "text-cebio-red" : "text-primary"}`}>
+                          <button onClick={() => handleToggleActive(u.id, u.is_active)} className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors ${u.is_active ? "bg-cebio-yellow-bg text-cebio-yellow hover:bg-cebio-yellow-bg/80" : "bg-cebio-green-bg text-primary hover:bg-cebio-green-bg/80"}`}>
                             {u.is_active ? "Desativar" : "Ativar"}
                           </button>
                           <button onClick={() => {
                             if (confirm(`Tem certeza que deseja EXCLUIR permanentemente ${u.name}?`)) {
                               api.deleteUser(u.id).then(() => { toast({ title: "Sucesso", description: "Usuario excluido" }); fetchUsers(); }).catch((err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }));
                             }
-                          }} className="text-xs font-medium text-cebio-red hover:underline">
+                          }} className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-cebio-red-bg text-cebio-red hover:bg-cebio-red-bg/80 transition-colors">
                             Excluir
                           </button>
                         </div>
