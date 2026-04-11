@@ -279,15 +279,32 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
             {photos.length > 0 && (
               <>
                 <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2"><Image className="w-4 h-4" /> Fotos</h4>
-                <div className="space-y-2 mb-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
                   {photos.map((file: any, i: number) => (
-                    <div key={i} className="flex items-center gap-3 bg-muted/50 border border-border rounded-lg p-3">
-                      <div className="w-10 h-10 bg-cebio-green-bg rounded flex items-center justify-center"><Image className="w-5 h-5 text-primary" /></div>
-                      <div className="flex-1">
-                        <div className="text-sm text-foreground">{file.original_name}</div>
-                        <div className="text-xs text-muted-foreground">{formatFileSize(file.file_size || 0)}</div>
+                    <div key={i} className="bg-muted/50 border border-border rounded-lg overflow-hidden group">
+                      <div className="relative aspect-square bg-muted">
+                        <img
+                          src={`/api/projects/${project.id}/files/${file.id}/download`}
+                          alt={file.original_name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <button
+                            onClick={() => setPreviewImage(`/api/projects/${project.id}/files/${file.id}/download`)}
+                            className="p-2 bg-white/90 rounded-full mr-2"
+                          >
+                            <Eye className="w-4 h-4 text-foreground" />
+                          </button>
+                          <a href={`/api/projects/${project.id}/files/${file.id}/download`} download className="p-2 bg-white/90 rounded-full">
+                            <Download className="w-4 h-4 text-foreground" />
+                          </a>
+                        </div>
                       </div>
-                      <a href={`/api/projects/${project.id}/files/${file.id}/download`} className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-secondary transition-colors">Baixar</a>
+                      <div className="p-2">
+                        <div className="text-xs text-foreground truncate">{file.original_name}</div>
+                        <div className="text-[10px] text-muted-foreground">{formatFileSize(file.file_size || 0)}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -304,7 +321,12 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
                         <div className="text-sm text-foreground">{file.original_name}</div>
                         <div className="text-xs text-muted-foreground">{formatFileSize(file.file_size || 0)}</div>
                       </div>
-                      <a href={`/api/projects/${project.id}/files/${file.id}/download`} className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-secondary transition-colors">Baixar</a>
+                      <a href={`/api/projects/${project.id}/files/${file.id}/download`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-muted border border-border text-foreground rounded text-xs font-medium hover:bg-accent transition-colors flex items-center gap-1">
+                        <Eye className="w-3.5 h-3.5" /> Ver
+                      </a>
+                      <a href={`/api/projects/${project.id}/files/${file.id}/download`} download className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-secondary transition-colors flex items-center gap-1">
+                        <Download className="w-3.5 h-3.5" /> Baixar
+                      </a>
                     </div>
                   ))}
                 </div>
