@@ -487,7 +487,7 @@ const AdminReports = () => {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-2 gap-6 mb-6">
+      <div ref={chartsRef} className="grid grid-cols-2 gap-6 mb-6">
         <div className="bg-card rounded-xl shadow-sm border border-border p-5">
           <h3 className="text-sm font-semibold mb-4">Projetos por Status</h3>
           <RenderChart type={chartType} data={byStatus} />
