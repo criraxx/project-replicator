@@ -135,6 +135,7 @@ const AdminReports = () => {
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [chartType, setChartType] = useState<ChartType>("columns");
+  const chartsRef = useRef<HTMLDivElement>(null);
 
   const [projects, setProjects] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
