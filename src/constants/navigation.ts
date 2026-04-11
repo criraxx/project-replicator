@@ -9,7 +9,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: "Usuários", path: "/admin/usuarios" },
   { label: "Ações Admin", path: "/admin/acoes" },
   { label: "Relatórios", path: "/admin/relatorios" },
-  { label: "Exportação", path: "/admin/exportacao" },
+  
   { label: "Auditoria", path: "/admin/auditoria" },
 ];
 
