@@ -396,11 +396,16 @@ const AdminReports = () => {
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6 flex justify-between items-center">
         <div>
           <h2 className="text-[22px] font-semibold mb-1.5">Relatórios e Analytics</h2>
-          <p className="text-sm opacity-90">Visão detalhada e personalizável do desempenho da plataforma</p>
+          <p className="text-sm opacity-90">Visao detalhada e personalizavel do desempenho da plataforma</p>
         </div>
-        <button onClick={exportPDF} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors">
-          <Download className="w-4 h-4" /> Exportar PDF
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => setShowCustomExport(true)} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors">
+            <Filter className="w-4 h-4" /> Exportar Personalizado
+          </button>
+          <button onClick={() => exportPDF()} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors">
+            <Download className="w-4 h-4" /> Exportar Tudo
+          </button>
+        </div>
       </div>
 
       {/* KPIs */}
