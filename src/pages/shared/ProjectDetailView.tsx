@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Image, ExternalLink, CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
+import { ArrowLeft, FileText, Image, ExternalLink, CheckCircle, XCircle, Clock, AlertTriangle, Download, Eye, X } from "lucide-react";
 import { formatDateBrasilia, formatDateTimeBrasilia } from "@/lib/formatters";
 import AppLayout from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
