@@ -67,6 +67,22 @@ export class Project {
   @Column({ type: 'int', nullable: true })
   deleted_by?: number;
 
+  // Pending edit fields - when author requests changes on approved project
+  @Column({ type: 'boolean', default: false })
+  has_pending_edit: boolean = false;
+
+  @Column({ type: 'text', nullable: true })
+  pending_edit_data?: string; // JSON string of proposed changes
+
+  @Column({ type: 'int', nullable: true })
+  pending_edit_by?: number;
+
+  @Column({ type: 'datetime', nullable: true })
+  pending_edit_at?: Date;
+
+  @Column({ type: 'text', nullable: true })
+  pending_edit_comment?: string; // Author's reason for edit
+
   @CreateDateColumn()
   created_at!: Date;
 

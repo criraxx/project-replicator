@@ -75,14 +75,33 @@ export class ProjectService {
     return this.listProjects(undefined, 'pendente', limit, offset);
   }
 
-  async updateProject(id: number, updates: Partial<Project>, changedBy: number): Promise<Project> {
+  async updateProject(id: number, updates: Partial<Project>, changedBy: number, isAdmin: boolean = false): Promise<Project> {
     const project = await this.getProjectById(id);
     if (!project) {
-      throw new AppError(404, 'Projeto não encontrado');
+      throw new AppError(404, 'Projeto nao encontrado');
     }
 
-    // Record version history
+    // If NOT admin and project is approved, store as pending edit request
+    if (!isAdmin && project.status === 'aprovado') {
+      // Remove fields that shouldn't be in pending edits
+      const { status, is_deleted, deleted_at, deleted_by, reviewed_by, reviewed_at, review_comment, ...editableUpdates } = updates as any;
+
+      await this.projectRepository.update(id, {
+        has_pending_edit: true,
+        pending_edit_data: JSON.stringify(editableUpdates),
+        pending_edit_by: changedBy,
+        pending_edit_at: new Date(),
+        pending_edit_comment: (updates as any).edit_reason || 'Solicitacao de alteracao',
+      });
+
+      const updated = await this.getProjectById(id);
+      if (!updated) throw new AppError(404, 'Projeto nao encontrado');
+      return updated;
+    }
+
+    // Admin or project not yet approved: apply directly
     for (const [field, newValue] of Object.entries(updates)) {
+      if (field === 'edit_reason') continue; // skip meta field
       const oldValue = (project as any)[field];
       if (oldValue !== newValue) {
         const version = this.versionRepository.create({
@@ -96,11 +115,10 @@ export class ProjectService {
       }
     }
 
-    await this.projectRepository.update(id, updates);
+    const { edit_reason, ...cleanUpdates } = updates as any;
+    await this.projectRepository.update(id, cleanUpdates);
     const updated = await this.getProjectById(id);
-    if (!updated) {
-      throw new AppError(404, 'Projeto não encontrado');
-    }
+    if (!updated) throw new AppError(404, 'Projeto nao encontrado');
     return updated;
   }
 
@@ -110,7 +128,7 @@ export class ProjectService {
       reviewed_by: reviewedBy,
       review_comment: comment,
       reviewed_at: new Date(),
-    }, reviewedBy);
+    }, reviewedBy, true);
   }
 
   async rejectProject(id: number, reviewedBy: number, comment?: string): Promise<Project> {
@@ -119,7 +137,7 @@ export class ProjectService {
       reviewed_by: reviewedBy,
       review_comment: comment,
       reviewed_at: new Date(),
-    }, reviewedBy);
+    }, reviewedBy, true);
   }
 
   async deleteProject(id: number, deletedBy: number): Promise<void> {
@@ -158,5 +176,83 @@ export class ProjectService {
     for (const id of projectIds) {
       await this.rejectProject(id, reviewedBy, comment);
     }
+  }
+
+  // --- Pending edit management (admin) ---
+
+  async listPendingEdits(): Promise<Project[]> {
+    return await this.projectRepository.find({
+      where: { has_pending_edit: true, is_deleted: false },
+      relations: ['owner'],
+      order: { pending_edit_at: 'DESC' },
+    });
+  }
+
+  async approvePendingEdit(id: number, adminId: number, comment?: string): Promise<Project> {
+    const project = await this.getProjectById(id);
+    if (!project) throw new AppError(404, 'Projeto nao encontrado');
+    if (!project.has_pending_edit || !project.pending_edit_data) {
+      throw new AppError(400, 'Nenhuma edicao pendente para este projeto');
+    }
+
+    const edits = JSON.parse(project.pending_edit_data);
+
+    // Record version history for each changed field
+    for (const [field, newValue] of Object.entries(edits)) {
+      const oldValue = (project as any)[field];
+      if (oldValue !== newValue) {
+        const version = this.versionRepository.create({
+          project_id: id,
+          field_changed: field,
+          old_value: String(oldValue),
+          new_value: String(newValue),
+          changed_by: adminId,
+        });
+        await this.versionRepository.save(version);
+      }
+    }
+
+    // Apply the edits + clear pending
+    await this.projectRepository.update(id, {
+      ...edits,
+      has_pending_edit: false,
+      pending_edit_data: undefined,
+      pending_edit_by: undefined,
+      pending_edit_at: undefined,
+      pending_edit_comment: undefined,
+    });
+
+    if (comment) {
+      await this.addComment(id, adminId, `Edicao aprovada: ${comment}`);
+    }
+
+    const updated = await this.getProjectById(id);
+    if (!updated) throw new AppError(404, 'Projeto nao encontrado');
+    return updated;
+  }
+
+  async rejectPendingEdit(id: number, adminId: number, comment?: string): Promise<Project> {
+    const project = await this.getProjectById(id);
+    if (!project) throw new AppError(404, 'Projeto nao encontrado');
+    if (!project.has_pending_edit) {
+      throw new AppError(400, 'Nenhuma edicao pendente para este projeto');
+    }
+
+    // Clear pending edit without applying
+    await this.projectRepository.update(id, {
+      has_pending_edit: false,
+      pending_edit_data: undefined,
+      pending_edit_by: undefined,
+      pending_edit_at: undefined,
+      pending_edit_comment: undefined,
+    });
+
+    if (comment) {
+      await this.addComment(id, adminId, `Edicao rejeitada: ${comment}`);
+    }
+
+    const updated = await this.getProjectById(id);
+    if (!updated) throw new AppError(404, 'Projeto nao encontrado');
+    return updated;
   }
 }
