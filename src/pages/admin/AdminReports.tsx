@@ -247,109 +247,50 @@ const AdminReports = () => {
     }, []);
   }, [projects, users]);
 
-  const exportPDF = () => {
-    const statusLabel = statusFilters.length > 0 ? statusFilters.map(s => STATUS_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos";
-    const userTypeLabel = userTypeFilters.length > 0 ? userTypeFilters.map(s => USER_TYPE_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos";
-    const catLabel = categoryFilters.length > 0 ? categoryFilters.join(", ") : "Todas";
-    const ownerLabel = ownerFilters.length > 0 ? ownerFilters.map(id => uniqueOwners.find(o => String(o.id) === id)?.name || id).join(", ") : "Todos";
-    const startLabel = startDate ? format(startDate, "dd/MM/yyyy") : "---";
-    const endLabel = endDate ? format(endDate, "dd/MM/yyyy") : "---";
+  const exportPDF = async () => {
+    if (!contentRef.current || exporting) return;
+    setExporting(true);
 
-    // Capture chart SVGs from the DOM
-    const chartSvgs: string[] = [];
-    if (chartsRef.current) {
-      const svgElements = chartsRef.current.querySelectorAll("svg.recharts-surface");
-      svgElements.forEach(svg => {
-        const clone = svg.cloneNode(true) as SVGElement;
-        const parent = svg.parentElement;
-        const w = parent?.clientWidth || 500;
-        const h = parent?.clientHeight || 280;
-        clone.setAttribute("width", String(w));
-        clone.setAttribute("height", String(h));
-        clone.setAttribute("viewBox", `0 0 ${w} ${h}`);
-        chartSvgs.push(new XMLSerializer().serializeToString(clone));
+    try {
+      const canvas = await html2canvas(contentRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        windowWidth: contentRef.current.scrollWidth,
       });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const usableWidth = pdfWidth - 2 * margin;
+
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = usableWidth / imgWidth;
+      const scaledHeight = imgHeight * ratio;
+
+      let heightLeft = scaledHeight;
+      let position = margin;
+
+      pdf.addImage(imgData, "PNG", margin, position, usableWidth, scaledHeight);
+      heightLeft -= (pdfHeight - 2 * margin);
+
+      while (heightLeft > 0) {
+        position = position - (pdfHeight - 2 * margin);
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", margin, position, usableWidth, scaledHeight);
+        heightLeft -= (pdfHeight - 2 * margin);
+      }
+
+      pdf.save(`relatorio_cebio_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    } catch (error) {
+      console.error("Erro ao exportar PDF:", error);
+    } finally {
+      setExporting(false);
     }
-
-    const chartTitles = ["Projetos por Status", "Projetos por Categoria", "Top 10 Usuarios", "Evolucao Temporal"];
-    const chartsHtml = chartSvgs.map((svg, i) =>
-      `<div style="margin-bottom:24px">
-        <h3 style="font-size:14px;color:#2d5f4a;margin-bottom:8px">${chartTitles[i] || `Grafico ${i + 1}`}</h3>
-        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center">${svg}</div>
-      </div>`
-    ).join("");
-
-    const printWin = window.open("", "_blank");
-    if (!printWin) return;
-
-    const rows = filtered.map(p => {
-      const owner = users.find(u => u.id === p.owner_id);
-      return `<tr>
-        <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb">${p.title}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb">${owner?.name || p.owner?.name || "---"}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb">${p.category || "---"}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb">${p.status}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb">${new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
-      </tr>`;
-    }).join("");
-
-    const statusRows = byStatus.map(d => `<tr><td style="padding:4px 8px">${d.name}</td><td style="padding:4px 8px;text-align:right">${d.value}</td></tr>`).join("");
-    const catRows = byCategory.map(d => `<tr><td style="padding:4px 8px">${d.name}</td><td style="padding:4px 8px;text-align:right">${d.value}</td></tr>`).join("");
-    const userRows = byUser.map(d => `<tr><td style="padding:4px 8px">${d.name}</td><td style="padding:4px 8px;text-align:right">${d.value}</td></tr>`).join("");
-
-    printWin.document.write(`<!DOCTYPE html><html><head><title>Relatorio CEBIO</title>
-      <style>body{font-family:Arial,sans-serif;margin:40px;color:#1a1a1a}
-      h1{color:#2d5f4a;margin-bottom:4px}h2{color:#2d5f4a;margin-top:28px;font-size:16px;border-bottom:2px solid #2d5f4a;padding-bottom:4px}
-      table{border-collapse:collapse;width:100%;margin-top:8px;font-size:13px}
-      th{text-align:left;padding:8px;background:#f0f7f4;border-bottom:2px solid #2d5f4a;font-size:12px}
-      .filters{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;background:#f9fafb;padding:12px;border-radius:8px;font-size:13px;margin-top:8px}
-      .filter-item span:first-child{font-weight:600;color:#555}
-      .kpi-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-top:12px}
-      .kpi{border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center}
-      .kpi .val{font-size:28px;font-weight:700;color:#2d5f4a}.kpi .lab{font-size:11px;color:#888}
-      .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px}
-      .summary-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:8px}
-      .summary-grid table{font-size:12px}
-      svg{max-width:100%;height:auto}
-      @media print{body{margin:20px}.charts-grid{break-inside:avoid}}</style></head><body>
-      <h1>Relatorio CEBIO Brasil</h1>
-      <p style="color:#888;font-size:13px">Gerado em ${new Date().toLocaleString("pt-BR")}</p>
-
-      <h2>Filtros Aplicados</h2>
-      <div class="filters">
-        <div class="filter-item"><span>Status:</span> ${statusLabel}</div>
-        <div class="filter-item"><span>Categoria:</span> ${catLabel}</div>
-        <div class="filter-item"><span>Tipo Usuario:</span> ${userTypeLabel}</div>
-        <div class="filter-item"><span>Proprietario:</span> ${ownerLabel}</div>
-        <div class="filter-item"><span>Data Inicio:</span> ${startLabel}</div>
-        <div class="filter-item"><span>Data Fim:</span> ${endLabel}</div>
-      </div>
-
-      <h2>Indicadores</h2>
-      <div class="kpi-grid">
-        <div class="kpi"><div class="val">${filtered.length}</div><div class="lab">Projetos Filtrados</div></div>
-        <div class="kpi"><div class="val">${users.length}</div><div class="lab">Usuarios no Sistema</div></div>
-        <div class="kpi"><div class="val">${approvalRate}%</div><div class="lab">Taxa de Aprovacao</div></div>
-        <div class="kpi"><div class="val">${categories.length}</div><div class="lab">Categorias</div></div>
-      </div>
-
-      <h2>Graficos</h2>
-      <div class="charts-grid">${chartsHtml || '<p style="color:#888">Nenhum grafico disponivel</p>'}</div>
-
-      <h2>Resumos</h2>
-      <div class="summary-grid">
-        <div><strong style="font-size:13px">Por Status</strong><table>${statusRows}</table></div>
-        <div><strong style="font-size:13px">Por Categoria</strong><table>${catRows}</table></div>
-        <div><strong style="font-size:13px">Top Usuarios</strong><table>${userRows}</table></div>
-      </div>
-
-      <h2>Projetos (${filtered.length})</h2>
-      <table><thead><tr><th>Titulo</th><th>Proprietario</th><th>Categoria</th><th>Status</th><th>Data</th></tr></thead>
-      <tbody>${rows || '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888">Nenhum projeto encontrado</td></tr>'}</tbody></table>
-      </body></html>`);
-
-    printWin.document.close();
-    setTimeout(() => { printWin.print(); }, 500);
   };
 
   const exportExcel = () => {
