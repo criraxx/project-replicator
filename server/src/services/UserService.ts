@@ -12,23 +12,11 @@ export class UserService {
     password: string,
     role: UserRole = 'bolsista',
     institution?: string,
-    createdBy?: number,
-    cpf?: string,
-    birthDate?: string,
-    phone?: string,
-    department?: string,
-    registrationNumber?: string
+    createdBy?: number
   ): Promise<User> {
-    const existingEmail = await this.userRepository.findOne({ where: { email: email.toLowerCase().trim() } });
-    if (existingEmail) {
+    const existing = await this.userRepository.findOne({ where: { email } });
+    if (existing) {
       throw new AppError(400, 'Email já cadastrado');
-    }
-
-    if (cpf) {
-      const existingCpf = await this.userRepository.findOne({ where: { cpf } });
-      if (existingCpf) {
-        throw new AppError(400, 'CPF já cadastrado');
-      }
     }
 
     const user = this.userRepository.create({
@@ -38,13 +26,8 @@ export class UserService {
       role,
       institution,
       created_by: createdBy,
-      cpf,
-      birth_date: birthDate ? new Date(birthDate) : undefined,
-      phone,
-      department,
-      registration_number: registrationNumber,
-      is_temp_password: true,
-      must_change_password: true,
+      is_temp_password: false,
+      must_change_password: false,
     });
 
     return await this.userRepository.save(user);
@@ -52,12 +35,6 @@ export class UserService {
 
   async getUserById(id: number): Promise<User | null> {
     return await this.userRepository.findOne({ where: { id } });
-  }
-
-  async getUserByCpf(cpf: string): Promise<User | null> {
-    return await this.userRepository.findOne({
-      where: { cpf: cpf.replace(/\D/g, '') },
-    });
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
@@ -130,15 +107,5 @@ export class UserService {
     if (result.affected === 0) {
       throw new AppError(404, 'Usuário não encontrado');
     }
-  }
-
-  async listInstitutions(): Promise<string[]> {
-    const results = await this.userRepository
-      .createQueryBuilder('user')
-      .select('DISTINCT user.institution', 'institution')
-      .where('user.institution IS NOT NULL')
-      .andWhere("user.institution != ''")
-      .getRawMany();
-    return results.map((r: any) => r.institution).filter(Boolean).sort();
   }
 }

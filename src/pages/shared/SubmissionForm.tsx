@@ -6,7 +6,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/services/api";
 import { ADMIN_NAV, PESQUISADOR_NAV, BOLSISTA_NAV } from "@/constants/navigation";
-import InstitutionAutocomplete from "@/components/ui/institution-autocomplete";
 
 interface Author {
   name: string; cpf: string; institution: string; level: string; role: string;
@@ -34,11 +33,6 @@ const SubmissionForm = () => {
   const [endDate, setEndDate] = useState("");
   const [summary, setSummary] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
-  const [institutions, setInstitutions] = useState<string[]>([]);
-
-  useEffect(() => {
-    api.listInstitutions().then(setInstitutions).catch(() => {});
-  }, []);
 
   const [authors, setAuthors] = useState<Author[]>([
     { name: user?.name || "", cpf: "", institution: "CEBIO Brasil - Centro de Excelência em Bioinsumos", level: "graduacao", role: "Autor Principal" },
@@ -205,14 +199,7 @@ const SubmissionForm = () => {
                 <div className="grid grid-cols-2 gap-4 mb-3">
                   <div>
                     <label className="block text-xs font-semibold mb-1">Instituição <span className="text-destructive">*</span></label>
-                    <InstitutionAutocomplete
-                      value={author.institution}
-                      onChange={(val) => updateAuthor(i, "institution", val)}
-                      institutions={institutions}
-                      placeholder="Digite para buscar ou cadastrar..."
-                      required
-                      className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background"
-                    />
+                    <input type="text" value={author.institution} onChange={(e) => updateAuthor(i, "institution", e.target.value)} placeholder="Nome da instituição" className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold mb-1">Nível</label>

@@ -50,16 +50,6 @@ const serializeUser = (user: any) => ({
   last_login: user.last_login,
 });
 
-// GET /api/users/institutions
-router.get('/users/institutions', authMiddleware, async (req: Request, res: Response) => {
-  try {
-    const institutions = await userService.listInstitutions();
-    res.json(institutions);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Erro interno' });
-  }
-});
-
 // GET /api/users
 router.get('/users', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
   try {

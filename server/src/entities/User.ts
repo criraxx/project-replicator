@@ -35,18 +35,6 @@ export class User {
   @Column({ type: 'varchar', length: 300, nullable: true })
   institution?: string;
 
-  @Column({ type: 'date', nullable: true })
-  birth_date?: Date;
-
-  @Column({ type: 'varchar', length: 20, nullable: true })
-  phone?: string;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  department?: string;
-
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  registration_number?: string;
-
   @Column({ type: 'boolean', default: true })
   is_active: boolean = true;
 
