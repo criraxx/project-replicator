@@ -251,8 +251,8 @@ const AdminUsers = () => {
               <div className="border-t border-border pt-3 mt-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium mb-1">Departamento/Campus *</label>
-                    <input type="text" required placeholder="Ex: Campus Ipora" value={newUser.department} onChange={(e) => setNewUser({ ...newUser, department: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+                    <label className="block text-sm font-medium mb-1">Campus/Instituicao *</label>
+                    <input type="text" required placeholder="Ex: IF Goiano - Campus Ipora" value={newUser.institution} onChange={(e) => setNewUser({ ...newUser, institution: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Telefone *</label>
