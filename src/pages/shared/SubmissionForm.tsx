@@ -59,6 +59,7 @@ const SubmissionForm = () => {
   };
 
   const addLink = () => setLinks([...links, { url: "", type: "outro", title: "", description: "" }]);
+  const removeLink = (i: number) => setLinks(links.filter((_, idx) => idx !== i));
   const updateLink = (i: number, field: keyof ExternalLink, value: string) => {
     const updated = [...links]; updated[i] = { ...updated[i], [field]: value }; setLinks(updated);
   };
