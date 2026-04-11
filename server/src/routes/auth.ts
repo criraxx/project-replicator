@@ -3,13 +3,15 @@ import { UserService } from '../services/UserService';
 import { generateToken } from '../middleware/auth';
 import { authMiddleware } from '../utils/auth';
 import { AuditService } from '../services/AuditService';
+import { loginLimiter } from '../middleware/security';
+import { validateLogin, validateChangePassword, handleValidationErrors } from '../middleware/validation';
 
 const router = Router();
 const userService = new UserService();
 const auditService = new AuditService();
 
 // POST /api/login
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', loginLimiter, validateLogin, handleValidationErrors, async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
@@ -104,7 +106,7 @@ router.put('/auth/profile', authMiddleware, async (req: Request, res: Response) 
 });
 
 // PUT /api/auth/change-password
-router.put('/auth/change-password', authMiddleware, async (req: Request, res: Response) => {
+router.put('/auth/change-password', authMiddleware, validateChangePassword, handleValidationErrors, async (req: Request, res: Response) => {
   try {
     const { current_password, new_password } = req.body;
 

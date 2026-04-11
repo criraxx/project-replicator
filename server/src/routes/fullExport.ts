@@ -8,8 +8,12 @@ import { Category } from '../entities/Category';
 import { AuditLog } from '../entities/AuditLog';
 import { Notification } from '../entities/Notification';
 import { ProjectAuthor } from '../entities/ProjectAuthor';
+import { authMiddleware, requireRole } from '../utils/auth';
 
 const router = Router();
+
+// All full export routes require admin authentication
+router.use(authMiddleware, requireRole('admin'));
 
 const headerFill: ExcelJS.FillPattern = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2D5F4A' } };
 const headerFont: Partial<ExcelJS.Font> = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };

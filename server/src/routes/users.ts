@@ -4,6 +4,13 @@ import { authMiddleware, requireRole } from '../utils/auth';
 import { AuditService } from '../services/AuditService';
 import { hashPassword } from '../middleware/auth';
 import { UserRole } from '../entities/User';
+import {
+  validateCreateUser,
+  validateUpdateUser,
+  validateId,
+  validateUserFilter,
+  handleValidationErrors,
+} from '../middleware/validation';
 
 const router = Router();
 const userService = new UserService();
@@ -51,7 +58,7 @@ const serializeUser = (user: any) => ({
 });
 
 // GET /api/users
-router.get('/users', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+router.get('/users', authMiddleware, requireRole('admin'), validateUserFilter, handleValidationErrors, async (req: Request, res: Response) => {
   try {
     const { role, active } = req.query;
     const users = await userService.listUsers(
@@ -88,7 +95,7 @@ router.get('/users/by-cpf/:cpf', authMiddleware, async (req: Request, res: Respo
 });
 
 // GET /api/users/:id
-router.get('/users/:id', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+router.get('/users/:id', authMiddleware, requireRole('admin'), ...validateId, handleValidationErrors, async (req: Request, res: Response) => {
   try {
     const user = await userService.getUserById(Number(req.params.id));
 
@@ -230,7 +237,7 @@ router.post('/users/batch', authMiddleware, requireRole('admin'), async (req: Re
 });
 
 // PUT /api/users/:id
-router.put('/users/:id', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+router.put('/users/:id', authMiddleware, requireRole('admin'), ...validateUpdateUser, handleValidationErrors, async (req: Request, res: Response) => {
   try {
     const updates = { ...req.body };
 

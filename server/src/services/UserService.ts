@@ -12,11 +12,23 @@ export class UserService {
     password: string,
     role: UserRole = 'bolsista',
     institution?: string,
-    createdBy?: number
+    createdBy?: number,
+    cpf?: string,
+    birth_date?: string,
+    phone?: string,
+    department?: string,
+    registration_number?: string
   ): Promise<User> {
-    const existing = await this.userRepository.findOne({ where: { email } });
+    const existing = await this.userRepository.findOne({ where: { email: email.toLowerCase().trim() } });
     if (existing) {
       throw new AppError(400, 'Email já cadastrado');
+    }
+
+    if (cpf) {
+      const existingCpf = await this.userRepository.findOne({ where: { cpf } });
+      if (existingCpf) {
+        throw new AppError(400, 'CPF já cadastrado');
+      }
     }
 
     const user = this.userRepository.create({
@@ -26,6 +38,11 @@ export class UserService {
       role,
       institution,
       created_by: createdBy,
+      cpf,
+      birth_date,
+      phone,
+      department,
+      registration_number,
       is_temp_password: false,
       must_change_password: false,
     });
@@ -41,6 +58,11 @@ export class UserService {
     return await this.userRepository.findOne({
       where: { email: email.toLowerCase().trim() },
     });
+  }
+
+  async getUserByCpf(cpf: string): Promise<User | null> {
+    const cleanCpf = cpf.replace(/\D/g, '');
+    return await this.userRepository.findOne({ where: { cpf: cleanCpf } });
   }
 
   async validateCredentials(email: string, password: string): Promise<User | null> {
