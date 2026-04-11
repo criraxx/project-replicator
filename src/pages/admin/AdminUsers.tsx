@@ -190,12 +190,13 @@ const AdminUsers = () => {
           <Search className="w-4 h-4 text-muted-foreground" />
           <input type="text" placeholder="Buscar por nome ou email..." value={search} onChange={(e) => setSearch(e.target.value)} className="bg-transparent border-none outline-none text-sm w-full" />
         </div>
-        <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="border border-border rounded-lg px-3 py-2 text-sm bg-card">
-          <option value="">Todos os perfis</option>
-          <option value="admin">Admin</option>
-          <option value="pesquisador">Pesquisador</option>
-          <option value="bolsista">Bolsista</option>
-        </select>
+        <MultiSelectFilter
+          label="Perfil"
+          options={[{ value: "admin", label: "Admin" }, { value: "pesquisador", label: "Pesquisador" }, { value: "bolsista", label: "Bolsista" }]}
+          selected={roleFilter ? [roleFilter] : []}
+          onChange={(vals) => setRoleFilter(vals.length === 1 ? vals[0] : "")}
+          placeholder="Todos"
+        />
         <MultiSelectFilter
           label="Status"
           options={[{ value: "true", label: "Ativos" }, { value: "false", label: "Inativos" }]}
