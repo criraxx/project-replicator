@@ -106,40 +106,42 @@ const AdminUserDetail = () => {
         <button onClick={() => navigate("/admin/usuarios")} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Voltar para Usuarios
         </button>
-        <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 flex justify-between items-start">
-          <div className="flex items-center gap-5">
-            <div className="w-16 h-16 rounded-full bg-primary-foreground/20 flex items-center justify-center text-2xl font-bold">
-              {user.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
-            </div>
-            <div>
-              <h2 className="text-lg sm:text-[22px] font-semibold">{user.name}</h2>
-              <p className="text-sm opacity-90">{user.email}</p>
-              <div className="flex gap-2 mt-2">
-                <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${badge?.className || "bg-muted text-muted-foreground"}`}>
-                  {badge?.label || user.role}
-                </span>
-                <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${user.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                  {user.is_active ? "Ativo" : "Inativo"}
-                </span>
+        <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-5 sm:p-7">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+            <div className="flex items-center gap-4 sm:gap-5">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary-foreground/20 flex items-center justify-center text-xl sm:text-2xl font-bold shrink-0">
+                {user.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
+              </div>
+              <div>
+                <h2 className="text-base sm:text-[22px] font-semibold">{user.name}</h2>
+                <p className="text-sm opacity-90">{user.email}</p>
+                <div className="flex gap-2 mt-2">
+                  <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${badge?.className || "bg-muted text-muted-foreground"}`}>
+                    {badge?.label || user.role}
+                  </span>
+                  <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${user.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                    {user.is_active ? "Ativo" : "Inativo"}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={handleResetPassword} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-              Resetar Senha
-            </button>
-            <button onClick={handleToggleActive} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-              {user.is_active ? "Desativar" : "Ativar"}
-            </button>
-            <button onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-              Excluir
-            </button>
+            <div className="flex gap-2 flex-wrap">
+              <button onClick={handleResetPassword} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors">
+                Resetar Senha
+              </button>
+              <button onClick={handleToggleActive} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors">
+                {user.is_active ? "Desativar" : "Ativar"}
+              </button>
+              <button onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors">
+                Excluir
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Info cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[
           { icon: Mail, label: "Email", value: user.email },
           { icon: Building2, label: "Instituicao", value: user.institution || "Nao informada" },
@@ -161,7 +163,7 @@ const AdminUserDetail = () => {
         <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
           <User className="w-4 h-4 text-muted-foreground" /> Todos os Dados do Usuario
         </h3>
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             { icon: User, label: "Nome Completo", value: user.name },
             { icon: Mail, label: "Email", value: user.email },
@@ -188,7 +190,7 @@ const AdminUserDetail = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 sm:gap-4 mb-6">
         <div className="bg-card rounded-xl p-4 shadow-sm border border-border text-center">
           <div className="text-2xl font-bold text-foreground">{projects.length}</div>
           <div className="text-xs text-muted-foreground mt-1">Total Projetos</div>
@@ -212,8 +214,30 @@ const AdminUserDetail = () => {
             <p className="text-sm">Este usuario nao possui projetos.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <div className="overflow-x-auto"><table className="w-full text-sm">
+          <>
+            {/* Mobile: Card layout */}
+            <div className="md:hidden divide-y divide-border">
+              {projects.map((p: any) => (
+                <div key={p.id} className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-medium text-sm text-foreground">{p.title}</p>
+                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0 ${
+                      p.status === "aprovado" ? "bg-cebio-green-bg text-primary" :
+                      p.status === "rejeitado" ? "bg-cebio-red-bg text-cebio-red" :
+                      p.status === "em_revisao" ? "bg-cebio-blue-bg text-cebio-blue" :
+                      "bg-cebio-yellow-bg text-cebio-yellow"
+                    }`}>{p.status.replace("_", " ")}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{p.category || "—"} • {new Date(p.created_at).toLocaleDateString("pt-BR")}</span>
+                    <button onClick={() => navigate(`/admin/projeto?id=${p.id}`)} className="text-xs font-medium text-primary">Ver Projeto</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop: Table layout */}
+            <div className="hidden md:block overflow-x-auto"><table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
                   <th className="p-3 text-left font-medium text-muted-foreground">Titulo</th>
@@ -234,24 +258,17 @@ const AdminUserDetail = () => {
                         p.status === "rejeitado" ? "bg-cebio-red-bg text-cebio-red" :
                         p.status === "em_revisao" ? "bg-cebio-blue-bg text-cebio-blue" :
                         "bg-cebio-yellow-bg text-cebio-yellow"
-                      }`}>
-                        {p.status.replace("_", " ")}
-                      </span>
+                      }`}>{p.status.replace("_", " ")}</span>
                     </td>
                     <td className="p-3 text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
                     <td className="p-3 text-center">
-                      <button
-                        onClick={() => navigate(`/admin/projeto?id=${p.id}`)}
-                        className="text-xs font-medium text-primary hover:underline"
-                      >
-                        Ver Projeto
-                      </button>
+                      <button onClick={() => navigate(`/admin/projeto?id=${p.id}`)} className="text-xs font-medium text-primary hover:underline">Ver Projeto</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table></div>
-          </div>
+          </>
         )}
       </div>
     </AppLayout>
