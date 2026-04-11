@@ -214,8 +214,8 @@ const AdminUsers = () => {
 
       {/* Modal: Novo Usuario */}
       {showNewUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-8">
-          <div className="bg-card rounded-xl p-6 w-full max-w-lg shadow-xl border border-border">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto p-3 sm:py-8">
+          <div className="bg-card rounded-xl p-5 sm:p-6 w-full max-w-lg shadow-xl border border-border max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Novo Usuario</h3>
               <button onClick={() => setShowNewUser(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
@@ -276,8 +276,8 @@ const AdminUsers = () => {
 
       {/* Modal: Cadastro em Lote */}
       {showBatchModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-8">
-          <div className="bg-card rounded-xl p-6 w-full max-w-2xl shadow-xl border border-border">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto p-3 sm:py-8">
+          <div className="bg-card rounded-xl p-5 sm:p-6 w-full max-w-2xl shadow-xl border border-border max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Cadastro em Lote</h3>
               <button onClick={() => setShowBatchModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
@@ -310,7 +310,7 @@ const AdminUsers = () => {
         </div>
       )}
 
-      {/* Tabela */}
+      {/* Tabela (desktop) + Cards (mobile) */}
       <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
         {loading ? (
           <div className="text-center py-12 text-muted-foreground">
@@ -324,7 +324,44 @@ const AdminUsers = () => {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto"><table className="w-full text-sm">
+            {/* Mobile: Card layout */}
+            <div className="md:hidden divide-y divide-border">
+              {filtered.map((u) => {
+                const badge = roleBadge[u.role];
+                return (
+                  <div key={u.id} className="p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-cebio-green-light flex items-center justify-center text-primary-foreground font-semibold text-sm">
+                          {u.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-foreground">{u.name}</p>
+                          <p className="text-xs text-muted-foreground">{u.email}</p>
+                        </div>
+                      </div>
+                      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${u.is_active ? "bg-cebio-green-bg text-primary" : "bg-cebio-red-bg text-cebio-red"}`}>
+                        {u.is_active ? "Ativo" : "Inativo"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${badge.className}`}>{badge.label}</span>
+                      {u.institution && <span className="text-xs text-muted-foreground">{u.institution}</span>}
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      <button onClick={() => navigate(`/admin/usuario?id=${u.id}`)} className="px-3 py-1.5 rounded-md text-xs font-semibold bg-primary text-primary-foreground">Detalhes</button>
+                      <button onClick={() => { setNotifyUser(u); setNotifyTitle(""); setNotifyMessage(""); setShowNotifyModal(true); }} className="px-3 py-1.5 rounded-md text-xs font-semibold bg-cebio-blue-bg text-cebio-blue">Notificar</button>
+                      <button onClick={() => handleToggleActive(u.id, u.is_active)} className={`px-3 py-1.5 rounded-md text-xs font-semibold ${u.is_active ? "bg-amber-600 text-white" : "bg-cebio-green-bg text-primary"}`}>
+                        {u.is_active ? "Desativar" : "Ativar"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop: Table layout */}
+            <div className="hidden md:block overflow-x-auto"><table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
                   <th className="p-3 text-left font-semibold text-muted-foreground">Usuário</th>
@@ -362,12 +399,8 @@ const AdminUsers = () => {
                       <td className="p-3 text-muted-foreground text-xs">{u.last_login ? new Date(u.last_login).toLocaleDateString("pt-BR") : "Nunca"}</td>
                       <td className="p-3">
                         <div className="flex justify-center gap-1.5">
-                          <button onClick={() => navigate(`/admin/usuario?id=${u.id}`)} className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-                            Detalhes
-                          </button>
-                          <button onClick={() => { setNotifyUser(u); setNotifyTitle(""); setNotifyMessage(""); setShowNotifyModal(true); }} className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-cebio-blue-bg text-cebio-blue hover:bg-cebio-blue-bg/80 transition-colors">
-                            Notificar
-                          </button>
+                          <button onClick={() => navigate(`/admin/usuario?id=${u.id}`)} className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">Detalhes</button>
+                          <button onClick={() => { setNotifyUser(u); setNotifyTitle(""); setNotifyMessage(""); setShowNotifyModal(true); }} className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-cebio-blue-bg text-cebio-blue hover:bg-cebio-blue-bg/80 transition-colors">Notificar</button>
                           <button onClick={() => handleToggleActive(u.id, u.is_active)} className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors ${u.is_active ? "bg-amber-600 text-white hover:bg-amber-700" : "bg-cebio-green-bg text-primary hover:bg-cebio-green-bg/80"}`}>
                             {u.is_active ? "Desativar" : "Ativar"}
                           </button>
@@ -375,9 +408,7 @@ const AdminUsers = () => {
                             const ok = await confirm({ title: "Excluir Usuario", description: `Tem certeza que deseja EXCLUIR permanentemente ${u.name}? Esta acao nao pode ser desfeita.`, confirmLabel: "Excluir", variant: "danger" });
                             if (!ok) return;
                             api.deleteUser(u.id).then(() => { toast({ title: "Sucesso", description: "Usuario excluido" }); fetchUsers(); }).catch((err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }));
-                          }} className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-cebio-red-bg text-cebio-red hover:bg-cebio-red-bg/80 transition-colors">
-                            Excluir
-                          </button>
+                          }} className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-cebio-red-bg text-cebio-red hover:bg-cebio-red-bg/80 transition-colors">Excluir</button>
                         </div>
                       </td>
                     </tr>
