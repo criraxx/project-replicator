@@ -13,6 +13,7 @@ const autoSlug = (name: string) => name.toLowerCase().normalize("NFD").replace(/
 const AdminActions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const confirm = useConfirmDialog();
   const [stats, setStats] = useState({ pending: 0, inactive: 0, tempPasswords: 0 });
 
   // Categories & Levels inline management
@@ -72,7 +73,8 @@ const AdminActions = () => {
       toast({ title: "Não é possível remover", description: "Esta categoria possui projetos vinculados.", variant: "destructive" });
       return;
     }
-    if (!confirm(`Remover a categoria "${name}"?`)) return;
+    const ok = await confirm({ title: "Remover Categoria", description: `Remover a categoria "${name}"?`, confirmLabel: "Remover", variant: "danger" });
+    if (!ok) return;
     try {
       await api.deleteCategory(id);
       toast({ title: "Sucesso", description: "Categoria removida!" });
@@ -97,7 +99,8 @@ const AdminActions = () => {
       toast({ title: "Não é possível remover", description: "Este nível possui projetos vinculados.", variant: "destructive" });
       return;
     }
-    if (!confirm(`Remover o nível "${name}"?`)) return;
+    const ok = await confirm({ title: "Remover Nivel", description: `Remover o nivel "${name}"?`, confirmLabel: "Remover", variant: "danger" });
+    if (!ok) return;
     try {
       await api.deleteAcademicLevel(id);
       toast({ title: "Sucesso", description: "Nível removido!" });
