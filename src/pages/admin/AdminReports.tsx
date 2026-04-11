@@ -243,114 +243,78 @@ const AdminReports = () => {
     }, []);
   }, [projects, users]);
 
-  const exportPDF = async () => {
-    if (!contentRef.current || exporting) return;
+  const buildPayload = () => {
+    const statusLabel = statusFilters.length > 0 ? statusFilters.map(s => STATUS_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos";
+    const userTypeLabel = userTypeFilters.length > 0 ? userTypeFilters.map(s => USER_TYPE_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos";
+    const catLabel = categoryFilters.length > 0 ? categoryFilters.join(", ") : "Todas";
+    const ownerLabel = ownerFilters.length > 0 ? ownerFilters.map(id => uniqueOwners.find(o => String(o.id) === id)?.name || id).join(", ") : "Todos";
+    return {
+      title: "Relatorio CEBIO Brasil",
+      generatedAt: new Date().toLocaleString("pt-BR"),
+      filters: [
+        { label: "Status", value: statusLabel },
+        { label: "Categoria", value: catLabel },
+        { label: "Tipo Usuario", value: userTypeLabel },
+        { label: "Proprietario", value: ownerLabel },
+        { label: "Data Inicio", value: startDate ? format(startDate, "dd/MM/yyyy") : "---" },
+        { label: "Data Fim", value: endDate ? format(endDate, "dd/MM/yyyy") : "---" },
+      ],
+      kpis: [
+        { label: "Projetos Filtrados", value: filtered.length },
+        { label: "Usuarios no Sistema", value: users.length },
+        { label: "Taxa de Aprovacao", value: `${approvalRate}%` },
+        { label: "Categorias", value: categories.length },
+      ],
+      sections: [
+        { title: "Projetos por Status", data: byStatus },
+        { title: "Projetos por Categoria", data: byCategory },
+        { title: "Top 10 Usuarios", data: byUser },
+        { title: "Evolucao Temporal", data: byMonth },
+        { title: "Tipo de Usuario", data: byUserType },
+      ],
+      projects: filtered.map(p => {
+        const owner = users.find((u: any) => u.id === p.owner_id);
+        return {
+          title: p.title,
+          owner: owner?.name || p.owner?.name || "---",
+          category: p.category || "---",
+          status: p.status,
+          date: new Date(p.created_at).toLocaleDateString("pt-BR"),
+        };
+      }),
+    };
+  };
+
+  const downloadBlob = async (url: string, body: any, filename: string) => {
     setExporting(true);
-
     try {
-      const canvas = await html2canvas(contentRef.current, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-        windowWidth: contentRef.current.scrollWidth,
+      const res = await fetch(`/api${url}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
-      const usableWidth = pdfWidth - 2 * margin;
-
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = usableWidth / imgWidth;
-      const scaledHeight = imgHeight * ratio;
-
-      let heightLeft = scaledHeight;
-      let position = margin;
-
-      pdf.addImage(imgData, "PNG", margin, position, usableWidth, scaledHeight);
-      heightLeft -= (pdfHeight - 2 * margin);
-
-      while (heightLeft > 0) {
-        position = position - (pdfHeight - 2 * margin);
-        pdf.addPage();
-        pdf.addImage(imgData, "PNG", margin, position, usableWidth, scaledHeight);
-        heightLeft -= (pdfHeight - 2 * margin);
-      }
-
-      pdf.save(`relatorio_cebio_${format(new Date(), "yyyy-MM-dd")}.pdf`);
-    } catch (error) {
-      console.error("Erro ao exportar PDF:", error);
+      if (!res.ok) throw new Error("Falha na exportacao");
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (err) {
+      console.error("Erro ao exportar:", err);
     } finally {
       setExporting(false);
     }
   };
 
-  const exportExcel = () => {
-    const wb = XLSX.utils.book_new();
+  const exportPDF = () => downloadBlob("/exports/pdf", buildPayload(), `relatorio_cebio_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  const exportExcel = () => downloadBlob("/exports/excel", buildPayload(), `relatorio_cebio_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
 
-    // Aba Resumo
-    const resumoData = [
-      ["Relatorio CEBIO Brasil"],
-      ["Gerado em", new Date().toLocaleString("pt-BR")],
-      [],
-      ["Filtros Aplicados"],
-      ["Status", statusFilters.length > 0 ? statusFilters.map(s => STATUS_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos"],
-      ["Categoria", categoryFilters.length > 0 ? categoryFilters.join(", ") : "Todas"],
-      ["Tipo Usuario", userTypeFilters.length > 0 ? userTypeFilters.map(s => USER_TYPE_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos"],
-      ["Proprietario", ownerFilters.length > 0 ? ownerFilters.map(id => uniqueOwners.find(o => String(o.id) === id)?.name || id).join(", ") : "Todos"],
-      ["Data Inicio", startDate ? format(startDate, "dd/MM/yyyy") : "---"],
-      ["Data Fim", endDate ? format(endDate, "dd/MM/yyyy") : "---"],
-      [],
-      ["Indicadores"],
-      ["Projetos Filtrados", filtered.length],
-      ["Usuarios no Sistema", users.length],
-      ["Taxa de Aprovacao", `${approvalRate}%`],
-      ["Categorias", categories.length],
-    ];
-    const wsResumo = XLSX.utils.aoa_to_sheet(resumoData);
-    wsResumo["!cols"] = [{ wch: 25 }, { wch: 40 }];
-    XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo");
+  const exportSectionPDF = (title: string, data: { name: string; value: number }[]) =>
+    downloadBlob("/exports/pdf-section", { sectionTitle: title, data }, `${title.replace(/\s+/g, "_")}.pdf`);
 
-    // Aba Por Status
-    const wsStatus = XLSX.utils.aoa_to_sheet([["Status", "Quantidade"], ...byStatus.map(d => [d.name, d.value])]);
-    wsStatus["!cols"] = [{ wch: 20 }, { wch: 15 }];
-    XLSX.utils.book_append_sheet(wb, wsStatus, "Por Status");
-
-    // Aba Por Categoria
-    const wsCat = XLSX.utils.aoa_to_sheet([["Categoria", "Quantidade"], ...byCategory.map(d => [d.name, d.value])]);
-    wsCat["!cols"] = [{ wch: 30 }, { wch: 15 }];
-    XLSX.utils.book_append_sheet(wb, wsCat, "Por Categoria");
-
-    // Aba Top Usuarios
-    const wsUsers = XLSX.utils.aoa_to_sheet([["Usuario", "Projetos"], ...byUser.map(d => [d.name, d.value])]);
-    wsUsers["!cols"] = [{ wch: 35 }, { wch: 15 }];
-    XLSX.utils.book_append_sheet(wb, wsUsers, "Top Usuarios");
-
-    // Aba Evolucao Temporal
-    const wsMonth = XLSX.utils.aoa_to_sheet([["Mes", "Quantidade"], ...byMonth.map(d => [d.name, d.value])]);
-    wsMonth["!cols"] = [{ wch: 15 }, { wch: 15 }];
-    XLSX.utils.book_append_sheet(wb, wsMonth, "Evolucao Temporal");
-
-    // Aba Tipo Usuario
-    const wsType = XLSX.utils.aoa_to_sheet([["Tipo", "Quantidade"], ...byUserType.map(d => [d.name, d.value])]);
-    wsType["!cols"] = [{ wch: 20 }, { wch: 15 }];
-    XLSX.utils.book_append_sheet(wb, wsType, "Tipo Usuario");
-
-    // Aba Projetos
-    const projRows = filtered.map(p => {
-      const owner = users.find((u: any) => u.id === p.owner_id);
-      return [p.title, owner?.name || p.owner?.name || "---", p.category || "---", p.status, new Date(p.created_at).toLocaleDateString("pt-BR")];
-    });
-    const wsProj = XLSX.utils.aoa_to_sheet([["Titulo", "Proprietario", "Categoria", "Status", "Data"], ...projRows]);
-    wsProj["!cols"] = [{ wch: 40 }, { wch: 30 }, { wch: 25 }, { wch: 15 }, { wch: 15 }];
-    XLSX.utils.book_append_sheet(wb, wsProj, "Projetos");
-
-    XLSX.writeFile(wb, `relatorio_cebio_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
-  };
+  const exportSectionExcel = (title: string, data: { name: string; value: number }[]) =>
+    downloadBlob("/exports/excel-section", { sectionTitle: title, data }, `${title.replace(/\s+/g, "_")}.xlsx`);
 
   return (
     <AppLayout pageName="Relatórios e Analytics" navItems={ADMIN_NAV} notificationCount={0}>
