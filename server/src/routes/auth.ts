@@ -77,20 +77,11 @@ router.get('/auth/me', authMiddleware, async (req: Request, res: Response) => {
 router.get('/auth/profile', authMiddleware, async (req: Request, res: Response) => {
   try {
     const user = await userService.getUserById(req.user!.id);
-    if (!user) {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
-    }
+    if (!user) return res.status(404).json({ error: 'Usuario nao encontrado' });
     res.json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      cpf: user.cpf,
-      role: user.role,
-      institution: user.institution,
-      birth_date: user.birth_date,
-      phone: user.phone,
-      department: user.department,
-      registration_number: user.registration_number,
+      id: user.id, name: user.name, email: user.email, cpf: user.cpf,
+      role: user.role, institution: user.institution, birth_date: user.birth_date,
+      phone: user.phone, department: user.department, registration_number: user.registration_number,
     });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Erro interno' });
@@ -104,19 +95,8 @@ router.put('/auth/profile', authMiddleware, async (req: Request, res: Response) 
     const updates: any = {};
     if (email) updates.email = email.toLowerCase().trim();
     if (phone !== undefined) updates.phone = phone;
-
     await userService.updateUser(req.user!.id, updates);
-
-    await auditService.logAction(
-      'UPDATE_PROFILE',
-      req.user!.id,
-      undefined,
-      undefined,
-      'Perfil atualizado pelo proprio usuario',
-      req.ip || 'unknown',
-      'low'
-    );
-
+    await auditService.logAction('UPDATE_PROFILE', req.user!.id, undefined, undefined, 'Perfil atualizado', req.ip || 'unknown', 'low');
     res.json({ message: 'Perfil atualizado com sucesso' });
   } catch (error: any) {
     res.status(error.statusCode || 500).json({ error: error.message || 'Erro interno' });

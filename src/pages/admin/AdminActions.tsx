@@ -112,7 +112,7 @@ const AdminActions = () => {
   const actions = [
     { icon: CheckCircle, title: "Aprovação em Lote", desc: "Aprovar múltiplos projetos simultaneamente", tag: "Projects", iconBg: "bg-cebio-green-bg", iconColor: "text-primary", path: "/admin/aprovacao-lote" },
     { icon: XCircle, title: "Rejeição em Lote", desc: "Rejeitar múltiplos projetos com comentários", tag: "Projects", iconBg: "bg-cebio-red-bg", iconColor: "text-cebio-red", path: "/admin/rejeicao-lote" },
-    { icon: KeyRound, title: "Reset de Senhas em Lote", desc: "Redefinir senhas para usuários selecionados", tag: "Users", iconBg: "bg-cebio-yellow-bg", iconColor: "text-cebio-yellow", path: "/admin/reset-senhas-lote" },
+    { icon: KeyRound, title: "Reset de Senhas em Lote", desc: "Redefinir senhas para usuários selecionados", tag: "Users", iconBg: "bg-cebio-yellow-bg", iconColor: "text-cebio-yellow", path: "/admin/usuarios" },
     { icon: Download, title: "Exportação Completa", desc: "Exportar todos os dados do sistema", tag: "Data", iconBg: "bg-cebio-blue-bg", iconColor: "text-cebio-blue", path: "" },
     { icon: Bell, title: "Notificações em Massa", desc: "Enviar notificações para grupos de usuários", tag: "Communication", iconBg: "bg-cebio-yellow-bg", iconColor: "text-cebio-yellow", path: "/admin/notificacao-massa", badge: 3 },
   ];

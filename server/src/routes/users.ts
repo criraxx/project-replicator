@@ -21,13 +21,8 @@ router.get('/users', authMiddleware, requireRole('admin'), async (req: Request, 
       id: u.id,
       name: u.name,
       email: u.email,
-      cpf: u.cpf,
       role: u.role,
       institution: u.institution,
-      birth_date: u.birth_date,
-      phone: u.phone,
-      department: u.department,
-      registration_number: u.registration_number,
       is_active: u.is_active,
       created_at: u.created_at,
       last_login: u.last_login,
@@ -48,13 +43,8 @@ router.get('/users/:id', authMiddleware, requireRole('admin'), async (req: Reque
       id: user.id,
       name: user.name,
       email: user.email,
-      cpf: user.cpf,
       role: user.role,
       institution: user.institution,
-      birth_date: user.birth_date,
-      phone: user.phone,
-      department: user.department,
-      registration_number: user.registration_number,
       is_active: user.is_active,
       created_at: user.created_at,
       last_login: user.last_login,
@@ -64,29 +54,16 @@ router.get('/users/:id', authMiddleware, requireRole('admin'), async (req: Reque
   }
 });
 
-// GET /api/users/by-cpf/:cpf
-router.get('/users/by-cpf/:cpf', authMiddleware, async (req: Request, res: Response) => {
-  try {
-    const cpf = req.params.cpf.replace(/\D/g, '');
-    const user = await userService.getUserByCpf(cpf);
-    if (!user) {
-      return res.status(404).json({ error: 'Usuario nao encontrado' });
-    }
-    res.json({ id: user.id, name: user.name, institution: user.institution, cpf: user.cpf });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Erro interno' });
-  }
-});
-
+// POST /api/users
 router.post('/users', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
   try {
-    const { email, name, password, role, institution, cpf, birth_date, phone, department, registration_number } = req.body;
+    const { email, name, password, role, institution } = req.body;
 
-    if (!email || !name || !password || !cpf || !birth_date) {
-      return res.status(400).json({ error: 'Email, nome, senha, CPF e data de nascimento sao obrigatorios' });
+    if (!email || !name || !password) {
+      return res.status(400).json({ error: 'Email, nome e senha são obrigatórios' });
     }
 
-    const user = await userService.createUser(email, name, password, role, institution, req.user!.id, cpf, birth_date, phone, department, registration_number);
+    const user = await userService.createUser(email, name, password, role, institution, req.user!.id);
 
     await auditService.logAction(
       'CREATE_USER',
@@ -124,8 +101,8 @@ router.post('/users/batch', authMiddleware, requireRole('admin'), async (req: Re
 
     for (const userData of usersData) {
       try {
-        if (!userData.email || !userData.name || !userData.cpf || !userData.birth_date) {
-          results.errors.push({ email: userData.email, error: 'Nome, email, CPF e data de nascimento sao obrigatorios' });
+        if (!userData.email || !userData.name) {
+          results.errors.push({ email: userData.email, error: 'Email e nome são obrigatórios' });
           continue;
         }
 
@@ -135,12 +112,7 @@ router.post('/users/batch', authMiddleware, requireRole('admin'), async (req: Re
           defaultPassword,
           userData.role || 'bolsista',
           userData.institution,
-          req.user!.id,
-          userData.cpf?.replace(/\D/g, ''),
-          userData.birth_date,
-          userData.phone,
-          userData.department,
-          userData.registration_number,
+          req.user!.id
         );
 
         results.success.push({
@@ -230,55 +202,6 @@ router.put('/users/:id/reset-password', authMiddleware, requireRole('admin'), as
     res.json({ message: 'Senha resetada com sucesso', temporary_password: newPassword });
   } catch (error: any) {
     res.status(error.statusCode || 500).json({ error: error.message || 'Erro interno' });
-  }
-});
-
-// POST /api/users/batch-reset-password
-router.post('/users/batch-reset-password', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
-  try {
-    const { user_ids, new_password } = req.body;
-
-    if (!user_ids || !Array.isArray(user_ids) || user_ids.length === 0) {
-      return res.status(400).json({ error: 'Lista de usuarios obrigatoria' });
-    }
-
-    const password = new_password || 'cebio2024';
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'A senha deve ter no minimo 6 caracteres' });
-    }
-
-    let success = 0;
-    let errors = 0;
-
-    for (const id of user_ids) {
-      try {
-        const user = await userService.getUserById(id);
-        if (!user) { errors++; continue; }
-
-        await userService.updateUser(id, {
-          hashed_password: hashPassword(password),
-          is_temp_password: true,
-          must_change_password: true,
-        });
-
-        await auditService.logAction(
-          'RESET_PASSWORD',
-          req.user!.id,
-          id,
-          undefined,
-          `Senha resetada em lote: ${user.email}`,
-          req.ip || 'unknown',
-          'high'
-        );
-        success++;
-      } catch {
-        errors++;
-      }
-    }
-
-    res.json({ success, errors, message: `${success} senha(s) resetada(s)` });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message || 'Erro interno' });
   }
 });
 

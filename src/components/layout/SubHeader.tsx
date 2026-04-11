@@ -63,7 +63,12 @@ const SubHeader = ({ pageName, navItems, notificationCount = 0 }: SubHeaderProps
           )}
         </div>
 
-        <button onClick={() => navigate("/perfil")} className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+        <button onClick={() => {
+          const role = user?.role;
+          if (role === "admin") navigate("/admin/perfil");
+          else if (role === "pesquisador") navigate("/pesquisador/perfil");
+          else navigate("/bolsista/perfil");
+        }} className="flex items-center gap-2.5 hover:opacity-80 transition-opacity cursor-pointer">
           <div className="w-9 h-9 rounded-full bg-cebio-green-light flex items-center justify-center text-primary-foreground font-semibold text-sm">
             {initials}
           </div>

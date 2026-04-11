@@ -113,15 +113,11 @@ class ApiClient {
     return this.request<any>('GET', `/users/${id}`);
   }
 
-  async createUser(data: {
-    email: string; name: string; password: string; role: string;
-    cpf: string; birth_date: string;
-    institution?: string; phone?: string; department?: string; registration_number?: string;
-  }) {
+  async createUser(data: { email: string; name: string; password: string; role: string; institution?: string }) {
     return this.request<any>('POST', '/users', data);
   }
 
-  async updateUser(id: number, data: Partial<{ name: string; institution: string; role: string; is_active: boolean; cpf: string; birth_date: string; phone: string; department: string; registration_number: string }>) {
+  async updateUser(id: number, data: Partial<{ name: string; institution: string; role: string; is_active: boolean }>) {
     return this.request<any>('PUT', `/users/${id}`, data);
   }
 
@@ -135,24 +131,10 @@ class ApiClient {
     });
   }
 
-  async getUserByCpf(cpf: string) {
-    return this.request<{ id: number; name: string; institution: string; cpf: string }>('GET', `/users/by-cpf/${cpf}`);
-  }
-
-  async batchCreateUsers(users: {
-    email: string; name: string; cpf: string; birth_date: string;
-    role?: string; institution?: string; phone?: string; department?: string; registration_number?: string;
-  }[], defaultPassword?: string) {
+  async batchCreateUsers(users: { email: string; name: string; role?: string; institution?: string }[], defaultPassword?: string) {
     return this.request<{ success: any[]; errors: any[] }>('POST', '/users/batch', {
       users,
       default_password: defaultPassword,
-    });
-  }
-
-  async batchResetPasswords(userIds: number[], newPassword: string) {
-    return this.request<{ success: number; errors: number }>('POST', '/users/batch-reset-password', {
-      user_ids: userIds,
-      new_password: newPassword,
     });
   }
 

@@ -156,35 +156,6 @@ const AdminUserDetail = () => {
         ))}
       </div>
 
-      {/* All user data */}
-      <div className="bg-card rounded-xl shadow-sm border border-border p-6 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Shield className="w-4 h-4 text-muted-foreground" />
-          <h3 className="text-sm font-semibold">Todos os Dados do Usuario</h3>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[
-            { label: "Nome Completo", value: user.name },
-            { label: "Email", value: user.email },
-            { label: "CPF", value: user.cpf ? user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : "Nao informado" },
-            { label: "Data de Nascimento", value: user.birth_date ? new Date(user.birth_date).toLocaleDateString("pt-BR") : "Nao informada" },
-            { label: "Telefone", value: user.phone ? user.phone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3") : "Nao informado" },
-            { label: "Funcao/Perfil", value: badge?.label || user.role },
-            { label: "Instituicao", value: user.institution || "Nao informada" },
-            { label: "Departamento/Campus", value: user.department || "Nao informado" },
-            { label: "Matricula/Registro", value: user.registration_number || "Nao informado" },
-            { label: "Status", value: user.is_active ? "Ativo" : "Inativo" },
-            { label: "Cadastrado em", value: user.created_at ? new Date(user.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "---" },
-            { label: "Ultimo login", value: user.last_login ? new Date(user.last_login).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "Nunca" },
-          ].map((item, i) => (
-            <div key={i} className="border border-border rounded-lg p-3">
-              <span className="text-xs text-muted-foreground font-medium block mb-1">{item.label}</span>
-              <span className="text-sm font-semibold text-foreground">{item.value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Stats */}
       <div className="grid grid-cols-5 gap-4 mb-6">
         <div className="bg-card rounded-xl p-4 shadow-sm border border-border text-center">

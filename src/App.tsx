@@ -17,7 +17,6 @@ import AdminAudit from "./pages/admin/AdminAudit";
 import AdminBatchApproval from "./pages/admin/AdminBatchApproval";
 import AdminBatchRejection from "./pages/admin/AdminBatchRejection";
 import AdminMassNotification from "./pages/admin/AdminMassNotification";
-import AdminBatchResetPassword from "./pages/admin/AdminBatchResetPassword";
 import PesquisadorDashboard from "./pages/pesquisador/PesquisadorDashboard";
 import PesquisadorProjects from "./pages/pesquisador/PesquisadorProjects";
 import PesquisadorHistory from "./pages/pesquisador/PesquisadorHistory";
@@ -54,24 +53,25 @@ const App = () => (
             <Route path="/admin/aprovacao-lote" element={<AdminBatchApproval />} />
             <Route path="/admin/rejeicao-lote" element={<AdminBatchRejection />} />
             <Route path="/admin/notificacao-massa" element={<AdminMassNotification />} />
-            <Route path="/admin/reset-senhas-lote" element={<AdminBatchResetPassword />} />
             <Route path="/admin/projeto" element={<ProjectDetailView isAdmin />} />
+            <Route path="/admin/perfil" element={<ProfilePage backPath="/admin/dashboard" />} />
             
             {/* Pesquisador */}
             <Route path="/pesquisador/dashboard" element={<PesquisadorDashboard />} />
             <Route path="/pesquisador/projetos" element={<PesquisadorProjects />} />
             <Route path="/pesquisador/submissao" element={<SubmissionForm />} />
             <Route path="/pesquisador/historico" element={<PesquisadorHistory />} />
+            <Route path="/pesquisador/perfil" element={<ProfilePage backPath="/pesquisador/dashboard" />} />
             
             {/* Bolsista */}
             <Route path="/bolsista/dashboard" element={<BolsistaDashboard />} />
             <Route path="/bolsista/projetos" element={<BolsistaProjects />} />
             <Route path="/bolsista/submissao" element={<SubmissionForm />} />
             <Route path="/bolsista/historico" element={<BolsistaHistory />} />
+            <Route path="/bolsista/perfil" element={<ProfilePage backPath="/bolsista/dashboard" />} />
             
             {/* Shared */}
             <Route path="/projeto" element={<ProjectDetailView />} />
-            <Route path="/perfil" element={<ProfilePage />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>
