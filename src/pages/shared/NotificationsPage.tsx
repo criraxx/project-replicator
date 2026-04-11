@@ -5,6 +5,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { ADMIN_NAV, PESQUISADOR_NAV, BOLSISTA_NAV } from "@/constants/navigation";
 import api from "@/services/api";
+import { formatDateBrasilia } from "@/lib/formatters";
 
 const NotificationsPage = ({ backPath }: { backPath?: string }) => {
   const { user } = useAuth();
@@ -145,7 +146,7 @@ const NotificationsPage = ({ backPath }: { backPath?: string }) => {
                       {n.title}
                     </p>
                     <span className="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
-                      {new Date(n.created_at).toLocaleDateString("pt-BR")} • {timeAgo(n.created_at)}
+                      {formatDateBrasilia(n.created_at)} • {timeAgo(n.created_at)}
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">{n.message}</p>

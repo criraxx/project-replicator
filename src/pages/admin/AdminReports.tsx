@@ -17,6 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import api from "@/services/api";
+import { formatDateBrasilia } from "@/lib/formatters";
 
 
 const COLORS = ["hsl(170,37%,30%)", "hsl(43,96%,56%)", "hsl(210,72%,46%)", "hsl(3,81%,55%)", "hsl(270,50%,50%)", "hsl(30,80%,55%)"];
@@ -279,7 +280,7 @@ const AdminReports = () => {
           owner: owner?.name || p.owner?.name || "---",
           category: p.category || "---",
           status: p.status,
-          date: new Date(p.created_at).toLocaleDateString("pt-BR"),
+          date: formatDateBrasilia(p.created_at),
         };
       }),
     };
@@ -507,7 +508,7 @@ const AdminReports = () => {
                   <td className="p-3 text-muted-foreground">{p.owner?.name || "—"}</td>
                   <td className="p-3 text-muted-foreground">{p.category || "—"}</td>
                   <td className="p-3"><span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-muted">{p.status}</span></td>
-                  <td className="p-3 text-muted-foreground">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
+                  <td className="p-3 text-muted-foreground">{formatDateBrasilia(p.created_at)}</td>
                 </tr>
               ))}
             </tbody>

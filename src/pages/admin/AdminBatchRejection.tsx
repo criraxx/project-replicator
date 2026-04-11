@@ -6,6 +6,7 @@ import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { formatDateBrasilia } from "@/lib/formatters";
 
 const AdminBatchRejection = () => {
   const [projects, setProjects] = useState<any[]>([]);
@@ -92,7 +93,7 @@ const AdminBatchRejection = () => {
                 <div className="flex gap-2.5 text-xs text-muted-foreground mb-2">
                   <span>{p.owner?.name || "—"}</span>
                   <span>{p.category || "—"}</span>
-                  <span>{new Date(p.created_at).toLocaleDateString("pt-BR")}</span>
+                  <span>{formatDateBrasilia(p.created_at)}</span>
                 </div>
                 <p className="text-[13px] text-muted-foreground">{p.summary || "Sem resumo"}</p>
               </div>

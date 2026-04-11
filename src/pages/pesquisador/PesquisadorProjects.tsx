@@ -7,6 +7,7 @@ import { PESQUISADOR_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { formatDateBrasilia } from "@/lib/formatters";
 
 const PesquisadorProjects = () => {
   const { user } = useAuth();
@@ -94,7 +95,7 @@ const PesquisadorProjects = () => {
                       <p className="text-xs text-muted-foreground mt-1">
                         Por <strong>{approval.project?.owner?.name || "—"}</strong>
                         {" • "}{approval.role_in_project || "Coautor"}
-                        {" • "}{approval.project?.created_at ? new Date(approval.project.created_at).toLocaleDateString("pt-BR") : ""}
+                        {" • "}{approval.project?.created_at ? formatDateBrasilia(approval.project.created_at) : ""}
                       </p>
                     </div>
                     <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-cebio-yellow-bg text-cebio-yellow flex items-center gap-1">
@@ -158,7 +159,7 @@ const PesquisadorProjects = () => {
                   <div key={p.id} onClick={() => navigate(`/projeto?id=${p.id}`)} className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
                     <div>
                       <div className="font-semibold text-foreground">{p.title}</div>
-                      <div className="text-xs text-muted-foreground mt-1">{p.category || "—"} • {p.academic_level || "—"} • {new Date(p.created_at).toLocaleDateString("pt-BR")}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{p.category || "—"} • {p.academic_level || "—"} • {formatDateBrasilia(p.created_at)}</div>
                     </div>
                     <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${statusColors[p.status as keyof typeof statusColors] || ""}`}>
                       {statusLabels[p.status as keyof typeof statusLabels] || p.status}

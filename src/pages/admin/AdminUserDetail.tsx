@@ -7,6 +7,7 @@ import { roleBadge } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
+import { formatDateBrasilia, formatDateTimeBrasilia } from "@/lib/formatters";
 
 
 const AdminUserDetail = () => {
@@ -145,8 +146,8 @@ const AdminUserDetail = () => {
         {[
           { icon: Mail, label: "Email", value: user.email },
           { icon: Building2, label: "Instituicao", value: user.institution || "Nao informada" },
-          { icon: Calendar, label: "Cadastrado em", value: user.created_at ? new Date(user.created_at).toLocaleDateString("pt-BR") : "---" },
-          { icon: Clock, label: "Ultimo login", value: user.last_login ? new Date(user.last_login).toLocaleDateString("pt-BR") : "Nunca" },
+          { icon: Calendar, label: "Cadastrado em", value: user.created_at ? formatDateBrasilia(user.created_at) : "---" },
+          { icon: Clock, label: "Ultimo login", value: user.last_login ? formatDateBrasilia(user.last_login) : "Nunca" },
         ].map((info, i) => (
           <div key={i} className="bg-card rounded-xl p-4 shadow-sm border border-border">
             <div className="flex items-center gap-2 mb-2">
@@ -168,14 +169,14 @@ const AdminUserDetail = () => {
             { icon: User, label: "Nome Completo", value: user.name },
             { icon: Mail, label: "Email", value: user.email },
             { icon: CreditCard, label: "CPF", value: user.cpf ? user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : "Não informado" },
-            { icon: Calendar, label: "Data de Nascimento", value: user.birth_date ? new Date(user.birth_date).toLocaleDateString("pt-BR") : "Não informado" },
+            { icon: Calendar, label: "Data de Nascimento", value: user.birth_date ? formatDateBrasilia(user.birth_date) : "Não informado" },
             { icon: Phone, label: "Telefone", value: user.phone ? user.phone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3") : "Não informado" },
             { icon: Building2, label: "Instituição", value: user.institution || "Não informada" },
             { icon: Building2, label: "Departamento/Campus", value: user.department || "Não informado" },
             { icon: Hash, label: "Matrícula/Registro", value: user.registration_number || "Não informado" },
             { icon: Shield, label: "Função/Perfil", value: badge?.label || user.role },
-            { icon: Calendar, label: "Cadastrado em", value: user.created_at ? new Date(user.created_at).toLocaleDateString("pt-BR") : "---" },
-            { icon: Clock, label: "Último login", value: user.last_login ? new Date(user.last_login).toLocaleString("pt-BR") : "Nunca" },
+            { icon: Calendar, label: "Cadastrado em", value: user.created_at ? formatDateBrasilia(user.created_at) : "---" },
+            { icon: Clock, label: "Último login", value: user.last_login ? formatDateTimeBrasilia(user.last_login) : "Nunca" },
             { icon: Shield, label: "Senha temporária", value: user.is_temp_password ? "Sim" : "Não" },
           ].map((info, i) => (
             <div key={i} className="bg-muted/30 rounded-lg p-3">
@@ -229,7 +230,7 @@ const AdminUserDetail = () => {
                     }`}>{p.status.replace("_", " ")}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{p.category || "—"} • {new Date(p.created_at).toLocaleDateString("pt-BR")}</span>
+                    <span>{p.category || "—"} • {formatDateBrasilia(p.created_at)}</span>
                     <button onClick={() => navigate(`/admin/projeto?id=${p.id}`)} className="text-xs font-medium text-primary">Ver Projeto</button>
                   </div>
                 </div>
@@ -260,7 +261,7 @@ const AdminUserDetail = () => {
                         "bg-cebio-yellow-bg text-cebio-yellow"
                       }`}>{p.status.replace("_", " ")}</span>
                     </td>
-                    <td className="p-3 text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
+                    <td className="p-3 text-muted-foreground text-xs">{formatDateBrasilia(p.created_at)}</td>
                     <td className="p-3 text-center">
                       <button onClick={() => navigate(`/admin/projeto?id=${p.id}`)} className="text-xs font-medium text-primary hover:underline">Ver Projeto</button>
                     </td>

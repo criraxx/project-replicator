@@ -4,6 +4,7 @@ import { ArrowLeft, Save, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/services/api";
+import { formatDateBrasilia } from "@/lib/formatters";
 
 interface ProfilePageProps {
   backPath: string;
@@ -102,7 +103,7 @@ const ProfilePage = ({ backPath }: ProfilePageProps) => {
               { label: "Nome", value: profile.name },
               { label: "Funcao", value: roleLabel[profile.role] || profile.role },
               { label: "CPF", value: profile.cpf ? profile.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : "—" },
-              { label: "Data de Nascimento", value: profile.birth_date ? new Date(profile.birth_date).toLocaleDateString("pt-BR") : "—" },
+              { label: "Data de Nascimento", value: profile.birth_date ? formatDateBrasilia(profile.birth_date) : "—" },
               { label: "Instituicao", value: profile.institution || "—" },
               { label: "Departamento", value: profile.department || "—" },
               { label: "Matricula", value: profile.registration_number || "—" },
