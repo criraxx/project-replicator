@@ -308,7 +308,6 @@ const AdminUsers = () => {
                             const ok = await confirm({ title: "Excluir Usuario", description: `Tem certeza que deseja EXCLUIR permanentemente ${u.name}? Esta acao nao pode ser desfeita.`, confirmLabel: "Excluir", variant: "danger" });
                             if (!ok) return;
                             api.deleteUser(u.id).then(() => { toast({ title: "Sucesso", description: "Usuario excluido" }); fetchUsers(); }).catch((err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }));
-                            }
                           }} className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-cebio-red-bg text-cebio-red hover:bg-cebio-red-bg/80 transition-colors">
                             Excluir
                           </button>
