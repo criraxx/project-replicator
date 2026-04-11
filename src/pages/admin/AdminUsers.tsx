@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { type User } from "@/data/mockData";
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
+import { formatCpf, formatDate, formatPhone, parseDateToISO, validatePassword } from "@/lib/formatters";
 
 const AdminUsers = () => {
   const navigate = useNavigate();
@@ -28,13 +29,13 @@ const AdminUsers = () => {
 
   // Form state for new user
   const [newUser, setNewUser] = useState({
-    name: "", email: "", role: "bolsista", institution: "", password: "cebio2024",
+    name: "", email: "", role: "bolsista", institution: "", password: "Cebio@2024",
     cpf: "", birth_date: "", phone: "", registration_number: "",
   });
 
   // Batch creation state
   const [batchText, setBatchText] = useState("");
-  const [batchPassword, setBatchPassword] = useState("cebio2024");
+  const [batchPassword, setBatchPassword] = useState("Cebio@2024");
 
   // Auto-format helpers
   const formatCpf = (v: string) => {

@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog";
 import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -46,37 +47,37 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             
             {/* Admin */}
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/projetos" element={<AdminProjects />} />
-            <Route path="/admin/usuarios" element={<AdminUsers />} />
-            <Route path="/admin/usuario" element={<AdminUserDetail />} />
-            <Route path="/admin/acoes" element={<AdminActions />} />
-            <Route path="/admin/relatorios" element={<AdminReports />} />
-            <Route path="/admin/auditoria" element={<AdminAudit />} />
-            <Route path="/admin/exportacao" element={<AdminExports />} />
-            <Route path="/admin/aprovacao-lote" element={<AdminBatchApproval />} />
-            <Route path="/admin/rejeicao-lote" element={<AdminBatchRejection />} />
-            <Route path="/admin/notificacao-massa" element={<AdminMassNotification />} />
-            <Route path="/admin/reset-senha-lote" element={<AdminBatchResetPassword />} />
-            <Route path="/admin/projeto" element={<ProjectDetailView isAdmin />} />
-            <Route path="/admin/perfil" element={<ProfilePage backPath="/admin/dashboard" />} />
-            <Route path="/admin/notificacoes" element={<NotificationsPage />} />
+            <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/projetos" element={<ProtectedRoute requiredRole="admin"><AdminProjects /></ProtectedRoute>} />
+            <Route path="/admin/usuarios" element={<ProtectedRoute requiredRole="admin"><AdminUsers /></ProtectedRoute>} />
+            <Route path="/admin/usuario" element={<ProtectedRoute requiredRole="admin"><AdminUserDetail /></ProtectedRoute>} />
+            <Route path="/admin/acoes" element={<ProtectedRoute requiredRole="admin"><AdminActions /></ProtectedRoute>} />
+            <Route path="/admin/relatorios" element={<ProtectedRoute requiredRole="admin"><AdminReports /></ProtectedRoute>} />
+            <Route path="/admin/auditoria" element={<ProtectedRoute requiredRole="admin"><AdminAudit /></ProtectedRoute>} />
+            <Route path="/admin/exportacao" element={<ProtectedRoute requiredRole="admin"><AdminExports /></ProtectedRoute>} />
+            <Route path="/admin/aprovacao-lote" element={<ProtectedRoute requiredRole="admin"><AdminBatchApproval /></ProtectedRoute>} />
+            <Route path="/admin/rejeicao-lote" element={<ProtectedRoute requiredRole="admin"><AdminBatchRejection /></ProtectedRoute>} />
+            <Route path="/admin/notificacao-massa" element={<ProtectedRoute requiredRole="admin"><AdminMassNotification /></ProtectedRoute>} />
+            <Route path="/admin/reset-senha-lote" element={<ProtectedRoute requiredRole="admin"><AdminBatchResetPassword /></ProtectedRoute>} />
+            <Route path="/admin/projeto" element={<ProtectedRoute requiredRole="admin"><ProjectDetailView isAdmin /></ProtectedRoute>} />
+            <Route path="/admin/perfil" element={<ProtectedRoute requiredRole="admin"><ProfilePage backPath="/admin/dashboard" /></ProtectedRoute>} />
+            <Route path="/admin/notificacoes" element={<ProtectedRoute requiredRole="admin"><NotificationsPage /></ProtectedRoute>} />
             
             {/* Pesquisador */}
-            <Route path="/pesquisador/dashboard" element={<PesquisadorDashboard />} />
-            <Route path="/pesquisador/projetos" element={<PesquisadorProjects />} />
-            <Route path="/pesquisador/submissao" element={<SubmissionForm />} />
-            <Route path="/pesquisador/historico" element={<PesquisadorHistory />} />
-            <Route path="/pesquisador/perfil" element={<ProfilePage backPath="/pesquisador/dashboard" />} />
-            <Route path="/pesquisador/notificacoes" element={<NotificationsPage />} />
+            <Route path="/pesquisador/dashboard" element={<ProtectedRoute requiredRole="pesquisador"><PesquisadorDashboard /></ProtectedRoute>} />
+            <Route path="/pesquisador/projetos" element={<ProtectedRoute requiredRole="pesquisador"><PesquisadorProjects /></ProtectedRoute>} />
+            <Route path="/pesquisador/submissao" element={<ProtectedRoute requiredRole="pesquisador"><SubmissionForm /></ProtectedRoute>} />
+            <Route path="/pesquisador/historico" element={<ProtectedRoute requiredRole="pesquisador"><PesquisadorHistory /></ProtectedRoute>} />
+            <Route path="/pesquisador/perfil" element={<ProtectedRoute requiredRole="pesquisador"><ProfilePage backPath="/pesquisador/dashboard" /></ProtectedRoute>} />
+            <Route path="/pesquisador/notificacoes" element={<ProtectedRoute requiredRole="pesquisador"><NotificationsPage /></ProtectedRoute>} />
             
             {/* Bolsista */}
-            <Route path="/bolsista/dashboard" element={<BolsistaDashboard />} />
-            <Route path="/bolsista/projetos" element={<BolsistaProjects />} />
-            <Route path="/bolsista/submissao" element={<SubmissionForm />} />
-            <Route path="/bolsista/historico" element={<BolsistaHistory />} />
-            <Route path="/bolsista/perfil" element={<ProfilePage backPath="/bolsista/dashboard" />} />
-            <Route path="/bolsista/notificacoes" element={<NotificationsPage />} />
+            <Route path="/bolsista/dashboard" element={<ProtectedRoute requiredRole="bolsista"><BolsistaDashboard /></ProtectedRoute>} />
+            <Route path="/bolsista/projetos" element={<ProtectedRoute requiredRole="bolsista"><BolsistaProjects /></ProtectedRoute>} />
+            <Route path="/bolsista/submissao" element={<ProtectedRoute requiredRole="bolsista"><SubmissionForm /></ProtectedRoute>} />
+            <Route path="/bolsista/historico" element={<ProtectedRoute requiredRole="bolsista"><BolsistaHistory /></ProtectedRoute>} />
+            <Route path="/bolsista/perfil" element={<ProtectedRoute requiredRole="bolsista"><ProfilePage backPath="/bolsista/dashboard" /></ProtectedRoute>} />
+            <Route path="/bolsista/notificacoes" element={<ProtectedRoute requiredRole="bolsista"><NotificationsPage /></ProtectedRoute>} />
             
             {/* Shared */}
             <Route path="/projeto" element={<ProjectDetailView />} />
