@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Search, Shield, AlertTriangle, Clock, Users, Download, Inbox, Info } from "lucide-react";
+import { formatDateTimeBrasilia } from "@/lib/formatters";
 import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
 import { severityColors } from "@/constants/ui";
