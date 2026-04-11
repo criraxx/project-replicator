@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Bell, Check, CheckCheck, ExternalLink, ArrowLeft } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,12 +9,15 @@ import api from "@/services/api";
 const NotificationsPage = ({ backPath }: { backPath?: string }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
 
-  const navItems = user?.role === "admin" ? ADMIN_NAV : user?.role === "pesquisador" ? PESQUISADOR_NAV : BOLSISTA_NAV;
-  const roleBase = user?.role === "admin" ? "/admin" : user?.role === "pesquisador" ? "/pesquisador" : "/bolsista";
+  // Derive role from current URL path to avoid mismatch
+  const pathRole = location.pathname.startsWith("/admin") ? "admin" : location.pathname.startsWith("/pesquisador") ? "pesquisador" : "bolsista";
+  const navItems = pathRole === "admin" ? ADMIN_NAV : pathRole === "pesquisador" ? PESQUISADOR_NAV : BOLSISTA_NAV;
+  const roleBase = `/${pathRole}`;
   const back = backPath || `${roleBase}/dashboard`;
 
   const fetchNotifications = async () => {
