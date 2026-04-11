@@ -6,7 +6,7 @@ import { ADMIN_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
-import { mockProjects, mockCategories, mockAcademicLevels } from "@/data/mockData";
+
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
 
 const STATUS_OPTIONS = [
@@ -40,20 +40,20 @@ const AdminProjects = () => {
           api.listCategories(),
           api.listAcademicLevels(),
         ]);
-        const p = projData.status === "fulfilled" && projData.value.projects?.length ? projData.value.projects : mockProjects;
+        const p = projData.status === "fulfilled" && projData.value.projects?.length ? projData.value.projects : [];
         setProjects(p);
         if (statsData.status === "fulfilled") {
           setStats(statsData.value);
         } else {
           setStats({ total: p.length, pending: p.filter((x: any) => x.status === "pendente").length, approved: p.filter((x: any) => x.status === "aprovado").length, rejected: p.filter((x: any) => x.status === "rejeitado").length });
         }
-        setCategories(catsData.status === "fulfilled" && catsData.value?.length ? catsData.value : mockCategories);
-        setLevels(lvlsData.status === "fulfilled" && lvlsData.value?.length ? lvlsData.value : mockAcademicLevels);
+        setCategories(catsData.status === "fulfilled" && catsData.value?.length ? catsData.value : []);
+        setLevels(lvlsData.status === "fulfilled" && lvlsData.value?.length ? lvlsData.value : []);
       } catch {
-        setProjects(mockProjects);
-        setStats({ total: mockProjects.length, pending: mockProjects.filter(x => x.status === "pendente").length, approved: mockProjects.filter(x => x.status === "aprovado").length, rejected: mockProjects.filter(x => x.status === "rejeitado").length });
-        setCategories(mockCategories);
-        setLevels(mockAcademicLevels);
+        setProjects([]);
+        setStats({ total: 0, pending: 0, approved: 0, rejected: 0 });
+        setCategories([]);
+        setLevels([]);
       }
       setLoading(false);
     };

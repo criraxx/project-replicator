@@ -5,7 +5,7 @@ import { ADMIN_NAV } from "@/constants/navigation";
 import { severityColors } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
-import { mockAuditLogs } from "@/data/mockData";
+
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
 
 const SEVERITY_OPTIONS = [
@@ -34,10 +34,9 @@ const AdminAudit = () => {
     const fetchLogs = async () => {
       try {
         const data = await api.listAuditLogs(200);
-        const l = data.logs && data.logs.length > 0 ? data.logs : mockAuditLogs;
-        setLogs(l);
+        setLogs(data.logs && data.logs.length > 0 ? data.logs : []);
       } catch {
-        setLogs(mockAuditLogs);
+        setLogs([]);
       }
       setLoading(false);
     };

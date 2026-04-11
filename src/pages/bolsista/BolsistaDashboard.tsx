@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { BOLSISTA_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
-import { mockProjects } from "@/data/mockData";
+
 
 const BolsistaDashboard = () => {
   const { user } = useAuth();
@@ -18,9 +18,9 @@ const BolsistaDashboard = () => {
     const fetchProjects = async () => {
       try {
         const data = await api.listProjects({ limit: 100 });
-        setProjects(data.projects?.length ? data.projects : mockProjects.filter(p => p.owner_id === 4 || p.owner_id === 5));
+        setProjects(data.projects?.length ? data.projects : []);
       } catch {
-        setProjects(mockProjects.filter(p => p.owner_id === 4 || p.owner_id === 5));
+        setProjects([]);
       }
       setLoading(false);
     };
