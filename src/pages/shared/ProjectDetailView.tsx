@@ -111,8 +111,8 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
     );
   }
 
-  const photos = (project.files || []).filter((f: any) => f.file_type === "foto");
-  const documents = (project.files || []).filter((f: any) => f.file_type === "documento" || f.file_type === "pdf");
+  const photos = (project.files || []).filter((f: any) => f.file_category === "photo");
+  const documents = (project.files || []).filter((f: any) => f.file_category === "pdf");
   const statusColor = statusColors[project.status as keyof typeof statusColors] || "bg-muted text-muted-foreground";
   const statusLabel = statusLabels[project.status as keyof typeof statusLabels] || project.status;
   const versions = project.versions || [];
@@ -291,7 +291,7 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
                       <div className="w-10 h-10 bg-cebio-green-bg rounded flex items-center justify-center"><Image className="w-5 h-5 text-primary" /></div>
                       <div className="flex-1">
                         <div className="text-sm text-foreground">{file.original_name}</div>
-                        <div className="text-xs text-muted-foreground">{formatFileSize(file.size_bytes || 0)}</div>
+                        <div className="text-xs text-muted-foreground">{formatFileSize(file.file_size || 0)}</div>
                       </div>
                     </div>
                   ))}
@@ -307,7 +307,7 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
                       <div className="w-10 h-10 bg-cebio-red-bg rounded flex items-center justify-center"><FileText className="w-5 h-5 text-cebio-red" /></div>
                       <div className="flex-1">
                         <div className="text-sm text-foreground">{file.original_name}</div>
-                        <div className="text-xs text-muted-foreground">{formatFileSize(file.size_bytes || 0)}</div>
+                        <div className="text-xs text-muted-foreground">{formatFileSize(file.file_size || 0)}</div>
                       </div>
                     </div>
                   ))}
