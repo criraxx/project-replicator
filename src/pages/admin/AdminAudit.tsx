@@ -146,7 +146,7 @@ const AdminAudit = () => {
                   <p className="text-xs text-muted-foreground line-clamp-2">{log.details}</p>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>{log.user?.name || `User #${log.user_id}`}</span>
-                    <span>{new Date(log.created_at).toLocaleString("pt-BR")}</span>
+                    <span>{formatDateTimeBrasilia(log.created_at)}</span>
                   </div>
                 </div>
               ))}
@@ -167,7 +167,7 @@ const AdminAudit = () => {
               <tbody>
                 {filtered.map((log: any) => (
                   <tr key={log.id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                    <td className="p-3 text-muted-foreground text-xs">{new Date(log.created_at).toLocaleString("pt-BR")}</td>
+                    <td className="p-3 text-muted-foreground text-xs">{formatDateTimeBrasilia(log.created_at)}</td>
                     <td className="p-3 text-muted-foreground">{log.user?.name || `User #${log.user_id}`}</td>
                     <td className="p-3 font-medium text-foreground">{log.action?.replace(/_/g, " ")}</td>
                     <td className="p-3 text-muted-foreground text-xs max-w-[250px] truncate">{log.details}</td>
