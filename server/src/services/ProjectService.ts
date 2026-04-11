@@ -38,10 +38,28 @@ export class ProjectService {
   }
 
   async getProjectById(id: number): Promise<Project | null> {
-    return await this.projectRepository.findOne({
+    const project = await this.projectRepository.findOne({
       where: { id, is_deleted: false },
-      relations: ['owner', 'versions', 'comments', 'authors', 'links', 'files'],
+      relations: ['owner', 'versions', 'comments', 'authors'],
     });
+    if (!project) return null;
+
+    // Load links and files separately to avoid errors if tables are not yet migrated
+    try {
+      const full = await this.projectRepository.findOne({
+        where: { id },
+        relations: ['links', 'files'],
+      });
+      if (full) {
+        project.links = full.links || [];
+        project.files = full.files || [];
+      }
+    } catch {
+      project.links = [];
+      project.files = [];
+    }
+
+    return project;
   }
 
   async listProjects(
