@@ -233,6 +233,55 @@ router.put('/users/:id/reset-password', authMiddleware, requireRole('admin'), as
   }
 });
 
+// POST /api/users/batch-reset-password
+router.post('/users/batch-reset-password', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+  try {
+    const { user_ids, new_password } = req.body;
+
+    if (!user_ids || !Array.isArray(user_ids) || user_ids.length === 0) {
+      return res.status(400).json({ error: 'Lista de usuarios obrigatoria' });
+    }
+
+    const password = new_password || 'cebio2024';
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'A senha deve ter no minimo 6 caracteres' });
+    }
+
+    let success = 0;
+    let errors = 0;
+
+    for (const id of user_ids) {
+      try {
+        const user = await userService.getUserById(id);
+        if (!user) { errors++; continue; }
+
+        await userService.updateUser(id, {
+          hashed_password: hashPassword(password),
+          is_temp_password: true,
+          must_change_password: true,
+        });
+
+        await auditService.logAction(
+          'RESET_PASSWORD',
+          req.user!.id,
+          id,
+          undefined,
+          `Senha resetada em lote: ${user.email}`,
+          req.ip || 'unknown',
+          'high'
+        );
+        success++;
+      } catch {
+        errors++;
+      }
+    }
+
+    res.json({ success, errors, message: `${success} senha(s) resetada(s)` });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Erro interno' });
+  }
+});
+
 // DELETE /api/users/:id
 router.delete('/users/:id', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
   try {

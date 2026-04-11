@@ -149,6 +149,13 @@ class ApiClient {
     });
   }
 
+  async batchResetPasswords(userIds: number[], newPassword: string) {
+    return this.request<{ success: number; errors: number }>('POST', '/users/batch-reset-password', {
+      user_ids: userIds,
+      new_password: newPassword,
+    });
+  }
+
   // ============================================
   // PROJECTS
   // ============================================
