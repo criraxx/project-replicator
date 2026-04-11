@@ -46,8 +46,8 @@ const AdminAudit = () => {
 
   const filtered = logs.filter((l) => {
     const matchSearch = !search || l.action?.toLowerCase().includes(search.toLowerCase()) || l.details?.toLowerCase().includes(search.toLowerCase()) || l.user?.name?.toLowerCase().includes(search.toLowerCase());
-    const matchSeverity = !severityFilter || l.severity === severityFilter;
-    const matchAction = !actionFilter || l.action?.toLowerCase().includes(actionFilter.toLowerCase());
+    const matchSeverity = severityFilters.length === 0 || severityFilters.includes(l.severity);
+    const matchAction = actionFilters.length === 0 || actionFilters.some((af: string) => l.action?.toLowerCase().includes(af.toLowerCase()));
     return matchSearch && matchSeverity && matchAction;
   });
 
@@ -58,7 +58,7 @@ const AdminAudit = () => {
     return d.toDateString() === today.toDateString();
   }).length;
 
-  const clearFilters = () => { setSearch(""); setSeverityFilter(""); setActionFilter(""); };
+  const clearFilters = () => { setSearch(""); setSeverityFilters([]); setActionFilters([]); };
 
   return (
     <AppLayout pageName="Auditoria" navItems={ADMIN_NAV} notificationCount={0}>
@@ -105,26 +105,8 @@ const AdminAudit = () => {
             <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Buscar</label>
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Ação, detalhes ou usuário..." className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-card" />
           </div>
-          <div>
-            <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Severidade</label>
-            <select value={severityFilter} onChange={(e) => setSeverityFilter(e.target.value)} className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-card">
-              <option value="">Todas</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="critical">Critical</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Tipo de Ação</label>
-            <select value={actionFilter} onChange={(e) => setActionFilter(e.target.value)} className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-card">
-              <option value="">Todas</option>
-              <option value="LOGIN">Login</option>
-              <option value="PROJECT">Project</option>
-              <option value="USER">User</option>
-              <option value="SYSTEM">System</option>
-            </select>
-          </div>
+          <MultiSelectFilter label="Severidade" options={SEVERITY_OPTIONS} selected={severityFilters} onChange={setSeverityFilters} placeholder="Todas" />
+          <MultiSelectFilter label="Tipo de Ação" options={ACTION_OPTIONS} selected={actionFilters} onChange={setActionFilters} placeholder="Todas" />
           <div>
             <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Data</label>
             <input type="date" className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-card" />
