@@ -225,40 +225,71 @@ const AdminUsers = () => {
         </button>
       </div>
 
-      {/* Modal: Novo Usuário */}
+      {/* Modal: Novo Usuario */}
       {showNewUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-xl p-6 w-full max-w-md shadow-xl border border-border">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-8">
+          <div className="bg-card rounded-xl p-6 w-full max-w-lg shadow-xl border border-border">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Novo Usuário</h3>
+              <h3 className="text-lg font-semibold">Novo Usuario</h3>
               <button onClick={() => setShowNewUser(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
             </div>
-            <form onSubmit={handleCreateUser} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Nome</label>
-                <input type="text" required value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+            <form onSubmit={handleCreateUser} className="space-y-3">
+              <p className="text-xs text-muted-foreground mb-1">Campos com * sao obrigatorios</p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium mb-1">Nome Completo *</label>
+                  <input type="text" required placeholder="Ex: Joao da Silva" value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium mb-1">Email *</label>
+                  <input type="email" required placeholder="Ex: usuario@ifgoiano.edu.br" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">CPF *</label>
+                  <input type="text" required placeholder="000.000.000-00" value={newUser.cpf} onChange={(e) => setNewUser({ ...newUser, cpf: formatCpf(e.target.value) })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" maxLength={14} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Data de Nascimento *</label>
+                  <input type="text" required placeholder="dd/mm/aaaa" value={newUser.birth_date} onChange={(e) => setNewUser({ ...newUser, birth_date: formatDate(e.target.value) })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" maxLength={10} />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium mb-1">Funcao/Perfil *</label>
+                  <select value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card">
+                    <option value="pesquisador">Pesquisador</option>
+                    <option value="bolsista">Bolsista</option>
+                    <option value="admin">Administrador</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <input type="email" required value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+
+              <div className="border-t border-border pt-3 mt-3">
+                <p className="text-xs text-muted-foreground mb-2">Campos opcionais</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium mb-1">Departamento/Campus</label>
+                    <input type="text" placeholder="Ex: Campus Ipora" value={newUser.department} onChange={(e) => setNewUser({ ...newUser, department: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Telefone</label>
+                    <input type="text" placeholder="(XX) 9XXXX-XXXX" value={newUser.phone} onChange={(e) => setNewUser({ ...newUser, phone: formatPhone(e.target.value) })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" maxLength={16} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Matricula/Registro</label>
+                    <input type="text" placeholder="Ex: 2024001" value={newUser.registration_number} onChange={(e) => setNewUser({ ...newUser, registration_number: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium mb-1">Instituicao</label>
+                    <input type="text" placeholder="Ex: IF Goiano" value={newUser.institution} onChange={(e) => setNewUser({ ...newUser, institution: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium mb-1">Senha inicial</label>
+                    <input type="text" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Perfil</label>
-                <select value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card">
-                  <option value="bolsista">Bolsista</option>
-                  <option value="pesquisador">Pesquisador</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Instituição</label>
-                <input type="text" value={newUser.institution} onChange={(e) => setNewUser({ ...newUser, institution: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Senha inicial</label>
-                <input type="text" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
-              </div>
-              <button type="submit" className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg text-sm font-semibold">Criar Usuário</button>
+
+              <button type="submit" className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg text-sm font-semibold mt-2">Criar Usuario</button>
             </form>
           </div>
         </div>
@@ -266,28 +297,31 @@ const AdminUsers = () => {
 
       {/* Modal: Cadastro em Lote */}
       {showBatchModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-xl p-6 w-full max-w-lg shadow-xl border border-border">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-y-auto py-8">
+          <div className="bg-card rounded-xl p-6 w-full max-w-2xl shadow-xl border border-border">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Cadastro em Lote</h3>
               <button onClick={() => setShowBatchModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
             </div>
-            <p className="text-sm text-muted-foreground mb-3">
-              Cole os dados dos usuários, um por linha, no formato:<br />
-              <code className="text-xs bg-muted px-1.5 py-0.5 rounded">Nome;Email;Perfil;Instituição</code>
+            <p className="text-sm text-muted-foreground mb-2">
+              Cole os dados dos usuarios, um por linha, no formato:
             </p>
+            <code className="text-xs bg-muted px-2 py-1 rounded block mb-2 font-mono">
+              Nome;Email;CPF;DataNasc;Perfil;Instituicao;Telefone;Depto;Matricula
+            </code>
+            <p className="text-xs text-muted-foreground mb-1">Campos obrigatorios: Nome, Email, CPF, Data de Nascimento</p>
             <p className="text-xs text-muted-foreground mb-3">
-              Exemplo: <code className="bg-muted px-1 py-0.5 rounded">Maria Santos;maria@email.com;bolsista;IF Goiano</code>
+              Exemplo: <code className="bg-muted px-1 py-0.5 rounded font-mono">Maria Santos;maria@ifgoiano.edu.br;123.456.789-00;15/03/1990;bolsista;IF Goiano;(64) 99999-9999;Campus Ipora;2024001</code>
             </p>
             <textarea
               rows={8}
               value={batchText}
               onChange={(e) => setBatchText(e.target.value)}
-              placeholder="Nome;Email;Perfil;Instituição"
+              placeholder="Nome;Email;CPF;DataNasc;Perfil;Instituicao;Telefone;Depto;Matricula"
               className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card font-mono mb-3"
             />
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Senha padrão para todos</label>
+              <label className="block text-sm font-medium mb-1">Senha padrao para todos</label>
               <input type="text" value={batchPassword} onChange={(e) => setBatchPassword(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
             </div>
             <button onClick={handleBatchCreate} className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg text-sm font-semibold">
