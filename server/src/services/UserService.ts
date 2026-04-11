@@ -54,6 +54,12 @@ export class UserService {
     return await this.userRepository.findOne({ where: { id } });
   }
 
+  async getUserByCpf(cpf: string): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: { cpf: cpf.replace(/\D/g, '') },
+    });
+  }
+
   async getUserByEmail(email: string): Promise<User | null> {
     return await this.userRepository.findOne({
       where: { email: email.toLowerCase().trim() },
