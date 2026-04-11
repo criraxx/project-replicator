@@ -33,6 +33,8 @@ const AdminUsers = () => {
     cpf: "", birth_date: "", phone: "", department: "", registration_number: "",
   });
 
+  const [institutions, setInstitutions] = useState<string[]>([]);
+
   // Batch creation state
   const [batchText, setBatchText] = useState("");
   const [batchPassword, setBatchPassword] = useState("cebio2024");
