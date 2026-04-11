@@ -63,15 +63,15 @@ const SubHeader = ({ pageName, navItems, notificationCount = 0 }: SubHeaderProps
           )}
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <button onClick={() => navigate("/perfil")} className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <div className="w-9 h-9 rounded-full bg-cebio-green-light flex items-center justify-center text-primary-foreground font-semibold text-sm">
             {initials}
           </div>
-          <div>
+          <div className="text-left">
             <div className="text-[13px] font-semibold text-foreground">{user?.name}</div>
             <div className="text-[11px] text-muted-foreground">{user?.institution}</div>
           </div>
-        </div>
+        </button>
 
         <button onClick={handleLogout} className="text-muted-foreground hover:text-foreground transition-colors">
           <LogOut className="w-5 h-5" />
