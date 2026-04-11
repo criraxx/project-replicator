@@ -348,6 +348,69 @@ const AdminReports = () => {
     setTimeout(() => { printWin.print(); }, 500);
   };
 
+  const exportExcel = () => {
+    const wb = XLSX.utils.book_new();
+
+    // Aba Resumo
+    const resumoData = [
+      ["Relatorio CEBIO Brasil"],
+      ["Gerado em", new Date().toLocaleString("pt-BR")],
+      [],
+      ["Filtros Aplicados"],
+      ["Status", statusFilters.length > 0 ? statusFilters.map(s => STATUS_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos"],
+      ["Categoria", categoryFilters.length > 0 ? categoryFilters.join(", ") : "Todas"],
+      ["Tipo Usuario", userTypeFilters.length > 0 ? userTypeFilters.map(s => USER_TYPE_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos"],
+      ["Proprietario", ownerFilters.length > 0 ? ownerFilters.map(id => uniqueOwners.find(o => String(o.id) === id)?.name || id).join(", ") : "Todos"],
+      ["Data Inicio", startDate ? format(startDate, "dd/MM/yyyy") : "---"],
+      ["Data Fim", endDate ? format(endDate, "dd/MM/yyyy") : "---"],
+      [],
+      ["Indicadores"],
+      ["Projetos Filtrados", filtered.length],
+      ["Usuarios no Sistema", users.length],
+      ["Taxa de Aprovacao", `${approvalRate}%`],
+      ["Categorias", categories.length],
+    ];
+    const wsResumo = XLSX.utils.aoa_to_sheet(resumoData);
+    wsResumo["!cols"] = [{ wch: 25 }, { wch: 40 }];
+    XLSX.utils.book_append_sheet(wb, wsResumo, "Resumo");
+
+    // Aba Por Status
+    const wsStatus = XLSX.utils.aoa_to_sheet([["Status", "Quantidade"], ...byStatus.map(d => [d.name, d.value])]);
+    wsStatus["!cols"] = [{ wch: 20 }, { wch: 15 }];
+    XLSX.utils.book_append_sheet(wb, wsStatus, "Por Status");
+
+    // Aba Por Categoria
+    const wsCat = XLSX.utils.aoa_to_sheet([["Categoria", "Quantidade"], ...byCategory.map(d => [d.name, d.value])]);
+    wsCat["!cols"] = [{ wch: 30 }, { wch: 15 }];
+    XLSX.utils.book_append_sheet(wb, wsCat, "Por Categoria");
+
+    // Aba Top Usuarios
+    const wsUsers = XLSX.utils.aoa_to_sheet([["Usuario", "Projetos"], ...byUser.map(d => [d.name, d.value])]);
+    wsUsers["!cols"] = [{ wch: 35 }, { wch: 15 }];
+    XLSX.utils.book_append_sheet(wb, wsUsers, "Top Usuarios");
+
+    // Aba Evolucao Temporal
+    const wsMonth = XLSX.utils.aoa_to_sheet([["Mes", "Quantidade"], ...byMonth.map(d => [d.name, d.value])]);
+    wsMonth["!cols"] = [{ wch: 15 }, { wch: 15 }];
+    XLSX.utils.book_append_sheet(wb, wsMonth, "Evolucao Temporal");
+
+    // Aba Tipo Usuario
+    const wsType = XLSX.utils.aoa_to_sheet([["Tipo", "Quantidade"], ...byUserType.map(d => [d.name, d.value])]);
+    wsType["!cols"] = [{ wch: 20 }, { wch: 15 }];
+    XLSX.utils.book_append_sheet(wb, wsType, "Tipo Usuario");
+
+    // Aba Projetos
+    const projRows = filtered.map(p => {
+      const owner = users.find((u: any) => u.id === p.owner_id);
+      return [p.title, owner?.name || p.owner?.name || "---", p.category || "---", p.status, new Date(p.created_at).toLocaleDateString("pt-BR")];
+    });
+    const wsProj = XLSX.utils.aoa_to_sheet([["Titulo", "Proprietario", "Categoria", "Status", "Data"], ...projRows]);
+    wsProj["!cols"] = [{ wch: 40 }, { wch: 30 }, { wch: 25 }, { wch: 15 }, { wch: 15 }];
+    XLSX.utils.book_append_sheet(wb, wsProj, "Projetos");
+
+    XLSX.writeFile(wb, `relatorio_cebio_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+  };
+
   return (
     <AppLayout pageName="Relatórios e Analytics" navItems={ADMIN_NAV} notificationCount={0}>
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6 flex justify-between items-center">
@@ -355,9 +418,14 @@ const AdminReports = () => {
           <h2 className="text-[22px] font-semibold mb-1.5">Relatórios e Analytics</h2>
           <p className="text-sm opacity-90">Visão detalhada e personalizável do desempenho da plataforma</p>
         </div>
-        <button onClick={exportPDF} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors">
-          <Download className="w-4 h-4" /> Exportar PDF
-        </button>
+        <div className="flex gap-2">
+          <button onClick={exportExcel} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors">
+            <FileSpreadsheet className="w-4 h-4" /> Exportar Excel
+          </button>
+          <button onClick={exportPDF} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors">
+            <Download className="w-4 h-4" /> Exportar PDF
+          </button>
+        </div>
       </div>
 
       {/* KPIs */}
