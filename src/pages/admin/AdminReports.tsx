@@ -127,6 +127,14 @@ const RenderChart = ({ type, data, dataKey = "value", nameKey = "name" }: { type
   );
 };
 
+const CHART_CONFIGS = [
+  { id: "status", title: "Projetos por Status" },
+  { id: "category", title: "Projetos por Categoria" },
+  { id: "users", title: "Top 10 Usuarios" },
+  { id: "timeline", title: "Evolucao Temporal" },
+  { id: "usertype", title: "Pesquisadores vs Bolsistas" },
+];
+
 const AdminReports = () => {
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
@@ -136,6 +144,8 @@ const AdminReports = () => {
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [chartType, setChartType] = useState<ChartType>("columns");
   const chartsRef = useRef<HTMLDivElement>(null);
+  const [showCustomExport, setShowCustomExport] = useState(false);
+  const [selectedCharts, setSelectedCharts] = useState<string[]>(CHART_CONFIGS.map(c => c.id));
 
   const [projects, setProjects] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
