@@ -80,8 +80,16 @@ const AdminUsers = () => {
     }
   };
 
+  const fetchInstitutions = async () => {
+    try {
+      const data = await api.listInstitutions();
+      setInstitutions(data);
+    } catch { /* ignore */ }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchInstitutions();
   }, [roleFilter, statusFilter]);
 
   const filtered = users.filter((u) => {
