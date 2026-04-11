@@ -486,7 +486,7 @@ const AdminReports = () => {
           <p className="text-xs text-muted-foreground mb-4">{filtered.length} projetos com os filtros aplicados</p>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/50">
                 <th className="text-left p-3 font-medium text-muted-foreground">Título</th>
@@ -509,7 +509,7 @@ const AdminReports = () => {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
           {filtered.length > 20 && (
             <div className="p-3 text-center text-xs text-muted-foreground">Mostrando 20 de {filtered.length} projetos</div>
           )}

@@ -133,7 +133,7 @@ const AdminAudit = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
                   <th className="p-3 text-left font-semibold text-muted-foreground uppercase text-xs">Timestamp</th>
@@ -158,7 +158,7 @@ const AdminAudit = () => {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </div>
         )}
       </div>

@@ -150,7 +150,7 @@ const AdminBatchResetPassword = () => {
         ) : filtered.length === 0 ? (
           <div className="p-10 text-center text-muted-foreground text-sm">Nenhum usuário encontrado</div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/50">
                 <th className="p-3 w-10">
@@ -190,7 +190,7 @@ const AdminBatchResetPassword = () => {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
     </AppLayout>

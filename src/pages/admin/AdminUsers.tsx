@@ -324,7 +324,7 @@ const AdminUsers = () => {
           </div>
         ) : (
           <>
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
                   <th className="p-3 text-left font-semibold text-muted-foreground">Usuário</th>
@@ -384,7 +384,7 @@ const AdminUsers = () => {
                   );
                 })}
               </tbody>
-            </table>
+            </table></div>
             <div className="p-4 text-sm text-muted-foreground border-t border-border">
               Mostrando {filtered.length} de {users.length} usuários
             </div>
