@@ -195,11 +195,13 @@ const AdminUsers = () => {
           <option value="pesquisador">Pesquisador</option>
           <option value="bolsista">Bolsista</option>
         </select>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="border border-border rounded-lg px-3 py-2 text-sm bg-card">
-          <option value="">Todos os status</option>
-          <option value="true">Ativos</option>
-          <option value="false">Inativos</option>
-        </select>
+        <MultiSelectFilter
+          label="Status"
+          options={[{ value: "true", label: "Ativos" }, { value: "false", label: "Inativos" }]}
+          selected={statusFilter ? [statusFilter] : []}
+          onChange={(vals) => setStatusFilter(vals.length === 1 ? vals[0] : "")}
+          placeholder="Todos"
+        />
         <button onClick={() => setShowNewUser(true)} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5">
           <UserPlus className="w-4 h-4" /> Novo Usuário
         </button>
