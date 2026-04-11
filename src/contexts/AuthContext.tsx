@@ -47,24 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem("cebio_user", JSON.stringify(userData));
       setUser(userData);
     } catch {
-      // Mock fallback when backend is unavailable
-      const mockUsers: Record<string, User> = {
-        "admin@cebio.org.br": { id: 1, name: "Administrador", email: "admin@cebio.org.br", role: "admin", institution: "CEBIO Brasil" },
-        "pesquisador@cebio.org.br": { id: 2, name: "Dr. Maria Santos", email: "pesquisador@cebio.org.br", role: "pesquisador", institution: "CEBIO Brasil - Centro de Excelência em Bioinsumos" },
-        "bolsista@cebio.org.br": { id: 3, name: "João Silva", email: "bolsista@cebio.org.br", role: "bolsista", institution: "CEBIO Brasil - Centro de Excelência em Bioinsumos" },
-      };
-      const mockPasswords: Record<string, string> = {
-        "admin@cebio.org.br": "admin123",
-        "pesquisador@cebio.org.br": "pesq123",
-        "bolsista@cebio.org.br": "bolsa123",
-      };
-      const mockUser = mockUsers[email];
-      if (!mockUser || mockPasswords[email] !== password) {
-        throw new Error("Credenciais inválidas");
-      }
-      localStorage.setItem("cebio_token", "mock-token");
-      localStorage.setItem("cebio_user", JSON.stringify(mockUser));
-      setUser(mockUser);
+      throw new Error("Não foi possível conectar ao servidor. Verifique se o backend está ativo.");
     }
   }, []);
 
