@@ -288,6 +288,14 @@ class ApiClient {
     return this.request<void>('PUT', '/notifications/read-all');
   }
 
+  // ============================================
+  // ADMIN
+  // ============================================
+
+  async getAdminStatus() {
+    return this.request<any>('GET', '/admin/status');
+  }
+
   async getAdminConfig() {
     return this.request<any>('GET', '/admin/config');
   }
