@@ -463,28 +463,36 @@ const AdminReports = () => {
 
       {/* Charts Grid */}
       <div ref={chartsRef} className="grid grid-cols-2 gap-6 mb-6">
-        <div className="bg-card rounded-xl shadow-sm border border-border p-5">
-          <h3 className="text-sm font-semibold mb-4">Projetos por Status</h3>
-          <RenderChart type={chartType} data={byStatus} />
-        </div>
-        <div className="bg-card rounded-xl shadow-sm border border-border p-5">
-          <h3 className="text-sm font-semibold mb-4">Projetos por Categoria</h3>
-          <RenderChart type={chartType} data={byCategory} />
-        </div>
-        <div className="bg-card rounded-xl shadow-sm border border-border p-5">
-          <h3 className="text-sm font-semibold mb-4">Top 10 Usuários</h3>
-          <RenderChart type={chartType === "columns" ? "bars" : chartType} data={byUser} />
-        </div>
-        <div className="bg-card rounded-xl shadow-sm border border-border p-5">
-          <h3 className="text-sm font-semibold mb-4">Evolução Temporal</h3>
-          <RenderChart type={chartType === "pie" || chartType === "pictogram" ? "lines" : chartType} data={byMonth} />
-        </div>
-      </div>
-
-      {/* Pictogram - User Types */}
-      <div className="bg-card rounded-xl shadow-sm border border-border p-5 mb-6">
-        <h3 className="text-sm font-semibold mb-4">Proporção Pesquisadores vs Bolsistas</h3>
-        <Pictogram data={byUserType.map((d, i) => ({ ...d, color: COLORS[i % COLORS.length] }))} />
+        {[
+          { title: "Projetos por Status", data: byStatus, type: chartType },
+          { title: "Projetos por Categoria", data: byCategory, type: chartType },
+          { title: "Top 10 Usuarios", data: byUser, type: chartType === "columns" ? "bars" as ChartType : chartType },
+          { title: "Evolucao Temporal", data: byMonth, type: (chartType === "pie" || chartType === "pictogram" ? "lines" : chartType) as ChartType },
+          { title: "Tipo de Usuario", data: byUserType, type: chartType },
+        ].map((chart, i) => (
+          <div key={i} className="bg-card rounded-xl shadow-sm border border-border p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold">{chart.title}</h3>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => exportSectionPDF(chart.title, chart.data)}
+                  disabled={exporting}
+                  className="px-2 py-1 rounded text-[11px] font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors flex items-center gap-1 disabled:opacity-50"
+                >
+                  <Download className="w-3 h-3" /> PDF
+                </button>
+                <button
+                  onClick={() => exportSectionExcel(chart.title, chart.data)}
+                  disabled={exporting}
+                  className="px-2 py-1 rounded text-[11px] font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors flex items-center gap-1 disabled:opacity-50"
+                >
+                  <FileSpreadsheet className="w-3 h-3" /> Excel
+                </button>
+              </div>
+            </div>
+            <RenderChart type={chart.type} data={chart.data} />
+          </div>
+        ))}
       </div>
 
       {/* Summary Table */}
