@@ -34,6 +34,16 @@ router.get('/projects/pending', authMiddleware, requireRole('admin'), async (req
   }
 });
 
+// GET /api/projects/pending-edits (admin only)
+router.get('/projects/pending-edits', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+  try {
+    const projects = await projectService.listPendingEdits();
+    res.json(projects);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Erro interno' });
+  }
+});
+
 // POST /api/projects/batch/approve (must be before :id)
 router.post('/projects/batch/approve', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
   try {
@@ -45,7 +55,7 @@ router.post('/projects/batch/approve', authMiddleware, requireRole('admin'), asy
       req.user!.id,
       undefined,
       undefined,
-      `Aprovação em lote: ${project_ids.length} projetos`,
+      `Aprovacao em lote: ${project_ids.length} projetos`,
       req.ip || 'unknown',
       'high'
     );
@@ -67,7 +77,7 @@ router.post('/projects/batch/reject', authMiddleware, requireRole('admin'), asyn
       req.user!.id,
       undefined,
       undefined,
-      `Rejeição em lote: ${project_ids.length} projetos`,
+      `Rejeicao em lote: ${project_ids.length} projetos`,
       req.ip || 'unknown',
       'high'
     );
@@ -105,7 +115,7 @@ router.get('/projects/:id', authMiddleware, async (req: Request, res: Response) 
   try {
     const project = await projectService.getProjectById(Number(req.params.id));
     if (!project) {
-      return res.status(404).json({ error: 'Projeto não encontrado' });
+      return res.status(404).json({ error: 'Projeto nao encontrado' });
     }
     res.json(project);
   } catch (error: any) {
@@ -118,7 +128,6 @@ router.post('/projects', authMiddleware, async (req: Request, res: Response) => 
   try {
     const { title, summary, description, category, academic_level, start_date, end_date, authors } = req.body;
 
-    // Project always goes to admin as 'pendente', but authors may still be pending approval
     const project = await projectService.createProject(
       title,
       summary,
@@ -131,13 +140,12 @@ router.post('/projects', authMiddleware, async (req: Request, res: Response) => 
       'pendente'
     );
 
-    // Add authors if provided
     if (authors && authors.length > 0) {
       await authorApprovalService.addAuthorsToProject(
         project.id,
         authors.map((a: any, i: number) => ({
           ...a,
-          is_owner: i === 0, // First author is the owner
+          is_owner: i === 0,
         })),
         req.user!.id
       );
@@ -149,7 +157,7 @@ router.post('/projects', authMiddleware, async (req: Request, res: Response) => 
       req.user!.id,
       undefined,
       project.id,
-      `Projeto criado: ${project.title}${hasCoAuthors ? ' (aguardando aprovação de coautores)' : ''}`,
+      `Projeto criado: ${project.title}${hasCoAuthors ? ' (aguardando aprovacao de coautores)' : ''}`,
       req.ip || 'unknown',
       'low'
     );
@@ -163,14 +171,20 @@ router.post('/projects', authMiddleware, async (req: Request, res: Response) => 
 // PUT /api/projects/:id
 router.put('/projects/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const project = await projectService.updateProject(Number(req.params.id), req.body, req.user!.id);
+    const isAdmin = req.user!.role === 'admin';
+    const project = await projectService.updateProject(Number(req.params.id), req.body, req.user!.id, isAdmin);
+
+    const action = (!isAdmin && project.has_pending_edit) ? 'REQUEST_EDIT' : 'UPDATE_PROJECT';
+    const desc = (!isAdmin && project.has_pending_edit)
+      ? `Solicitacao de edicao: ${project.title}`
+      : `Projeto atualizado: ${project.title}`;
 
     await auditService.logAction(
-      'UPDATE_PROJECT',
+      action,
       req.user!.id,
       undefined,
       project.id,
-      `Projeto atualizado: ${project.title}`,
+      desc,
       req.ip || 'unknown',
       'low'
     );
@@ -223,12 +237,54 @@ router.post('/projects/:id/reject', authMiddleware, requireRole('admin'), async 
   }
 });
 
-// DELETE /api/projects/:id
+// POST /api/projects/:id/approve-edit (admin approves a pending edit)
+router.post('/projects/:id/approve-edit', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+  try {
+    const project = await projectService.approvePendingEdit(Number(req.params.id), req.user!.id, req.body.comment);
+
+    await auditService.logAction(
+      'APPROVE_EDIT',
+      req.user!.id,
+      undefined,
+      project.id,
+      `Edicao aprovada: ${project.title}`,
+      req.ip || 'unknown',
+      'medium'
+    );
+
+    res.json(project);
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Erro interno' });
+  }
+});
+
+// POST /api/projects/:id/reject-edit (admin rejects a pending edit)
+router.post('/projects/:id/reject-edit', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+  try {
+    const project = await projectService.rejectPendingEdit(Number(req.params.id), req.user!.id, req.body.comment);
+
+    await auditService.logAction(
+      'REJECT_EDIT',
+      req.user!.id,
+      undefined,
+      project.id,
+      `Edicao rejeitada: ${project.title}`,
+      req.ip || 'unknown',
+      'medium'
+    );
+
+    res.json(project);
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Erro interno' });
+  }
+});
+
+// DELETE /api/projects/:id (admin only)
 router.delete('/projects/:id', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
   try {
     const project = await projectService.getProjectById(Number(req.params.id));
     if (!project) {
-      return res.status(404).json({ error: 'Projeto não encontrado' });
+      return res.status(404).json({ error: 'Projeto nao encontrado' });
     }
 
     await projectService.deleteProject(Number(req.params.id), req.user!.id);
