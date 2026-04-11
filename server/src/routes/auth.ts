@@ -24,7 +24,7 @@ router.post('/login', async (req: Request, res: Response) => {
 
     await userService.updateLastLogin(user.id);
 
-    const token = generateToken(user.id, user.role);
+    const token = generateToken(user.id, user.role, user.cpf);
 
     await auditService.logAction(
       'LOGIN',

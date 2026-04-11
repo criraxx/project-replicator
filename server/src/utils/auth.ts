@@ -7,6 +7,7 @@ declare global {
       user?: {
         id: number;
         role: string;
+        cpf?: string;
       };
     }
   }
@@ -27,6 +28,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
   req.user = {
     id: decoded.sub,
     role: decoded.role,
+    cpf: decoded.cpf,
   };
 
   next();

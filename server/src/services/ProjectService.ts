@@ -2,12 +2,14 @@ import { AppDataSource } from '../config/database';
 import { Project, ProjectStatus } from '../entities/Project';
 import { ProjectVersion } from '../entities/ProjectVersion';
 import { ProjectComment } from '../entities/ProjectComment';
+import { ProjectAuthor } from '../entities/ProjectAuthor';
 import { AppError } from '../middleware/errorHandler';
 
 export class ProjectService {
   private projectRepository = AppDataSource.getRepository(Project);
   private versionRepository = AppDataSource.getRepository(ProjectVersion);
   private commentRepository = AppDataSource.getRepository(ProjectComment);
+  private authorRepository = AppDataSource.getRepository(ProjectAuthor);
 
   async createProject(
     title: string,
@@ -254,5 +256,74 @@ export class ProjectService {
     const updated = await this.getProjectById(id);
     if (!updated) throw new AppError(404, 'Projeto nao encontrado');
     return updated;
+
+  // List projects owned by user OR where user is author by CPF
+  async listUserProjects(
+    userId: number,
+    userCpf?: string,
+    status?: ProjectStatus,
+    limit: number = 100,
+    offset: number = 0
+  ): Promise<{ projects: Project[]; total: number }> {
+    let query = this.projectRepository.createQueryBuilder('project')
+      .leftJoinAndSelect('project.owner', 'owner')
+      .leftJoinAndSelect('project.authors', 'authors')
+      .where('project.is_deleted = :deleted', { deleted: false });
+
+    if (userCpf) {
+      query = query.andWhere(
+        '(project.owner_id = :userId OR project.id IN ' +
+        '(SELECT pa.project_id FROM project_authors pa WHERE pa.cpf = :cpf))',
+        { userId, cpf: userCpf.replace(/\D/g, '') }
+      );
+    } else {
+      query = query.andWhere('project.owner_id = :userId', { userId });
+    }
+
+    if (status) {
+      query = query.andWhere('project.status = :status', { status });
+    }
+
+    const total = await query.getCount();
+    const projects = await query
+      .orderBy('project.created_at', 'DESC')
+      .limit(limit)
+      .offset(offset)
+      .getMany();
+
+    return { projects, total };
   }
+
+  // Search projects by title (respecting user visibility)
+  async searchProjects(
+    term: string,
+    userId: number,
+    isAdmin: boolean,
+    userCpf?: string
+  ): Promise<Array<{ id: number; title: string; status: string; category: string }>> {
+    let query = this.projectRepository.createQueryBuilder('project')
+      .where('project.is_deleted = :deleted', { deleted: false })
+      .andWhere('project.title LIKE :term', { term: `%${term}%` });
+
+    if (!isAdmin) {
+      if (userCpf) {
+        query = query.andWhere(
+          '(project.owner_id = :userId OR project.id IN ' +
+          '(SELECT pa.project_id FROM project_authors pa WHERE pa.cpf = :cpf))',
+          { userId, cpf: userCpf.replace(/\D/g, '') }
+        );
+      } else {
+        query = query.andWhere('project.owner_id = :userId', { userId });
+      }
+    }
+
+    const projects = await query
+      .select(['project.id', 'project.title', 'project.status', 'project.category'])
+      .orderBy('project.created_at', 'DESC')
+      .limit(10)
+      .getMany();
+
+    return projects.map(p => ({ id: p.id, title: p.title, status: p.status, category: p.category }));
+  }
+}
 }

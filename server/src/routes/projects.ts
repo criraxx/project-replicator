@@ -10,6 +10,25 @@ const projectService = new ProjectService();
 const auditService = new AuditService();
 const authorApprovalService = new AuthorApprovalService();
 
+// GET /api/projects/search
+router.get('/projects/search', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { q } = req.query;
+    if (!q || String(q).trim().length < 2) {
+      return res.json([]);
+    }
+    const results = await projectService.searchProjects(
+      String(q).trim(),
+      req.user!.id,
+      req.user!.role === 'admin',
+      req.user!.cpf
+    );
+    res.json(results);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Erro interno' });
+  }
+});
+
 // GET /api/projects/stats (must be before :id)
 router.get('/projects/stats', authMiddleware, async (req: Request, res: Response) => {
   try {
@@ -93,13 +112,20 @@ router.get('/projects', authMiddleware, async (req: Request, res: Response) => {
   try {
     const { status, owner_id, limit, offset } = req.query;
 
-    // Non-admin users can only see their own projects
-    const ownerId = req.user!.role === 'admin'
-      ? (owner_id ? Number(owner_id) : undefined)
-      : req.user!.id;
+    if (req.user!.role === 'admin') {
+      const result = await projectService.listProjects(
+        owner_id ? Number(owner_id) : undefined,
+        status as ProjectStatus | undefined,
+        limit ? Number(limit) : undefined,
+        offset ? Number(offset) : undefined
+      );
+      return res.json(result);
+    }
 
-    const result = await projectService.listProjects(
-      ownerId,
+    // Non-admin: own projects + projects linked by CPF
+    const result = await projectService.listUserProjects(
+      req.user!.id,
+      req.user!.cpf,
       status as ProjectStatus | undefined,
       limit ? Number(limit) : undefined,
       offset ? Number(offset) : undefined

@@ -24,9 +24,9 @@ export const verifyPassword = (password: string, hash: string): boolean => {
 /**
  * Generate JWT token
  */
-export const generateToken = (userId: number, role: string): string => {
+export const generateToken = (userId: number, role: string, cpf?: string): string => {
   return jwt.sign(
-    { sub: userId, role },
+    { sub: userId, role, cpf },
     JWT_SECRET as any,
     { expiresIn: JWT_EXPIRE as any }
   );
