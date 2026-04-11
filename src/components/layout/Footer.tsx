@@ -1,5 +1,5 @@
-import logoCebio from "@/assets/logo-cebio-color.png";
-import logoIf from "@/assets/logo-if.png";
+import logoCebio from "@/assets/logo-if.png";
+import logoIf from "@/assets/logo-cebio.png";
 import logoFapeg from "@/assets/logo-fapeg.png";
 import logoUtt from "@/assets/logo-utt.png";
 
