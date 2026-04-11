@@ -166,17 +166,17 @@ const AdminReports = () => {
   const filtered = useMemo(() => {
     return projects.filter(p => {
       if (statusFilters.length > 0 && !statusFilters.includes(p.status)) return false;
-      if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
-      if (userTypeFilter !== "all") {
+      if (categoryFilters.length > 0 && !categoryFilters.includes(p.category)) return false;
+      if (userTypeFilters.length > 0) {
         const owner = users.find(u => u.id === p.owner_id);
-        if (owner && owner.role !== userTypeFilter) return false;
+        if (owner && !userTypeFilters.includes(owner.role)) return false;
       }
-      if (ownerFilter !== "all" && String(p.owner_id) !== ownerFilter) return false;
+      if (ownerFilters.length > 0 && !ownerFilters.includes(String(p.owner_id))) return false;
       if (startDate && new Date(p.created_at) < startDate) return false;
       if (endDate && new Date(p.created_at) > endDate) return false;
       return true;
     });
-  }, [projects, statusFilters, categoryFilter, userTypeFilter, ownerFilter, startDate, endDate, users]);
+  }, [projects, statusFilters, categoryFilters, userTypeFilters, ownerFilters, startDate, endDate, users]);
 
   const byStatus = useMemo(() => {
     const map: Record<string, number> = {};
@@ -223,9 +223,9 @@ const AdminReports = () => {
 
   const clearFilters = () => {
     setStatusFilters([]);
-    setCategoryFilter("all");
-    setUserTypeFilter("all");
-    setOwnerFilter("all");
+    setCategoryFilters([]);
+    setUserTypeFilters([]);
+    setOwnerFilters([]);
     setStartDate(undefined);
     setEndDate(undefined);
   };
@@ -244,9 +244,9 @@ const AdminReports = () => {
 
   const exportPDF = () => {
     const statusLabel = statusFilters.length > 0 ? statusFilters.map(s => STATUS_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos";
-    const userTypeLabel = USER_TYPE_OPTIONS.find(o => o.value === userTypeFilter)?.label || "Todos";
-    const catLabel = categoryFilter === "all" ? "Todas" : categoryFilter;
-    const ownerLabel = ownerFilter === "all" ? "Todos" : uniqueOwners.find(o => String(o.id) === ownerFilter)?.name || "Todos";
+    const userTypeLabel = userTypeFilters.length > 0 ? userTypeFilters.map(s => USER_TYPE_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos";
+    const catLabel = categoryFilters.length > 0 ? categoryFilters.join(", ") : "Todas";
+    const ownerLabel = ownerFilters.length > 0 ? ownerFilters.map(id => uniqueOwners.find(o => String(o.id) === id)?.name || id).join(", ") : "Todos";
     const startLabel = startDate ? format(startDate, "dd/MM/yyyy") : "—";
     const endLabel = endDate ? format(endDate, "dd/MM/yyyy") : "—";
 
