@@ -219,7 +219,7 @@ const SubHeader = ({ pageName, navItems }: SubHeaderProps) => {
                 <button
                   onClick={() => {
                     setShowNotifications(false);
-                    const base = user?.role === "admin" ? "/admin" : user?.role === "pesquisador" ? "/pesquisador" : "/bolsista";
+                    const base = location.pathname.startsWith("/admin") ? "/admin" : location.pathname.startsWith("/pesquisador") ? "/pesquisador" : "/bolsista";
                     navigate(`${base}/notificacoes`);
                   }}
                   className="w-full text-center text-xs font-semibold text-primary hover:underline"
