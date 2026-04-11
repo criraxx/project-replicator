@@ -17,6 +17,7 @@ import AdminAudit from "./pages/admin/AdminAudit";
 import AdminBatchApproval from "./pages/admin/AdminBatchApproval";
 import AdminBatchRejection from "./pages/admin/AdminBatchRejection";
 import AdminMassNotification from "./pages/admin/AdminMassNotification";
+import AdminBatchResetPassword from "./pages/admin/AdminBatchResetPassword";
 import PesquisadorDashboard from "./pages/pesquisador/PesquisadorDashboard";
 import PesquisadorProjects from "./pages/pesquisador/PesquisadorProjects";
 import PesquisadorHistory from "./pages/pesquisador/PesquisadorHistory";
