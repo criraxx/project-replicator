@@ -68,9 +68,9 @@ const TopHeader = () => {
   return (
     <header className="bg-primary text-primary-foreground h-12 px-6 flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <img src={logoIf} alt="IF Goiano" className="h-8 w-auto" />
+        <img src={logoIf} alt="IF Goiano" className="h-8 w-auto brightness-0 invert" />
         <span className="text-primary-foreground/60 font-light text-xl">×</span>
-        <img src={logoCebio} alt="CEBIO" className="h-8 w-auto" />
+        <img src={logoCebio} alt="CEBIO" className="h-8 w-auto brightness-0 invert" />
       </div>
 
       <div className="flex-1 max-w-[320px] mx-6 relative" ref={wrapperRef}>
