@@ -8,6 +8,7 @@ import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { type User, mockUsers } from "@/data/mockData";
+import MultiSelectFilter from "@/components/ui/multi-select-filter";
 
 const AdminUsers = () => {
   const navigate = useNavigate();
