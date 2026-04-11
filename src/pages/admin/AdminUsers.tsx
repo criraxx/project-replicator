@@ -246,6 +246,7 @@ const AdminUsers = () => {
                   <div className="col-span-2">
                     <label className="block text-sm font-medium mb-1">Senha inicial *</label>
                     <input type="text" required value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+                    <p className="text-xs text-muted-foreground mt-1">Mín. 8 caracteres, com maiúscula, minúscula, número e caractere especial (ex: @, #, $, !)</p>
                   </div>
                 </div>
               </div>
