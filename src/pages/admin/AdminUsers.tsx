@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Search, UserPlus, Eye, KeyRound, UserX, UserCheck, Inbox, Upload, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Search, UserPlus, Inbox, Upload, X } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
 import { roleBadge } from "@/constants/ui";
@@ -8,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { type User, mockUsers } from "@/data/mockData";
 
 const AdminUsers = () => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -289,11 +291,19 @@ const AdminUsers = () => {
                       </td>
                       <td className="p-3 text-muted-foreground text-xs">{u.last_login ? new Date(u.last_login).toLocaleDateString("pt-BR") : "Nunca"}</td>
                       <td className="p-3">
-                        <div className="flex justify-center gap-1">
-                          <button className="p-1.5 rounded hover:bg-muted" title="Ver detalhes"><Eye className="w-4 h-4 text-cebio-blue" /></button>
-                          <button onClick={() => handleResetPassword(u.id, u.name)} className="p-1.5 rounded hover:bg-muted" title="Resetar senha"><KeyRound className="w-4 h-4 text-cebio-yellow" /></button>
-                          <button onClick={() => handleToggleActive(u.id, u.is_active)} className="p-1.5 rounded hover:bg-muted" title={u.is_active ? "Desativar" : "Ativar"}>
-                            {u.is_active ? <UserX className="w-4 h-4 text-cebio-red" /> : <UserCheck className="w-4 h-4 text-primary" />}
+                        <div className="flex justify-center gap-2">
+                          <button onClick={() => navigate(`/admin/usuario?id=${u.id}`)} className="text-xs font-medium text-primary hover:underline">
+                            Detalhes
+                          </button>
+                          <button onClick={() => handleToggleActive(u.id, u.is_active)} className={`text-xs font-medium hover:underline ${u.is_active ? "text-cebio-red" : "text-primary"}`}>
+                            {u.is_active ? "Desativar" : "Ativar"}
+                          </button>
+                          <button onClick={() => {
+                            if (confirm(`Tem certeza que deseja EXCLUIR permanentemente ${u.name}?`)) {
+                              api.deleteUser(u.id).then(() => { toast({ title: "Sucesso", description: "Usuario excluido" }); fetchUsers(); }).catch((err: any) => toast({ title: "Erro", description: err.message, variant: "destructive" }));
+                            }
+                          }} className="text-xs font-medium text-cebio-red hover:underline">
+                            Excluir
                           </button>
                         </div>
                       </td>
