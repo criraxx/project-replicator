@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/services/api";
 import { ADMIN_NAV, PESQUISADOR_NAV, BOLSISTA_NAV } from "@/constants/navigation";
+import InstitutionAutocomplete from "@/components/ui/institution-autocomplete";
 
 interface Author {
   name: string; cpf: string; institution: string; level: string; role: string;
