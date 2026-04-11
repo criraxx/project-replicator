@@ -320,7 +320,7 @@ const AdminReports = () => {
     <AppLayout pageName="Relatórios e Analytics" navItems={ADMIN_NAV} notificationCount={0}>
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6 flex justify-between items-center">
         <div>
-          <h2 className="text-[22px] font-semibold mb-1.5">Relatórios e Analytics</h2>
+          <h2 className="text-lg sm:text-[22px] font-semibold mb-1.5">Relatórios e Analytics</h2>
           <p className="text-sm opacity-90">Visão detalhada e personalizável do desempenho da plataforma</p>
         </div>
         <div className="flex gap-2">

@@ -67,7 +67,7 @@ const AdminExports = () => {
     <AppLayout pageName="Exportação de Dados" navItems={ADMIN_NAV} notificationCount={0}>
       {/* Header */}
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6">
-        <h2 className="text-[22px] font-semibold mb-1.5">Exportação Completa</h2>
+        <h2 className="text-lg sm:text-[22px] font-semibold mb-1.5">Exportação Completa</h2>
         <p className="text-sm opacity-90">Exporte todos os dados do sistema em Excel, PDF ou JSON</p>
       </div>
 

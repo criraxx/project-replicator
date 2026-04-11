@@ -40,7 +40,7 @@ const PesquisadorHistory = () => {
     <AppLayout pageName="Histórico de Atividades" navItems={PESQUISADOR_NAV} notificationCount={1}>
       {/* Banner */}
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6">
-        <h2 className="text-[22px] font-semibold mb-1.5">Histórico de Atividades</h2>
+        <h2 className="text-lg sm:text-[22px] font-semibold mb-1.5">Histórico de Atividades</h2>
         <p className="text-sm opacity-90 mb-3">Acompanhe todas as suas atividades e interações no sistema CEBIO</p>
         <div className="flex gap-4 flex-wrap">
           <span className="flex items-center gap-1.5 text-[13px] opacity-90"><Clock className="w-4 h-4" /> Registro Completo</span>
@@ -60,7 +60,7 @@ const PesquisadorHistory = () => {
           <div key={i} className="bg-card rounded-xl p-5 shadow-sm border border-border flex justify-between items-start">
             <div>
               <div className="text-[13px] text-muted-foreground mb-1">{s.label}</div>
-              <div className="text-[32px] font-bold text-foreground leading-none">{s.value}</div>
+              <div className="text-2xl sm:text-[32px] font-bold text-foreground leading-none">{s.value}</div>
             </div>
             <div className={`w-11 h-11 rounded-lg ${s.iconBg} flex items-center justify-center`}>
               <FileText className={`w-[22px] h-[22px] ${s.iconColor}`} />

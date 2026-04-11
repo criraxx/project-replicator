@@ -65,7 +65,7 @@ const AdminAudit = () => {
       {/* Banner */}
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6 flex justify-between items-start">
         <div>
-          <h2 className="text-[22px] font-semibold mb-1.5">Sistema de Auditoria - CEBIO</h2>
+          <h2 className="text-lg sm:text-[22px] font-semibold mb-1.5">Sistema de Auditoria - CEBIO</h2>
           <p className="text-sm opacity-90 mb-3">Auditoria completa do Centro de Excelência em Bioinsumos</p>
           <div className="flex gap-4 flex-wrap">
             <span className="flex items-center gap-1.5 text-[13px] opacity-90"><Clock className="w-4 h-4" /> Logs Estruturados</span>
@@ -89,7 +89,7 @@ const AdminAudit = () => {
           <div key={i} className="bg-card rounded-xl p-5 shadow-sm border border-border flex justify-between items-start">
             <div>
               <div className="text-[13px] text-muted-foreground mb-1">{s.label}</div>
-              <div className="text-[32px] font-bold text-foreground leading-none">{s.value}</div>
+              <div className="text-2xl sm:text-[32px] font-bold text-foreground leading-none">{s.value}</div>
             </div>
             <div className={`w-11 h-11 rounded-full ${s.iconBg} flex items-center justify-center`}>
               <s.icon className={`w-[22px] h-[22px] ${s.iconColor}`} />

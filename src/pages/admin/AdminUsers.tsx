@@ -167,7 +167,7 @@ const AdminUsers = () => {
   return (
     <AppLayout pageName="Gestão de Usuários" navItems={ADMIN_NAV} notificationCount={0}>
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6">
-        <h2 className="text-[22px] font-semibold mb-1.5">Gestão de Usuários</h2>
+        <h2 className="text-lg sm:text-[22px] font-semibold mb-1.5">Gestão de Usuários</h2>
         <p className="text-sm opacity-90">Gerencie todos os usuários da plataforma CEBIO</p>
       </div>
 
