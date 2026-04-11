@@ -26,6 +26,7 @@ import BolsistaHistory from "./pages/bolsista/BolsistaHistory";
 import SubmissionForm from "./pages/shared/SubmissionForm";
 import ProjectDetailView from "./pages/shared/ProjectDetailView";
 import ProfilePage from "./pages/shared/ProfilePage";
+import NotificationsPage from "./pages/shared/NotificationsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +56,7 @@ const App = () => (
             <Route path="/admin/notificacao-massa" element={<AdminMassNotification />} />
             <Route path="/admin/projeto" element={<ProjectDetailView isAdmin />} />
             <Route path="/admin/perfil" element={<ProfilePage backPath="/admin/dashboard" />} />
+            <Route path="/admin/notificacoes" element={<NotificationsPage />} />
             
             {/* Pesquisador */}
             <Route path="/pesquisador/dashboard" element={<PesquisadorDashboard />} />
@@ -62,6 +64,7 @@ const App = () => (
             <Route path="/pesquisador/submissao" element={<SubmissionForm />} />
             <Route path="/pesquisador/historico" element={<PesquisadorHistory />} />
             <Route path="/pesquisador/perfil" element={<ProfilePage backPath="/pesquisador/dashboard" />} />
+            <Route path="/pesquisador/notificacoes" element={<NotificationsPage />} />
             
             {/* Bolsista */}
             <Route path="/bolsista/dashboard" element={<BolsistaDashboard />} />
@@ -69,6 +72,7 @@ const App = () => (
             <Route path="/bolsista/submissao" element={<SubmissionForm />} />
             <Route path="/bolsista/historico" element={<BolsistaHistory />} />
             <Route path="/bolsista/perfil" element={<ProfilePage backPath="/bolsista/dashboard" />} />
+            <Route path="/bolsista/notificacoes" element={<NotificationsPage />} />
             
             {/* Shared */}
             <Route path="/projeto" element={<ProjectDetailView />} />
