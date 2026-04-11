@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Project } from './Project';
 
 @Entity('project_links')
@@ -14,6 +14,9 @@ export class ProjectLink {
 
   @Column({ type: 'varchar', length: 2048 })
   url!: string;
+
+  @CreateDateColumn()
+  created_at!: Date;
 
   @ManyToOne(() => Project, (project: Project) => project.links)
   @JoinColumn({ name: 'project_id' })
