@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Mail, Building2, Calendar, Clock, Shield, FileText } from "lucide-react";
+import { ArrowLeft, Mail, Building2, Calendar, Clock, Shield, FileText, Phone, Hash, User, CreditCard } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
 import { roleBadge } from "@/constants/ui";
@@ -154,6 +154,37 @@ const AdminUserDetail = () => {
             <p className="text-sm font-semibold text-foreground truncate">{info.value}</p>
           </div>
         ))}
+      </div>
+
+      {/* Todos os Dados do Usuário */}
+      <div className="bg-card rounded-xl shadow-sm border border-border p-6 mb-6">
+        <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+          <User className="w-4 h-4 text-muted-foreground" /> Todos os Dados do Usuario
+        </h3>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          {[
+            { icon: User, label: "Nome Completo", value: user.name },
+            { icon: Mail, label: "Email", value: user.email },
+            { icon: CreditCard, label: "CPF", value: user.cpf ? user.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : "Não informado" },
+            { icon: Calendar, label: "Data de Nascimento", value: user.birth_date ? new Date(user.birth_date).toLocaleDateString("pt-BR") : "Não informado" },
+            { icon: Phone, label: "Telefone", value: user.phone ? user.phone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3") : "Não informado" },
+            { icon: Building2, label: "Instituição", value: user.institution || "Não informada" },
+            { icon: Building2, label: "Departamento/Campus", value: user.department || "Não informado" },
+            { icon: Hash, label: "Matrícula/Registro", value: user.registration_number || "Não informado" },
+            { icon: Shield, label: "Função/Perfil", value: badge?.label || user.role },
+            { icon: Calendar, label: "Cadastrado em", value: user.created_at ? new Date(user.created_at).toLocaleDateString("pt-BR") : "---" },
+            { icon: Clock, label: "Último login", value: user.last_login ? new Date(user.last_login).toLocaleString("pt-BR") : "Nunca" },
+            { icon: Shield, label: "Senha temporária", value: user.is_temp_password ? "Sim" : "Não" },
+          ].map((info, i) => (
+            <div key={i} className="bg-muted/30 rounded-lg p-3">
+              <div className="flex items-center gap-1.5 mb-1">
+                <info.icon className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-[11px] text-muted-foreground font-medium">{info.label}</span>
+              </div>
+              <p className="text-sm font-medium text-foreground">{info.value}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Stats */}
