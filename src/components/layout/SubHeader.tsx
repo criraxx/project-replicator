@@ -172,7 +172,7 @@ const SubHeader = ({ pageName, navItems }: SubHeaderProps) => {
 
             {/* Notifications dropdown */}
             {showNotifications && (
-              <div className="absolute right-0 top-10 w-[320px] sm:w-[380px] bg-card rounded-xl shadow-xl border border-border z-50 overflow-hidden">
+              <div className="absolute right-0 sm:right-0 top-10 w-[calc(100vw-24px)] sm:w-[380px] max-w-[380px] bg-card rounded-xl shadow-xl border border-border z-50 overflow-hidden" style={{ right: "0", left: "auto" }}>
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                   <h4 className="text-sm font-semibold text-foreground">Notificacoes</h4>
                   {unreadCount > 0 && (

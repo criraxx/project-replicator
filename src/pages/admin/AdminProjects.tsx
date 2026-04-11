@@ -149,7 +149,7 @@ const AdminProjects = () => {
         <button onClick={clearFilters} className="px-4 py-2 border border-border rounded-lg text-sm font-medium bg-muted hover:bg-muted/80">Limpar Filtros</button>
       </div>
 
-      {/* Table */}
+      {/* Table / Cards */}
       <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
         <div className="p-5 pb-0">
           <h3 className="text-base font-semibold mb-1">Projetos Ativos</h3>
@@ -163,8 +163,30 @@ const AdminProjects = () => {
             <p className="text-sm font-medium">Nenhum projeto encontrado</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <div className="overflow-x-auto"><table className="w-full text-sm">
+          <>
+            {/* Mobile: Card layout */}
+            <div className="md:hidden divide-y divide-border">
+              {filtered.map((p: any) => (
+                <div key={p.id} className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm text-primary truncate">{p.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{p.owner?.name || p.owner_name || "—"} • {p.category || "—"}</p>
+                    </div>
+                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full shrink-0 ${statusColors[p.status as keyof typeof statusColors] || ""}`}>
+                      {statusLabels[p.status as keyof typeof statusLabels] || p.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString("pt-BR")}</span>
+                    <button onClick={() => navigate(`/admin/projeto?id=${p.id}`)} className="px-3 py-1.5 text-xs font-semibold rounded-md bg-primary text-primary-foreground">Ver Projeto</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop: Table layout */}
+            <div className="hidden md:block overflow-x-auto"><table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
                   <th className="p-3 text-left w-10"><input type="checkbox" checked={selectedIds.length === filtered.length && filtered.length > 0} onChange={toggleAll} className="accent-primary" /></th>
@@ -200,15 +222,13 @@ const AdminProjects = () => {
                     <td className="p-3 text-muted-foreground">{p.owner?.name || p.owner_name || "—"}</td>
                     <td className="p-3 text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
                     <td className="p-3">
-                      <button onClick={() => navigate(`/admin/projeto?id=${p.id}`)} className="px-3 py-1.5 text-xs font-semibold rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-                        Ver Projeto
-                      </button>
+                      <button onClick={() => navigate(`/admin/projeto?id=${p.id}`)} className="px-3 py-1.5 text-xs font-semibold rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">Ver Projeto</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table></div>
-          </div>
+          </>
         )}
       </div>
     </AppLayout>
