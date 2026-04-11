@@ -280,6 +280,14 @@ class ApiClient {
     return this.request<void>('POST', '/notifications/broadcast', data);
   }
 
+  async sendNotification(data: { user_id: number; title: string; message: string; type?: string; related_project_id?: number }) {
+    return this.request<any>('POST', '/notifications/send', data);
+  }
+
+  async markAllNotificationsRead() {
+    return this.request<void>('PUT', '/notifications/read-all');
+  }
+
   // ============================================
   // ADMIN
   // ============================================

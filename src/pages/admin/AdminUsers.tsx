@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, UserPlus, Inbox, Upload, X } from "lucide-react";
+import { Search, UserPlus, Inbox, Upload, X, Send } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
 import { roleBadge } from "@/constants/ui";
@@ -18,6 +18,10 @@ const AdminUsers = () => {
   const [loading, setLoading] = useState(true);
   const [showNewUser, setShowNewUser] = useState(false);
   const [showBatchModal, setShowBatchModal] = useState(false);
+  const [showNotifyModal, setShowNotifyModal] = useState(false);
+  const [notifyUser, setNotifyUser] = useState<any>(null);
+  const [notifyTitle, setNotifyTitle] = useState("");
+  const [notifyMessage, setNotifyMessage] = useState("");
   const { toast } = useToast();
   const confirm = useConfirmDialog();
 
@@ -301,6 +305,9 @@ const AdminUsers = () => {
                           <button onClick={() => navigate(`/admin/usuario?id=${u.id}`)} className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
                             Detalhes
                           </button>
+                          <button onClick={() => { setNotifyUser(u); setNotifyTitle(""); setNotifyMessage(""); setShowNotifyModal(true); }} className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-cebio-blue-bg text-cebio-blue hover:bg-cebio-blue-bg/80 transition-colors">
+                            Notificar
+                          </button>
                           <button onClick={() => handleToggleActive(u.id, u.is_active)} className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors ${u.is_active ? "bg-amber-600 text-white hover:bg-amber-700" : "bg-cebio-green-bg text-primary hover:bg-cebio-green-bg/80"}`}>
                             {u.is_active ? "Desativar" : "Ativar"}
                           </button>
@@ -324,6 +331,44 @@ const AdminUsers = () => {
           </>
         )}
       </div>
+
+      {/* Modal: Enviar Notificacao */}
+      {showNotifyModal && notifyUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-xl p-6 w-full max-w-md shadow-xl border border-border">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Enviar Notificacao</h3>
+              <button onClick={() => setShowNotifyModal(false)}><X className="w-5 h-5 text-muted-foreground" /></button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">Para: <span className="font-semibold text-foreground">{notifyUser.name}</span> ({notifyUser.email})</p>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">Titulo *</label>
+                <input type="text" value={notifyTitle} onChange={(e) => setNotifyTitle(e.target.value)} placeholder="Titulo da notificacao" className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Mensagem *</label>
+                <textarea rows={4} value={notifyMessage} onChange={(e) => setNotifyMessage(e.target.value)} placeholder="Escreva a mensagem..." className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+              </div>
+              <button
+                disabled={!notifyTitle.trim() || !notifyMessage.trim()}
+                onClick={async () => {
+                  try {
+                    await api.sendNotification({ user_id: notifyUser.id, title: notifyTitle, message: notifyMessage });
+                    toast({ title: "Sucesso", description: `Notificacao enviada para ${notifyUser.name}` });
+                    setShowNotifyModal(false);
+                  } catch (err: any) {
+                    toast({ title: "Erro", description: err.message, variant: "destructive" });
+                  }
+                }}
+                className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <Send className="w-4 h-4" /> Enviar Notificacao
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 };
