@@ -20,7 +20,7 @@ const NotificationsPage = ({ backPath }: { backPath?: string }) => {
   const fetchNotifications = async () => {
     try {
       const data = await api.listNotifications();
-      setNotifications(data);
+      setNotifications(Array.isArray(data) ? data : (data as any).notifications || []);
     } catch { /* ignore */ } finally {
       setLoading(false);
     }
