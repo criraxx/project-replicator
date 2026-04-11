@@ -12,11 +12,23 @@ export class UserService {
     password: string,
     role: UserRole = 'bolsista',
     institution?: string,
-    createdBy?: number
+    createdBy?: number,
+    cpf?: string,
+    birthDate?: string,
+    phone?: string,
+    department?: string,
+    registrationNumber?: string
   ): Promise<User> {
-    const existing = await this.userRepository.findOne({ where: { email } });
-    if (existing) {
+    const existingEmail = await this.userRepository.findOne({ where: { email: email.toLowerCase().trim() } });
+    if (existingEmail) {
       throw new AppError(400, 'Email já cadastrado');
+    }
+
+    if (cpf) {
+      const existingCpf = await this.userRepository.findOne({ where: { cpf } });
+      if (existingCpf) {
+        throw new AppError(400, 'CPF já cadastrado');
+      }
     }
 
     const user = this.userRepository.create({
@@ -26,8 +38,13 @@ export class UserService {
       role,
       institution,
       created_by: createdBy,
-      is_temp_password: false,
-      must_change_password: false,
+      cpf,
+      birth_date: birthDate ? new Date(birthDate) : undefined,
+      phone,
+      department,
+      registration_number: registrationNumber,
+      is_temp_password: true,
+      must_change_password: true,
     });
 
     return await this.userRepository.save(user);
@@ -35,6 +52,12 @@ export class UserService {
 
   async getUserById(id: number): Promise<User | null> {
     return await this.userRepository.findOne({ where: { id } });
+  }
+
+  async getUserByCpf(cpf: string): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: { cpf: cpf.replace(/\D/g, '') },
+    });
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
