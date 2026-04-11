@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Bell, Check, CheckCheck, ExternalLink, ArrowLeft } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { ADMIN_NAV, PESQUISADOR_NAV, BOLSISTA_NAV } from "@/constants/navigation";
 import api from "@/services/api";
 
 const NotificationsPage = ({ backPath }: { backPath?: string }) => {
@@ -12,11 +13,13 @@ const NotificationsPage = ({ backPath }: { backPath?: string }) => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
 
-  const basePath = backPath || (user?.role === "admin" ? "/admin/dashboard" : user?.role === "pesquisador" ? "/pesquisador/dashboard" : "/bolsista/dashboard");
+  const navItems = user?.role === "admin" ? ADMIN_NAV : user?.role === "pesquisador" ? PESQUISADOR_NAV : BOLSISTA_NAV;
+  const roleBase = user?.role === "admin" ? "/admin" : user?.role === "pesquisador" ? "/pesquisador" : "/bolsista";
+  const back = backPath || `${roleBase}/dashboard`;
 
   const fetchNotifications = async () => {
     try {
-      const data = await api.getNotifications();
+      const data = await api.listNotifications();
       setNotifications(data);
     } catch { /* ignore */ } finally {
       setLoading(false);
@@ -42,8 +45,7 @@ const NotificationsPage = ({ backPath }: { backPath?: string }) => {
   const handleClick = (n: any) => {
     if (!n.is_read) handleMarkAsRead(n.id);
     if (n.related_project_id) {
-      const projectBase = user?.role === "admin" ? "/admin" : user?.role === "pesquisador" ? "/pesquisador" : "/bolsista";
-      navigate(`${projectBase}/projeto?id=${n.related_project_id}`);
+      navigate(`${roleBase}/projeto?id=${n.related_project_id}`);
     }
   };
 
@@ -75,9 +77,9 @@ const NotificationsPage = ({ backPath }: { backPath?: string }) => {
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
-    <AppLayout>
+    <AppLayout pageName="Notificações" navItems={navItems} notificationCount={unreadCount}>
       <div className="p-6 max-w-3xl mx-auto">
-        <button onClick={() => navigate(basePath)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
+        <button onClick={() => navigate(back)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
           <ArrowLeft className="w-4 h-4" /> Voltar
         </button>
 
