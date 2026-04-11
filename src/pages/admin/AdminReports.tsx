@@ -373,6 +373,7 @@ const AdminReports = () => {
         </div>
       </div>
 
+      <div ref={contentRef}>
       {/* KPIs */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         {[
