@@ -34,3 +34,16 @@ export const validatePassword = (password: string): string | null => {
   if (!/[^A-Za-z0-9]/.test(password)) return "A senha deve conter pelo menos um caractere especial (ex: @, #, $, !).";
   return null;
 };
+
+// Formatação de datas com timezone de Brasília (America/Sao_Paulo)
+const BRASILIA_TZ = 'America/Sao_Paulo';
+
+export const formatDateBrasilia = (dateStr: string): string => {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString("pt-BR", { timeZone: BRASILIA_TZ });
+};
+
+export const formatDateTimeBrasilia = (dateStr: string): string => {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleString("pt-BR", { timeZone: BRASILIA_TZ });
+};

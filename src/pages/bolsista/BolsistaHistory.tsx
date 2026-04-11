@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, FileText, Eye, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { Clock, FileText, Eye, CheckCircle, XCircle, AlertTriangle, LogIn, LogOut, Edit, Send } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { BOLSISTA_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
+import { formatDateBrasilia, formatDateTimeBrasilia } from "@/lib/formatters";
 
 const BolsistaHistory = () => {
   const { user } = useAuth();
@@ -14,18 +15,27 @@ const BolsistaHistory = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [periodFilter, setPeriodFilter] = useState("");
   const [projects, setProjects] = useState<any[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"projetos" | "atividades">("projetos");
 
   useEffect(() => {
-    const fetchProjects = async () => {
+    const fetchData = async () => {
       try {
-        const data = await api.listProjects({ limit: 100 });
-        setProjects(data.projects || []);
+        const [projectData, auditData] = await Promise.all([
+          api.listProjects({ limit: 100 }),
+          api.listAuditLogs(200).catch(() => ({ logs: [] })),
+        ]);
+        setProjects(projectData.projects || []);
+        const myLogs = (auditData.logs || []).filter(
+          (l: any) => l.user_id === user?.id
+        );
+        setAuditLogs(myLogs);
       } catch { /* silent */ }
       setLoading(false);
     };
-    fetchProjects();
-  }, []);
+    fetchData();
+  }, [user?.id]);
 
   const filterByPeriod = (dateStr: string) => {
     if (!periodFilter) return true;
@@ -61,12 +71,46 @@ const BolsistaHistory = () => {
     return <Clock className="w-4 h-4 text-blue-500" />;
   };
 
+  const getActivityIcon = (action: string) => {
+    const a = action?.toUpperCase() || "";
+    if (a.includes("LOGIN")) return <LogIn className="w-4 h-4 text-green-600" />;
+    if (a.includes("LOGOUT")) return <LogOut className="w-4 h-4 text-muted-foreground" />;
+    if (a.includes("APPROV") || a.includes("APROVADO")) return <CheckCircle className="w-4 h-4 text-green-600" />;
+    if (a.includes("REJECT") || a.includes("REJEITADO")) return <XCircle className="w-4 h-4 text-red-500" />;
+    if (a.includes("SUBMIT") || a.includes("CREATE") || a.includes("PENDENTE")) return <Send className="w-4 h-4 text-blue-500" />;
+    if (a.includes("UPDATE") || a.includes("EDIT")) return <Edit className="w-4 h-4 text-yellow-500" />;
+    return <Clock className="w-4 h-4 text-muted-foreground" />;
+  };
+
+  const getActivityLabel = (action: string) => {
+    const a = action?.toUpperCase() || "";
+    if (a.includes("LOGIN")) return "Login no sistema";
+    if (a.includes("LOGOUT")) return "Logout do sistema";
+    if (a.includes("APPROV")) return "Projeto aprovado";
+    if (a.includes("REJECT")) return "Projeto rejeitado";
+    if (a.includes("SUBMIT") || a.includes("CREATE_PROJECT")) return "Projeto submetido (pendente)";
+    if (a.includes("UPDATE")) return "Projeto atualizado";
+    if (a.includes("UPLOAD")) return "Arquivo(s) enviado(s)";
+    return action?.replace(/_/g, " ") || "Atividade";
+  };
+
+  const getActivityColor = (action: string) => {
+    const a = action?.toUpperCase() || "";
+    if (a.includes("LOGIN")) return "border-l-green-500";
+    if (a.includes("LOGOUT")) return "border-l-muted-foreground";
+    if (a.includes("APPROV")) return "border-l-green-600";
+    if (a.includes("REJECT")) return "border-l-red-500";
+    if (a.includes("SUBMIT") || a.includes("CREATE")) return "border-l-blue-500";
+    if (a.includes("UPDATE") || a.includes("EDIT")) return "border-l-yellow-500";
+    return "border-l-muted-foreground";
+  };
+
   return (
     <AppLayout pageName="Histórico de Projetos" navItems={BOLSISTA_NAV} notificationCount={0}>
       {/* Banner */}
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6">
         <h2 className="text-lg sm:text-[22px] font-semibold mb-1.5">Histórico de Projetos</h2>
-        <p className="text-sm opacity-90 mb-3">Acompanhe o status de todos os seus projetos submetidos</p>
+        <p className="text-sm opacity-90 mb-3">Acompanhe o status e atividades dos seus projetos</p>
         <div className="flex gap-4 flex-wrap">
           <span className="flex items-center gap-1.5 text-[13px] opacity-90"><Clock className="w-4 h-4" /> Seus Projetos</span>
           <span className="flex items-center gap-1.5 text-[13px] opacity-90"><Eye className="w-4 h-4" /> Status em Tempo Real</span>
@@ -93,85 +137,142 @@ const BolsistaHistory = () => {
         ))}
       </div>
 
-      {/* Filters */}
-      <div className="bg-card rounded-xl shadow-sm border border-border p-4 mb-6">
-        <div className="flex gap-4 items-end flex-wrap">
-          <div className="flex-1 min-w-[200px]">
-            <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Buscar</label>
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar projetos..." className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-card" />
-          </div>
-          <div>
-            <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Status</label>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2.5 border border-border rounded-lg text-sm bg-card">
-              <option value="">Todos</option>
-              <option value="pendente">Pendente</option>
-              <option value="em_revisao">Em Revisão</option>
-              <option value="aprovado">Aprovado</option>
-              <option value="rejeitado">Rejeitado</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Período</label>
-            <select value={periodFilter} onChange={(e) => setPeriodFilter(e.target.value)} className="px-3 py-2.5 border border-border rounded-lg text-sm bg-card">
-              <option value="">Todos</option>
-              <option value="hoje">Hoje</option>
-              <option value="semana">Esta semana</option>
-              <option value="mes">Este mês</option>
-              <option value="ano">Este ano</option>
-            </select>
-          </div>
-          <button onClick={clearFilters} className="px-4 py-2.5 border border-border rounded-lg text-sm font-medium bg-muted hover:bg-muted/80">Limpar</button>
-        </div>
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6">
+        <button
+          onClick={() => setActiveTab("projetos")}
+          className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${activeTab === "projetos" ? "bg-primary text-primary-foreground" : "bg-card border border-border text-muted-foreground hover:bg-muted"}`}
+        >
+          Projetos
+        </button>
+        <button
+          onClick={() => setActiveTab("atividades")}
+          className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${activeTab === "atividades" ? "bg-primary text-primary-foreground" : "bg-card border border-border text-muted-foreground hover:bg-muted"}`}
+        >
+          Linha do Tempo
+        </button>
       </div>
 
-      {/* Projects List */}
-      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
-        <div className="p-5 pb-0">
-          <h3 className="text-base font-semibold">Seus Projetos</h3>
-          <p className="text-[13px] text-muted-foreground">{filtered.length} projeto(s)</p>
-        </div>
-        <div className="p-5 pt-4">
-          {loading ? (
-            <p className="text-center text-sm text-muted-foreground py-8">Carregando...</p>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground">
-              <Clock className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <h4 className="font-semibold mb-1">Nenhum projeto encontrado</h4>
-              <p className="text-sm mb-4">Seus projetos aparecerão aqui após a submissão</p>
-              <button onClick={() => navigate("/bolsista/submissao")} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold">
-                + Criar Primeiro Projeto
-              </button>
+      {activeTab === "projetos" && (
+        <>
+          {/* Filters */}
+          <div className="bg-card rounded-xl shadow-sm border border-border p-4 mb-6">
+            <div className="flex gap-4 items-end flex-wrap">
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Buscar</label>
+                <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar projetos..." className="w-full px-3 py-2.5 border border-border rounded-lg text-sm bg-card" />
+              </div>
+              <div>
+                <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Status</label>
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2.5 border border-border rounded-lg text-sm bg-card">
+                  <option value="">Todos</option>
+                  <option value="pendente">Pendente</option>
+                  <option value="em_revisao">Em Revisão</option>
+                  <option value="aprovado">Aprovado</option>
+                  <option value="rejeitado">Rejeitado</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Período</label>
+                <select value={periodFilter} onChange={(e) => setPeriodFilter(e.target.value)} className="px-3 py-2.5 border border-border rounded-lg text-sm bg-card">
+                  <option value="">Todos</option>
+                  <option value="hoje">Hoje</option>
+                  <option value="semana">Esta semana</option>
+                  <option value="mes">Este mês</option>
+                  <option value="ano">Este ano</option>
+                </select>
+              </div>
+              <button onClick={clearFilters} className="px-4 py-2.5 border border-border rounded-lg text-sm font-medium bg-muted hover:bg-muted/80">Limpar</button>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {filtered.map((p: any) => (
-                <div key={p.id} onClick={() => navigate(`/projeto?id=${p.id}`)} className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2">
-                      {statusIcon(p.status)}
-                      <h4 className="text-sm font-semibold text-foreground">{p.title}</h4>
-                    </div>
-                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${statusColors[p.status as keyof typeof statusColors] || ""}`}>
-                      {statusLabels[p.status as keyof typeof statusLabels] || p.status}
-                    </span>
-                  </div>
-                  <div className="flex gap-4 text-xs text-muted-foreground">
-                    <span>{p.category || "—"}</span>
-                    <span>{p.academic_level || "—"}</span>
-                    <span>Criado: {new Date(p.created_at).toLocaleDateString("pt-BR")}</span>
-                    {p.updated_at && <span>Atualizado: {new Date(p.updated_at).toLocaleDateString("pt-BR")}</span>}
-                  </div>
-                  {p.status === "rejeitado" && (p.review_comment || p.rejection_reason) && (
-                    <div className="mt-2 text-xs text-destructive bg-destructive/10 rounded p-2">
-                      <strong>Motivo:</strong> {p.review_comment || p.rejection_reason}
-                    </div>
-                  )}
+          </div>
+
+          {/* Projects List */}
+          <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+            <div className="p-5 pb-0">
+              <h3 className="text-base font-semibold">Seus Projetos</h3>
+              <p className="text-[13px] text-muted-foreground">{filtered.length} projeto(s)</p>
+            </div>
+            <div className="p-5 pt-4">
+              {loading ? (
+                <p className="text-center text-sm text-muted-foreground py-8">Carregando...</p>
+              ) : filtered.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground">
+                  <Clock className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <h4 className="font-semibold mb-1">Nenhum projeto encontrado</h4>
+                  <p className="text-sm mb-4">Seus projetos aparecerão aqui após a submissão</p>
+                  <button onClick={() => navigate("/bolsista/submissao")} className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold">
+                    + Criar Primeiro Projeto
+                  </button>
                 </div>
-              ))}
+              ) : (
+                <div className="space-y-3">
+                  {filtered.map((p: any) => (
+                    <div key={p.id} onClick={() => navigate(`/projeto?id=${p.id}`)} className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
+                          {statusIcon(p.status)}
+                          <h4 className="text-sm font-semibold text-foreground">{p.title}</h4>
+                        </div>
+                        <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${statusColors[p.status as keyof typeof statusColors] || ""}`}>
+                          {statusLabels[p.status as keyof typeof statusLabels] || p.status}
+                        </span>
+                      </div>
+                      <div className="flex gap-4 text-xs text-muted-foreground">
+                        <span>{p.category || "—"}</span>
+                        <span>{p.academic_level || "—"}</span>
+                        <span>Criado: {formatDateBrasilia(p.created_at)}</span>
+                        {p.updated_at && <span>Atualizado: {formatDateBrasilia(p.updated_at)}</span>}
+                      </div>
+                      {p.status === "rejeitado" && (p.review_comment || p.rejection_reason) && (
+                        <div className="mt-2 text-xs text-destructive bg-destructive/10 rounded p-2">
+                          <strong>Motivo:</strong> {p.review_comment || p.rejection_reason}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+          </div>
+        </>
+      )}
+
+      {activeTab === "atividades" && (
+        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+          <div className="p-5 pb-0">
+            <h3 className="text-base font-semibold">Linha do Tempo de Atividades</h3>
+            <p className="text-[13px] text-muted-foreground">Horário de Brasília (UTC-3)</p>
+          </div>
+          <div className="p-5 pt-4">
+            {loading ? (
+              <p className="text-center text-sm text-muted-foreground py-8">Carregando...</p>
+            ) : auditLogs.length === 0 ? (
+              <div className="text-center py-10 text-muted-foreground">
+                <Clock className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <h4 className="font-semibold mb-1">Nenhuma atividade registrada</h4>
+                <p className="text-sm">Suas atividades aparecerão aqui</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {auditLogs.map((log: any) => (
+                  <div key={log.id} className={`border-l-[3px] ${getActivityColor(log.action)} bg-muted/50 rounded-r-lg p-4`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        {getActivityIcon(log.action)}
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{getActivityLabel(log.action)}</p>
+                          {log.details && <p className="text-xs text-muted-foreground mt-0.5">{log.details}</p>}
+                        </div>
+                      </div>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">{formatDateTimeBrasilia(log.created_at)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </AppLayout>
   );
 };

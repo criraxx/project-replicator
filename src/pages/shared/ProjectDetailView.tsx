@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, FileText, Image, ExternalLink, CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
+import { formatDateBrasilia, formatDateTimeBrasilia } from "@/lib/formatters";
 import AppLayout from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import api from "@/services/api";
@@ -45,15 +46,8 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
     load();
   }, [projectId]);
 
-  const formatDate = (d: string) => {
-    if (!d) return "—";
-    return new Date(d).toLocaleDateString("pt-BR");
-  };
-
-  const formatDateTime = (d: string) => {
-    if (!d) return "—";
-    return new Date(d).toLocaleString("pt-BR");
-  };
+  const formatDate = (d: string) => formatDateBrasilia(d);
+  const formatDateTime = (d: string) => formatDateTimeBrasilia(d);
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + " B";
