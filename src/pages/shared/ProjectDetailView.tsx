@@ -315,11 +315,11 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
       </div>
 
       {/* Links */}
-      {(project.links || []).length > 0 && (
-        <div className="bg-card border border-border rounded-xl p-5 mb-5">
-          <h3 className="text-base font-semibold text-primary mb-4">Links Externos</h3>
-          <div className="space-y-2">
-            {project.links.map((link: any, i: number) => (
+      <div className="bg-card border border-border rounded-xl p-5 mb-5">
+        <h3 className="text-base font-semibold text-primary mb-4">Links Externos</h3>
+        {(project.links || []).length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhum link adicionado</p>
+        ) : (
               <div key={i} className="flex items-center gap-3 bg-muted/50 border border-border rounded-lg p-3">
                 <div className="w-10 h-10 bg-cebio-blue-bg rounded flex items-center justify-center"><ExternalLink className="w-5 h-5 text-cebio-blue" /></div>
                 <div className="flex-1">
