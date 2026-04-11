@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Eye, CheckCircle, XCircle, Trash2, Inbox, FileText } from "lucide-react";
+import { Search, Eye, CheckCircle, XCircle, Inbox, FileText } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
@@ -98,14 +98,6 @@ const AdminProjects = () => {
   const toggleSelect = (id: number) => setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   const toggleAll = () => setSelectedIds(selectedIds.length === filtered.length ? [] : filtered.map(p => p.id));
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Tem certeza que deseja excluir este projeto?")) return;
-    try {
-      await api.deleteProject(id);
-      toast({ title: "Sucesso", description: "Projeto excluido!" });
-      setProjects(projects.filter(p => p.id !== id));
-    } catch (err: any) { toast({ title: "Erro", description: err.message, variant: "destructive" }); }
-  };
 
   return (
     <AppLayout pageName="Gestao de Projetos" navItems={ADMIN_NAV} notificationCount={0}>
@@ -208,14 +200,9 @@ const AdminProjects = () => {
                     <td className="p-3 text-muted-foreground">{p.owner?.name || p.owner_name || "—"}</td>
                     <td className="p-3 text-muted-foreground text-xs">{new Date(p.created_at).toLocaleDateString("pt-BR")}</td>
                     <td className="p-3">
-                      <div className="flex gap-1.5">
-                        <button onClick={() => navigate(`/admin/projeto?id=${p.id}`)} className="px-2.5 py-1 text-xs font-semibold rounded bg-cebio-blue text-primary-foreground flex items-center gap-1">
-                          <Eye className="w-3 h-3" /> Ver
-                        </button>
-                        <button onClick={() => handleDelete(p.id)} className="px-2.5 py-1 text-xs font-semibold rounded bg-destructive text-destructive-foreground">
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
+                      <button onClick={() => navigate(`/admin/projeto?id=${p.id}`)} className="px-3 py-1.5 text-xs font-semibold rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                        Ver Projeto
+                      </button>
                     </td>
                   </tr>
                 ))}
