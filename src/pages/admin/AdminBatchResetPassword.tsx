@@ -86,7 +86,7 @@ const AdminBatchResetPassword = () => {
       </button>
 
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6">
-        <h2 className="text-[22px] font-semibold mb-1.5">Reset de Senha em Lote</h2>
+        <h2 className="text-lg sm:text-[22px] font-semibold mb-1.5">Reset de Senha em Lote</h2>
         <p className="text-sm opacity-90">Selecione os usuários e defina a nova senha para todos.</p>
       </div>
 
@@ -150,7 +150,7 @@ const AdminBatchResetPassword = () => {
         ) : filtered.length === 0 ? (
           <div className="p-10 text-center text-muted-foreground text-sm">Nenhum usuário encontrado</div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/50">
                 <th className="p-3 w-10">
@@ -190,7 +190,7 @@ const AdminBatchResetPassword = () => {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
     </AppLayout>

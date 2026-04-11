@@ -38,21 +38,21 @@ const AdminBatchApproval = () => {
   return (
     <AppLayout pageName="Aprovação em Lote" navItems={ADMIN_NAV} notificationCount={0}>
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6">
-        <h2 className="text-[22px] font-semibold mb-1.5">Aprovação de Projetos em Lote</h2>
+        <h2 className="text-lg sm:text-[22px] font-semibold mb-1.5">Aprovação de Projetos em Lote</h2>
         <p className="text-sm opacity-90">Avalie e aprove projetos que estão aguardando revisão</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
         <div className="bg-card rounded-xl p-5 shadow-sm border border-border flex justify-between items-start">
-          <div><div className="text-[13px] text-muted-foreground mb-1">Pendentes</div><div className="text-[32px] font-bold text-foreground">{projects.length}</div></div>
+          <div><div className="text-[13px] text-muted-foreground mb-1">Pendentes</div><div className="text-2xl sm:text-[32px] font-bold text-foreground">{projects.length}</div></div>
           <div className="w-11 h-11 rounded-full bg-cebio-yellow-bg flex items-center justify-center"><Clock className="w-5 h-5 text-cebio-yellow" /></div>
         </div>
         <div className="bg-card rounded-xl p-5 shadow-sm border border-border flex justify-between items-start">
-          <div><div className="text-[13px] text-muted-foreground mb-1">Selecionados</div><div className="text-[32px] font-bold text-foreground">{selectedIds.length}</div></div>
+          <div><div className="text-[13px] text-muted-foreground mb-1">Selecionados</div><div className="text-2xl sm:text-[32px] font-bold text-foreground">{selectedIds.length}</div></div>
           <div className="w-11 h-11 rounded-full bg-cebio-blue-bg flex items-center justify-center"><CheckCircle className="w-5 h-5 text-cebio-blue" /></div>
         </div>
         <div className="bg-card rounded-xl p-5 shadow-sm border border-border flex justify-between items-start">
-          <div><div className="text-[13px] text-muted-foreground mb-1">Aprovados Hoje</div><div className="text-[32px] font-bold text-foreground">0</div></div>
+          <div><div className="text-[13px] text-muted-foreground mb-1">Aprovados Hoje</div><div className="text-2xl sm:text-[32px] font-bold text-foreground">0</div></div>
           <div className="w-11 h-11 rounded-full bg-cebio-green-bg flex items-center justify-center"><CheckCircle className="w-5 h-5 text-primary" /></div>
         </div>
       </div>

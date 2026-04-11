@@ -37,7 +37,7 @@ const PesquisadorDashboard = () => {
       {/* Banner */}
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6 flex justify-between items-start">
         <div>
-          <h2 className="text-[22px] font-semibold mb-1">Bem-vindo, {user?.name}</h2>
+          <h2 className="text-lg sm:text-[22px] font-semibold mb-1">Bem-vindo, {user?.name}</h2>
           <p className="text-sm opacity-90 mb-1">Pesquisador • CEBIO Brasil - Centro de Excelência em Bioinsumos</p>
           <p className="text-[13px] opacity-85 mb-3">Gerencie seus projetos acadêmicos e acompanhe o progresso das submissões</p>
           <button onClick={() => navigate("/pesquisador/submissao")} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors">
@@ -51,7 +51,7 @@ const PesquisadorDashboard = () => {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {[
           { label: "Total de Projetos", value: projects.length, sub: `${projects.length} projetos no total`, subColor: "text-primary", icon: FolderOpen, iconBg: "bg-cebio-blue-bg", iconColor: "text-cebio-blue" },
           { label: "Em Revisão", value: pending, sub: "Aguardando aprovação", subColor: "text-cebio-yellow", icon: Clock, iconBg: "bg-cebio-yellow-bg", iconColor: "text-cebio-yellow" },
@@ -61,7 +61,7 @@ const PesquisadorDashboard = () => {
           <div key={i} className="bg-card rounded-xl p-5 shadow-sm border border-border flex justify-between items-start">
             <div>
               <div className="text-[13px] text-muted-foreground mb-1">{s.label}</div>
-              <div className="text-[32px] font-bold text-foreground leading-none">{s.value}</div>
+              <div className="text-2xl sm:text-[32px] font-bold text-foreground leading-none">{s.value}</div>
               <div className={`text-xs mt-1 ${s.subColor}`}>{s.sub}</div>
             </div>
             <div className={`w-11 h-11 rounded-lg ${s.iconBg} flex items-center justify-center`}>
@@ -72,9 +72,9 @@ const PesquisadorDashboard = () => {
       </div>
 
       {/* Main Grid: Projects (2/3) + Sidebar (1/3) */}
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Projects - 2 cols */}
-        <div className="col-span-2">
+        <div className="lg:col-span-2">
           <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
             <div className="flex justify-between items-center p-5 pb-0">
               <h3 className="text-base font-semibold">Meus Projetos</h3>

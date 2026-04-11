@@ -82,7 +82,7 @@ const AdminDashboard = () => {
     <AppLayout pageName="Painel do Administrador" navItems={ADMIN_NAV} notificationCount={0}>
       {/* Banner */}
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6 relative overflow-hidden">
-        <h2 className="text-[22px] font-semibold mb-1.5">Painel Administrativo - CEBIO</h2>
+        <h2 className="text-lg sm:text-[22px] font-semibold mb-1.5">Painel Administrativo - CEBIO</h2>
         <p className="text-sm opacity-90 mb-4">Centro de Excelência em Bioinsumos - Gestão Completa</p>
         <div className="flex gap-5 flex-wrap">
           <span className="flex items-center gap-1.5 text-[13px] opacity-90"><Shield className="w-4 h-4" /> Acesso Total</span>
@@ -92,7 +92,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {[
           { label: "Total de Projetos", value: stats.total, sub: `${stats.pending} pendentes`, icon: FolderOpen, iconBg: "bg-cebio-blue-bg", iconColor: "text-cebio-blue" },
           { label: "Aprovados", value: stats.approved, sub: stats.total ? `${Math.round((stats.approved / stats.total) * 100)}% do total` : "0%", icon: CheckCircle, iconBg: "bg-cebio-green-bg", iconColor: "text-primary" },
@@ -102,7 +102,7 @@ const AdminDashboard = () => {
           <div key={i} className="bg-card rounded-xl p-5 shadow-sm border border-border flex justify-between items-start">
             <div>
               <div className="text-[13px] text-muted-foreground mb-1">{stat.label}</div>
-              <div className="text-[32px] font-bold text-foreground leading-none">{stat.value}</div>
+              <div className="text-2xl sm:text-[32px] font-bold text-foreground leading-none">{stat.value}</div>
               <div className="text-xs mt-1 text-muted-foreground">{stat.sub}</div>
             </div>
             <div className={`w-11 h-11 rounded-full ${stat.iconBg} flex items-center justify-center`}>
@@ -113,7 +113,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
         {[
           { label: "Novo Usuário", icon: Users, path: "/admin/usuarios" },
           { label: "Pendentes", icon: Clock, path: "/admin/projetos" },

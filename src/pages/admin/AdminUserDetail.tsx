@@ -112,7 +112,7 @@ const AdminUserDetail = () => {
               {user.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
             </div>
             <div>
-              <h2 className="text-[22px] font-semibold">{user.name}</h2>
+              <h2 className="text-lg sm:text-[22px] font-semibold">{user.name}</h2>
               <p className="text-sm opacity-90">{user.email}</p>
               <div className="flex gap-2 mt-2">
                 <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${badge?.className || "bg-muted text-muted-foreground"}`}>
@@ -213,7 +213,7 @@ const AdminUserDetail = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
                   <th className="p-3 text-left font-medium text-muted-foreground">Titulo</th>
@@ -250,7 +250,7 @@ const AdminUserDetail = () => {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           </div>
         )}
       </div>

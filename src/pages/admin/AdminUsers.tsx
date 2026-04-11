@@ -167,11 +167,11 @@ const AdminUsers = () => {
   return (
     <AppLayout pageName="Gestão de Usuários" navItems={ADMIN_NAV} notificationCount={0}>
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6">
-        <h2 className="text-[22px] font-semibold mb-1.5">Gestão de Usuários</h2>
+        <h2 className="text-lg sm:text-[22px] font-semibold mb-1.5">Gestão de Usuários</h2>
         <p className="text-sm opacity-90">Gerencie todos os usuários da plataforma CEBIO</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {[
           { label: "Total", value: users.length, color: "text-cebio-blue" },
           { label: "Ativos", value: users.filter((u) => u.is_active).length, color: "text-primary" },
@@ -324,7 +324,7 @@ const AdminUsers = () => {
           </div>
         ) : (
           <>
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/50">
                   <th className="p-3 text-left font-semibold text-muted-foreground">Usuário</th>
@@ -384,7 +384,7 @@ const AdminUsers = () => {
                   );
                 })}
               </tbody>
-            </table>
+            </table></div>
             <div className="p-4 text-sm text-muted-foreground border-t border-border">
               Mostrando {filtered.length} de {users.length} usuários
             </div>

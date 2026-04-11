@@ -320,7 +320,7 @@ const AdminReports = () => {
     <AppLayout pageName="Relatórios e Analytics" navItems={ADMIN_NAV} notificationCount={0}>
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6 flex justify-between items-center">
         <div>
-          <h2 className="text-[22px] font-semibold mb-1.5">Relatórios e Analytics</h2>
+          <h2 className="text-lg sm:text-[22px] font-semibold mb-1.5">Relatórios e Analytics</h2>
           <p className="text-sm opacity-90">Visão detalhada e personalizável do desempenho da plataforma</p>
         </div>
         <div className="flex gap-2">
@@ -335,7 +335,7 @@ const AdminReports = () => {
 
       <div>
       {/* KPIs */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {[
           { icon: FileText, label: "Projetos (filtrados)", value: filtered.length, sub: `de ${projects.length} totais`, iconBg: "bg-cebio-blue-bg", iconColor: "text-cebio-blue" },
           { icon: Users, label: "Usuários no Sistema", value: users.length, sub: `${users.filter(u => u.is_active).length} ativos`, iconBg: "bg-cebio-green-bg", iconColor: "text-primary" },
@@ -361,7 +361,7 @@ const AdminReports = () => {
           <Filter className="w-4 h-4 text-muted-foreground" />
           <h3 className="text-sm font-semibold">Filtros</h3>
         </div>
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
           <MultiSelectFilter
             label="Status"
             options={STATUS_OPTIONS.filter(o => o.value !== "all")}
@@ -486,7 +486,7 @@ const AdminReports = () => {
           <p className="text-xs text-muted-foreground mb-4">{filtered.length} projetos com os filtros aplicados</p>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/50">
                 <th className="text-left p-3 font-medium text-muted-foreground">Título</th>
@@ -509,7 +509,7 @@ const AdminReports = () => {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
           {filtered.length > 20 && (
             <div className="p-3 text-center text-xs text-muted-foreground">Mostrando 20 de {filtered.length} projetos</div>
           )}
