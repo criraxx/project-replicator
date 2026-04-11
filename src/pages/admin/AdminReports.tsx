@@ -367,8 +367,8 @@ const AdminReports = () => {
           <button onClick={exportExcel} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors">
             <FileSpreadsheet className="w-4 h-4" /> Exportar Excel
           </button>
-          <button onClick={exportPDF} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors">
-            <Download className="w-4 h-4" /> Exportar PDF
+          <button onClick={exportPDF} disabled={exporting} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 disabled:opacity-50 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors">
+            <Download className="w-4 h-4" /> {exporting ? "Gerando..." : "Exportar PDF"}
           </button>
         </div>
       </div>
