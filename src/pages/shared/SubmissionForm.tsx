@@ -59,6 +59,7 @@ const SubmissionForm = () => {
   };
 
   const addLink = () => setLinks([...links, { url: "", type: "outro", title: "", description: "" }]);
+  const removeLink = (i: number) => setLinks(links.filter((_, idx) => idx !== i));
   const updateLink = (i: number, field: keyof ExternalLink, value: string) => {
     const updated = [...links]; updated[i] = { ...updated[i], [field]: value }; setLinks(updated);
   };
@@ -248,6 +249,10 @@ const SubmissionForm = () => {
 
             {links.map((link, i) => (
               <div key={i} className="bg-muted/50 border border-border rounded-lg p-4 mb-3">
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="text-sm font-semibold">Link {i + 1}</h4>
+                  {links.length > 1 && <button type="button" onClick={() => removeLink(i)}><Trash2 className="w-5 h-5 text-destructive cursor-pointer" /></button>}
+                </div>
                 <div className="grid grid-cols-2 gap-4 mb-3">
                   <div>
                     <label className="block text-xs font-semibold mb-1">URL</label>
