@@ -256,6 +256,7 @@ export class ProjectService {
     const updated = await this.getProjectById(id);
     if (!updated) throw new AppError(404, 'Projeto nao encontrado');
     return updated;
+  }
 
   // List projects owned by user OR where user is author by CPF
   async listUserProjects(
