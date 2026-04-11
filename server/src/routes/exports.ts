@@ -1,8 +1,12 @@
 import { Router, Request, Response } from 'express';
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
+import { authMiddleware, requireRole } from '../utils/auth';
 
 const router = Router();
+
+// All export routes require admin authentication
+router.use(authMiddleware, requireRole('admin'));
 
 interface ChartData {
   name: string;
