@@ -327,4 +327,4 @@ export class ProjectService {
     return projects.map(p => ({ id: p.id, title: p.title, status: p.status, category: p.category }));
   }
 }
-}
+
