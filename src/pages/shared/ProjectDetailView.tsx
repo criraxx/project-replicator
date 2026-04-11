@@ -287,6 +287,7 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
                         <div className="text-sm text-foreground">{file.original_name}</div>
                         <div className="text-xs text-muted-foreground">{formatFileSize(file.file_size || 0)}</div>
                       </div>
+                      <a href={`/api/projects/${project.id}/files/${file.id}/download`} className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-secondary transition-colors">Baixar</a>
                     </div>
                   ))}
                 </div>
@@ -303,6 +304,7 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
                         <div className="text-sm text-foreground">{file.original_name}</div>
                         <div className="text-xs text-muted-foreground">{formatFileSize(file.file_size || 0)}</div>
                       </div>
+                      <a href={`/api/projects/${project.id}/files/${file.id}/download`} className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-secondary transition-colors">Baixar</a>
                     </div>
                   ))}
                 </div>

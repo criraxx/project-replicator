@@ -62,7 +62,7 @@ const upload = multer({
 router.post(
   '/projects/:id/files',
   authMiddleware,
-  upload.array('files', 10),
+  upload.fields([{ name: 'file', maxCount: 1 }, { name: 'files', maxCount: 10 }]),
   async (req: Request, res: Response) => {
     try {
       const projectId = Number(req.params.id);
@@ -76,7 +76,9 @@ router.post(
         return res.status(403).json({ error: 'Sem permissão para enviar arquivos neste projeto' });
       }
 
-      const files = req.files as Express.Multer.File[];
+      // Support both 'file' (single) and 'files' (multiple) field names
+      const uploadedFiles = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const files = [...(uploadedFiles['file'] || []), ...(uploadedFiles['files'] || [])];
       if (!files || files.length === 0) {
         return res.status(400).json({ error: 'Nenhum arquivo enviado' });
       }
