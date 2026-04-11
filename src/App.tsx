@@ -17,6 +17,7 @@ import AdminAudit from "./pages/admin/AdminAudit";
 import AdminBatchApproval from "./pages/admin/AdminBatchApproval";
 import AdminBatchRejection from "./pages/admin/AdminBatchRejection";
 import AdminMassNotification from "./pages/admin/AdminMassNotification";
+import AdminBatchResetPassword from "./pages/admin/AdminBatchResetPassword";
 import PesquisadorDashboard from "./pages/pesquisador/PesquisadorDashboard";
 import PesquisadorProjects from "./pages/pesquisador/PesquisadorProjects";
 import PesquisadorHistory from "./pages/pesquisador/PesquisadorHistory";
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/admin/aprovacao-lote" element={<AdminBatchApproval />} />
             <Route path="/admin/rejeicao-lote" element={<AdminBatchRejection />} />
             <Route path="/admin/notificacao-massa" element={<AdminMassNotification />} />
+            <Route path="/admin/reset-senhas-lote" element={<AdminBatchResetPassword />} />
             <Route path="/admin/projeto" element={<ProjectDetailView isAdmin />} />
             
             {/* Pesquisador */}
