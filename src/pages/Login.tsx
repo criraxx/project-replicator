@@ -72,12 +72,6 @@ const Login = () => {
           <a href="#" className="text-sm text-primary hover:underline">Esqueceu sua senha?</a>
         </div>
 
-        <div className="mt-6 p-3 bg-muted rounded-lg text-[11px] text-muted-foreground">
-          <p className="font-semibold mb-1">Credenciais de teste:</p>
-          <p>Admin: admin@cebio.org.br / admin123</p>
-          <p>Pesquisador: pesquisador@cebio.org.br / pesq123</p>
-          <p>Bolsista: bolsista@cebio.org.br / bolsa123</p>
-        </div>
       </div>
     </div>
   );
