@@ -6,11 +6,26 @@ import { severityColors } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { mockAuditLogs } from "@/data/mockData";
+import MultiSelectFilter from "@/components/ui/multi-select-filter";
+
+const SEVERITY_OPTIONS = [
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+  { value: "critical", label: "Critical" },
+];
+
+const ACTION_OPTIONS = [
+  { value: "LOGIN", label: "Login" },
+  { value: "PROJECT", label: "Project" },
+  { value: "USER", label: "User" },
+  { value: "SYSTEM", label: "System" },
+];
 
 const AdminAudit = () => {
   const [search, setSearch] = useState("");
-  const [severityFilter, setSeverityFilter] = useState("");
-  const [actionFilter, setActionFilter] = useState("");
+  const [severityFilters, setSeverityFilters] = useState<string[]>([]);
+  const [actionFilters, setActionFilters] = useState<string[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
