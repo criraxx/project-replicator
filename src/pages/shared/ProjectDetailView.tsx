@@ -80,7 +80,7 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
     if (!project) return;
     setActionLoading(true);
     try {
-      await api.updateProjectStatus(project.id, "aprovado", reviewComment || undefined);
+      await api.updateProject(project.id, { status: "aprovado", review_comment: reviewComment || undefined });
       setProject({ ...project, status: "aprovado" });
       toast({ title: "Sucesso", description: "Projeto aprovado com sucesso!" });
       setReviewComment("");
@@ -99,7 +99,7 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
     }
     setActionLoading(true);
     try {
-      await api.updateProjectStatus(project.id, "rejeitado", reviewComment);
+      await api.updateProject(project.id, { status: "rejeitado", review_comment: reviewComment });
       setProject({ ...project, status: "rejeitado", rejection_reason: reviewComment });
       toast({ title: "Sucesso", description: "Projeto rejeitado." });
       setReviewComment("");
