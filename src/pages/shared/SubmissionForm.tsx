@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/services/api";
 import { ADMIN_NAV, PESQUISADOR_NAV, BOLSISTA_NAV } from "@/constants/navigation";
+import { formatCpf } from "@/lib/formatters";
 
 interface Author {
   name: string; cpf: string; institution: string; level: string; role: string;
@@ -21,6 +22,7 @@ const SubmissionForm = () => {
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   const isAdmin = user?.role === "admin";
   const isPesquisador = user?.role === "pesquisador";
@@ -35,7 +37,7 @@ const SubmissionForm = () => {
   const [targetAudience, setTargetAudience] = useState("");
 
   const [authors, setAuthors] = useState<Author[]>([
-    { name: user?.name || "", cpf: "", institution: "CEBIO Brasil - Centro de Excelência em Bioinsumos", level: "graduacao", role: "Autor Principal" },
+    { name: user?.name || "", cpf: "", institution: "", level: "graduacao", role: "Autor Principal" },
   ]);
 
   const [links, setLinks] = useState<ExternalLink[]>([
@@ -45,6 +47,23 @@ const SubmissionForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       try { const cats = await api.listCategories(); setCategories(cats); } catch { /* silent */ }
+      // Auto-fill principal author from profile
+      try {
+        const profile = await api.getProfile();
+        if (profile) {
+          setAuthors(prev => {
+            const updated = [...prev];
+            updated[0] = {
+              ...updated[0],
+              name: profile.name || updated[0].name,
+              cpf: profile.cpf ? formatCpf(profile.cpf) : updated[0].cpf,
+              institution: profile.institution || updated[0].institution,
+            };
+            return updated;
+          });
+          setProfileLoaded(true);
+        }
+      } catch { /* silent */ }
     };
     fetchData();
   }, []);
@@ -55,7 +74,13 @@ const SubmissionForm = () => {
   const addAuthor = () => setAuthors([...authors, { name: "", cpf: "", institution: "", level: "graduacao", role: "Coautor" }]);
   const removeAuthor = (i: number) => setAuthors(authors.filter((_, idx) => idx !== i));
   const updateAuthor = (i: number, field: keyof Author, value: string) => {
-    const updated = [...authors]; updated[i] = { ...updated[i], [field]: value }; setAuthors(updated);
+    const updated = [...authors];
+    if (field === "cpf") {
+      updated[i] = { ...updated[i], cpf: formatCpf(value) };
+    } else {
+      updated[i] = { ...updated[i], [field]: value };
+    }
+    setAuthors(updated);
   };
 
   const addLink = () => setLinks([...links, { url: "", type: "outro", title: "", description: "" }]);
@@ -75,9 +100,9 @@ const SubmissionForm = () => {
       await api.createProject({
         title, summary, category, academic_level: academicLevel, description: summary,
         start_date: startDate || undefined, end_date: endDate || undefined,
-        authors: authors.map((a, i) => ({
+        authors: authors.map((a) => ({
           name: a.name,
-          cpf: a.cpf,
+          cpf: a.cpf.replace(/\D/g, ""),
           institution: a.institution,
           academic_level: a.level,
           role_in_project: a.role,
@@ -96,6 +121,8 @@ const SubmissionForm = () => {
       toast({ title: "Erro ao enviar projeto", description: err.message, variant: "destructive" });
     } finally { setSubmitting(false); }
   };
+
+  const isPrincipalAuthorField = (i: number) => i === 0 && profileLoaded;
 
   return (
     <AppLayout pageName="Submissão de Projeto" navItems={navItems} notificationCount={isPesquisador ? 1 : 0}>
@@ -183,23 +210,23 @@ const SubmissionForm = () => {
             {authors.map((author, i) => (
               <div key={i} className="bg-muted/50 border border-border rounded-lg p-4 mb-3">
                 <div className="flex justify-between items-center mb-3">
-                  <h4 className="text-sm font-semibold">{i === 0 ? "Autor Principal" : `Autor ${i + 1}`}</h4>
+                  <h4 className="text-sm font-semibold">{i === 0 ? "Autor Principal (seus dados)" : `Autor ${i + 1}`}</h4>
                   {i > 0 && <button type="button" onClick={() => removeAuthor(i)}><Trash2 className="w-5 h-5 text-destructive cursor-pointer" /></button>}
                 </div>
                 <div className="grid grid-cols-2 gap-4 mb-3">
                   <div>
                     <label className="block text-xs font-semibold mb-1">Nome Completo <span className="text-destructive">*</span></label>
-                    <input type="text" value={author.name} onChange={(e) => updateAuthor(i, "name", e.target.value)} placeholder="Nome do autor" className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
+                    <input type="text" value={author.name} onChange={(e) => updateAuthor(i, "name", e.target.value)} placeholder="Nome do autor" readOnly={isPrincipalAuthorField(i)} className={`w-full px-3 py-2 border border-border rounded-lg text-sm bg-background ${isPrincipalAuthorField(i) ? "opacity-70 cursor-not-allowed" : ""}`} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold mb-1">CPF <span className="text-destructive">*</span></label>
-                    <input type="text" value={author.cpf} onChange={(e) => updateAuthor(i, "cpf", e.target.value)} placeholder="000.000.000-00" className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
+                    <input type="text" value={author.cpf} onChange={(e) => updateAuthor(i, "cpf", e.target.value)} placeholder="000.000.000-00" maxLength={14} readOnly={isPrincipalAuthorField(i)} className={`w-full px-3 py-2 border border-border rounded-lg text-sm bg-background ${isPrincipalAuthorField(i) ? "opacity-70 cursor-not-allowed" : ""}`} />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mb-3">
                   <div>
                     <label className="block text-xs font-semibold mb-1">Instituição <span className="text-destructive">*</span></label>
-                    <input type="text" value={author.institution} onChange={(e) => updateAuthor(i, "institution", e.target.value)} placeholder="Nome da instituição" className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background" />
+                    <input type="text" value={author.institution} onChange={(e) => updateAuthor(i, "institution", e.target.value)} placeholder="Nome da instituição" readOnly={isPrincipalAuthorField(i)} className={`w-full px-3 py-2 border border-border rounded-lg text-sm bg-background ${isPrincipalAuthorField(i) ? "opacity-70 cursor-not-allowed" : ""}`} />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold mb-1">Nível</label>

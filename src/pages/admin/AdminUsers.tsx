@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { type User } from "@/data/mockData";
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
+import { formatCpf, formatDate, formatPhone, parseDateToISO, validatePassword } from "@/lib/formatters";
 
 const AdminUsers = () => {
   const navigate = useNavigate();
@@ -28,39 +29,15 @@ const AdminUsers = () => {
 
   // Form state for new user
   const [newUser, setNewUser] = useState({
-    name: "", email: "", role: "bolsista", institution: "", password: "cebio2024",
+    name: "", email: "", role: "bolsista", institution: "", password: "Cebio@2024",
     cpf: "", birth_date: "", phone: "", registration_number: "",
   });
 
   // Batch creation state
   const [batchText, setBatchText] = useState("");
-  const [batchPassword, setBatchPassword] = useState("cebio2024");
+  const [batchPassword, setBatchPassword] = useState("Cebio@2024");
 
-  // Auto-format helpers
-  const formatCpf = (v: string) => {
-    const d = v.replace(/\D/g, "").slice(0, 11);
-    if (d.length <= 3) return d;
-    if (d.length <= 6) return `${d.slice(0, 3)}.${d.slice(3)}`;
-    if (d.length <= 9) return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6)}`;
-    return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
-  };
-  const formatDate = (v: string) => {
-    const d = v.replace(/\D/g, "").slice(0, 8);
-    if (d.length <= 2) return d;
-    if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`;
-    return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;
-  };
-  const formatPhone = (v: string) => {
-    const d = v.replace(/\D/g, "").slice(0, 11);
-    if (d.length <= 2) return d.length ? `(${d}` : "";
-    if (d.length <= 7) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
-    return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
-  };
-  const parseDateToISO = (v: string) => {
-    const p = v.split("/");
-    if (p.length === 3 && p[2].length === 4) return `${p[2]}-${p[1]}-${p[0]}`;
-    return "";
-  };
+  // parseDateToISO, formatCpf, formatDate, formatPhone now imported from @/lib/formatters
 
   const fetchUsers = async () => {
     try {
@@ -88,6 +65,10 @@ const AdminUsers = () => {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    const passwordError = validatePassword(newUser.password);
+    if (passwordError) {
+      toast({ title: "Erro na senha", description: passwordError, variant: "destructive" }); return;
+    }
     if (!newUser.cpf || newUser.cpf.replace(/\D/g, "").length !== 11) {
       toast({ title: "Erro", description: "CPF invalido", variant: "destructive" }); return;
     }
@@ -104,7 +85,7 @@ const AdminUsers = () => {
       });
       toast({ title: "Sucesso", description: "Usuario criado com sucesso!" });
       setShowNewUser(false);
-      setNewUser({ name: "", email: "", role: "bolsista", institution: "", password: "cebio2024", cpf: "", birth_date: "", phone: "", registration_number: "" });
+      setNewUser({ name: "", email: "", role: "bolsista", institution: "", password: "Cebio@2024", cpf: "", birth_date: "", phone: "", registration_number: "" });
       fetchUsers();
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
@@ -265,6 +246,7 @@ const AdminUsers = () => {
                   <div className="col-span-2">
                     <label className="block text-sm font-medium mb-1">Senha inicial *</label>
                     <input type="text" required value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+                    <p className="text-xs text-muted-foreground mt-1">Mín. 8 caracteres, com maiúscula, minúscula, número e caractere especial (ex: @, #, $, !)</p>
                   </div>
                 </div>
               </div>
