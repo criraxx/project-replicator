@@ -55,6 +55,7 @@ const App = () => (
             <Route path="/admin/aprovacao-lote" element={<AdminBatchApproval />} />
             <Route path="/admin/rejeicao-lote" element={<AdminBatchRejection />} />
             <Route path="/admin/notificacao-massa" element={<AdminMassNotification />} />
+            <Route path="/admin/reset-senha-lote" element={<AdminBatchResetPassword />} />
             <Route path="/admin/projeto" element={<ProjectDetailView isAdmin />} />
             <Route path="/admin/perfil" element={<ProfilePage backPath="/admin/dashboard" />} />
             <Route path="/admin/notificacoes" element={<NotificationsPage />} />
