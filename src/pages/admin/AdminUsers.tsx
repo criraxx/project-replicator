@@ -117,6 +117,7 @@ const AdminUsers = () => {
       setShowNewUser(false);
       setNewUser({ name: "", email: "", role: "bolsista", institution: "", password: "cebio2024", cpf: "", birth_date: "", phone: "", department: "", registration_number: "" });
       fetchUsers();
+      fetchInstitutions();
     } catch (err: any) {
       const msg = err.message || "";
       if (msg.toLowerCase().includes("cadastrado") || msg.toLowerCase().includes("duplicate") || msg.toLowerCase().includes("already")) {
@@ -285,8 +286,8 @@ const AdminUsers = () => {
               <div className="border-t border-border pt-3 mt-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium mb-1">Departamento/Campus *</label>
-                    <input type="text" required placeholder="Ex: Campus Ipora" value={newUser.department} onChange={(e) => setNewUser({ ...newUser, department: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+                    <label className="block text-sm font-medium mb-1">Campus/Instituição *</label>
+                    <input type="text" required placeholder="Ex: Campus Iporá" value={newUser.department} onChange={(e) => setNewUser({ ...newUser, department: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1">Telefone *</label>
@@ -298,7 +299,14 @@ const AdminUsers = () => {
                   </div>
                   <div className="col-span-2">
                     <label className="block text-sm font-medium mb-1">Instituicao *</label>
-                    <input type="text" required placeholder="Ex: IF Goiano" value={newUser.institution} onChange={(e) => setNewUser({ ...newUser, institution: e.target.value })} className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card" />
+                    <InstitutionAutocomplete
+                      value={newUser.institution}
+                      onChange={(val) => setNewUser({ ...newUser, institution: val })}
+                      institutions={institutions}
+                      placeholder="Digite para buscar ou cadastrar..."
+                      required
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card"
+                    />
                   </div>
                   <div className="col-span-2">
                     <label className="block text-sm font-medium mb-1">Senha inicial *</label>
