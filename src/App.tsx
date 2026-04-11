@@ -48,6 +48,7 @@ const App = () => (
             <Route path="/admin/aprovacao-lote" element={<AdminBatchApproval />} />
             <Route path="/admin/rejeicao-lote" element={<AdminBatchRejection />} />
             <Route path="/admin/notificacao-massa" element={<AdminMassNotification />} />
+            <Route path="/admin/projeto" element={<ProjectDetailView isAdmin />} />
             
             {/* Pesquisador */}
             <Route path="/pesquisador/dashboard" element={<PesquisadorDashboard />} />

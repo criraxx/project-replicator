@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { BarChart3, FileText, Users, TrendingUp, Download, Filter, RefreshCw, User } from "lucide-react";
+import MultiSelectFilter from "@/components/ui/multi-select-filter";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
   PieChart, Pie, Cell,
@@ -10,7 +11,6 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -129,9 +129,9 @@ const RenderChart = ({ type, data, dataKey = "value", nameKey = "name" }: { type
 
 const AdminReports = () => {
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [userTypeFilter, setUserTypeFilter] = useState("all");
-  const [ownerFilter, setOwnerFilter] = useState("all");
+  const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
+  const [userTypeFilters, setUserTypeFilters] = useState<string[]>([]);
+  const [ownerFilters, setOwnerFilters] = useState<string[]>([]);
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [chartType, setChartType] = useState<ChartType>("columns");
@@ -165,17 +165,17 @@ const AdminReports = () => {
   const filtered = useMemo(() => {
     return projects.filter(p => {
       if (statusFilters.length > 0 && !statusFilters.includes(p.status)) return false;
-      if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
-      if (userTypeFilter !== "all") {
+      if (categoryFilters.length > 0 && !categoryFilters.includes(p.category)) return false;
+      if (userTypeFilters.length > 0) {
         const owner = users.find(u => u.id === p.owner_id);
-        if (owner && owner.role !== userTypeFilter) return false;
+        if (owner && !userTypeFilters.includes(owner.role)) return false;
       }
-      if (ownerFilter !== "all" && String(p.owner_id) !== ownerFilter) return false;
+      if (ownerFilters.length > 0 && !ownerFilters.includes(String(p.owner_id))) return false;
       if (startDate && new Date(p.created_at) < startDate) return false;
       if (endDate && new Date(p.created_at) > endDate) return false;
       return true;
     });
-  }, [projects, statusFilters, categoryFilter, userTypeFilter, ownerFilter, startDate, endDate, users]);
+  }, [projects, statusFilters, categoryFilters, userTypeFilters, ownerFilters, startDate, endDate, users]);
 
   const byStatus = useMemo(() => {
     const map: Record<string, number> = {};
@@ -222,9 +222,9 @@ const AdminReports = () => {
 
   const clearFilters = () => {
     setStatusFilters([]);
-    setCategoryFilter("all");
-    setUserTypeFilter("all");
-    setOwnerFilter("all");
+    setCategoryFilters([]);
+    setUserTypeFilters([]);
+    setOwnerFilters([]);
     setStartDate(undefined);
     setEndDate(undefined);
   };
@@ -243,9 +243,9 @@ const AdminReports = () => {
 
   const exportPDF = () => {
     const statusLabel = statusFilters.length > 0 ? statusFilters.map(s => STATUS_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos";
-    const userTypeLabel = USER_TYPE_OPTIONS.find(o => o.value === userTypeFilter)?.label || "Todos";
-    const catLabel = categoryFilter === "all" ? "Todas" : categoryFilter;
-    const ownerLabel = ownerFilter === "all" ? "Todos" : uniqueOwners.find(o => String(o.id) === ownerFilter)?.name || "Todos";
+    const userTypeLabel = userTypeFilters.length > 0 ? userTypeFilters.map(s => USER_TYPE_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos";
+    const catLabel = categoryFilters.length > 0 ? categoryFilters.join(", ") : "Todas";
+    const ownerLabel = ownerFilters.length > 0 ? ownerFilters.map(id => uniqueOwners.find(o => String(o.id) === id)?.name || id).join(", ") : "Todos";
     const startLabel = startDate ? format(startDate, "dd/MM/yyyy") : "—";
     const endLabel = endDate ? format(endDate, "dd/MM/yyyy") : "—";
 
@@ -380,35 +380,27 @@ const AdminReports = () => {
           </div>
         </div>
         <div className="grid grid-cols-3 gap-4 mb-4">
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Categoria</label>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                {categories.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Tipo de Usuário</label>
-            <Select value={userTypeFilter} onValueChange={setUserTypeFilter}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {USER_TYPE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Proprietário</label>
-            <Select value={ownerFilter} onValueChange={setOwnerFilter}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {uniqueOwners.map(o => <SelectItem key={o.id} value={String(o.id)}>{o.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+          <MultiSelectFilter
+            label="Categoria"
+            options={categories.map(c => ({ value: c.name, label: c.name }))}
+            selected={categoryFilters}
+            onChange={setCategoryFilters}
+            placeholder="Todas"
+          />
+          <MultiSelectFilter
+            label="Tipo de Usuario"
+            options={USER_TYPE_OPTIONS.filter(o => o.value !== "all")}
+            selected={userTypeFilters}
+            onChange={setUserTypeFilters}
+            placeholder="Todos"
+          />
+          <MultiSelectFilter
+            label="Proprietario"
+            options={uniqueOwners.map(o => ({ value: String(o.id), label: o.name }))}
+            selected={ownerFilters}
+            onChange={setOwnerFilters}
+            placeholder="Todos"
+          />
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Data Início</label>
             <Popover>
