@@ -399,6 +399,19 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
           </div>
         )}
       </div>
+
+      {/* Image Lightbox */}
+      {previewImage && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setPreviewImage(null)}>
+          <button onClick={() => setPreviewImage(null)} className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors">
+            <X className="w-6 h-6 text-white" />
+          </button>
+          <img src={previewImage} alt="Preview" className="max-w-full max-h-[90vh] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
+          <a href={previewImage} download className="absolute bottom-4 right-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-secondary transition-colors" onClick={(e) => e.stopPropagation()}>
+            <Download className="w-4 h-4" /> Baixar
+          </a>
+        </div>
+      )}
     </AppLayout>
   );
 };
