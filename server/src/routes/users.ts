@@ -110,7 +110,7 @@ router.get('/users/:id', authMiddleware, requireRole('admin'), ...validateId, ha
 });
 
 // POST /api/users
-router.post('/users', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+router.post('/users', authMiddleware, requireRole('admin'), ...validateCreateUser, handleValidationErrors, async (req: Request, res: Response) => {
   try {
     const {
       email,
