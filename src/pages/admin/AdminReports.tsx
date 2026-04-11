@@ -127,6 +127,14 @@ const RenderChart = ({ type, data, dataKey = "value", nameKey = "name" }: { type
   );
 };
 
+const CHART_CONFIGS = [
+  { id: "status", title: "Projetos por Status" },
+  { id: "category", title: "Projetos por Categoria" },
+  { id: "users", title: "Top 10 Usuarios" },
+  { id: "timeline", title: "Evolucao Temporal" },
+  { id: "usertype", title: "Pesquisadores vs Bolsistas" },
+];
+
 const AdminReports = () => {
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
@@ -136,6 +144,8 @@ const AdminReports = () => {
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [chartType, setChartType] = useState<ChartType>("columns");
   const chartsRef = useRef<HTMLDivElement>(null);
+  const [showCustomExport, setShowCustomExport] = useState(false);
+  const [selectedCharts, setSelectedCharts] = useState<string[]>(CHART_CONFIGS.map(c => c.id));
 
   const [projects, setProjects] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -242,7 +252,43 @@ const AdminReports = () => {
     }, []);
   }, [projects, users]);
 
-  const exportPDF = () => {
+  const captureSvgFromContainer = (container: HTMLElement): string => {
+    const svg = container.querySelector("svg.recharts-surface");
+    if (!svg) return "";
+    const clone = svg.cloneNode(true) as SVGElement;
+    const parent = svg.parentElement;
+    const w = parent?.clientWidth || 500;
+    const h = parent?.clientHeight || 280;
+    clone.setAttribute("width", String(w));
+    clone.setAttribute("height", String(h));
+    clone.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    return new XMLSerializer().serializeToString(clone);
+  };
+
+  const exportSingleChart = (chartId: string) => {
+    if (!chartsRef.current) return;
+    const el = chartsRef.current.querySelector(`[data-chart-id="${chartId}"]`) as HTMLElement;
+    if (!el) return;
+    const svg = captureSvgFromContainer(el);
+    const title = CHART_CONFIGS.find(c => c.id === chartId)?.title || "Grafico";
+    if (!svg) return;
+    const printWin = window.open("", "_blank");
+    if (!printWin) return;
+    printWin.document.write(`<!DOCTYPE html><html><head><title>${title} - CEBIO</title>
+      <style>body{font-family:Arial,sans-serif;margin:40px;text-align:center}
+      h1{color:#2d5f4a;font-size:18px;margin-bottom:16px}
+      svg{max-width:100%;height:auto}
+      p{color:#888;font-size:12px}
+      @media print{body{margin:20px}}</style></head><body>
+      <h1>${title}</h1>
+      <div style="border:1px solid #e5e7eb;border-radius:8px;padding:16px;display:inline-block">${svg}</div>
+      <p>CEBIO Brasil - Gerado em ${new Date().toLocaleString("pt-BR")}</p>
+      </body></html>`);
+    printWin.document.close();
+    setTimeout(() => printWin.print(), 400);
+  };
+
+  const exportPDF = (chartIds?: string[]) => {
     const statusLabel = statusFilters.length > 0 ? statusFilters.map(s => STATUS_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos";
     const userTypeLabel = userTypeFilters.length > 0 ? userTypeFilters.map(s => USER_TYPE_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos";
     const catLabel = categoryFilters.length > 0 ? categoryFilters.join(", ") : "Todas";
@@ -250,29 +296,24 @@ const AdminReports = () => {
     const startLabel = startDate ? format(startDate, "dd/MM/yyyy") : "---";
     const endLabel = endDate ? format(endDate, "dd/MM/yyyy") : "---";
 
-    // Capture chart SVGs from the DOM
-    const chartSvgs: string[] = [];
+    const idsToExport = chartIds || CHART_CONFIGS.map(c => c.id);
+
+    // Capture selected chart SVGs
+    const chartsHtmlParts: string[] = [];
     if (chartsRef.current) {
-      const svgElements = chartsRef.current.querySelectorAll("svg.recharts-surface");
-      svgElements.forEach(svg => {
-        const clone = svg.cloneNode(true) as SVGElement;
-        const parent = svg.parentElement;
-        const w = parent?.clientWidth || 500;
-        const h = parent?.clientHeight || 280;
-        clone.setAttribute("width", String(w));
-        clone.setAttribute("height", String(h));
-        clone.setAttribute("viewBox", `0 0 ${w} ${h}`);
-        chartSvgs.push(new XMLSerializer().serializeToString(clone));
+      idsToExport.forEach(id => {
+        const el = chartsRef.current!.querySelector(`[data-chart-id="${id}"]`) as HTMLElement;
+        if (!el) return;
+        const svg = captureSvgFromContainer(el);
+        const title = CHART_CONFIGS.find(c => c.id === id)?.title || "Grafico";
+        if (svg) {
+          chartsHtmlParts.push(`<div style="margin-bottom:24px">
+            <h3 style="font-size:14px;color:#2d5f4a;margin-bottom:8px">${title}</h3>
+            <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center">${svg}</div>
+          </div>`);
+        }
       });
     }
-
-    const chartTitles = ["Projetos por Status", "Projetos por Categoria", "Top 10 Usuarios", "Evolucao Temporal"];
-    const chartsHtml = chartSvgs.map((svg, i) =>
-      `<div style="margin-bottom:24px">
-        <h3 style="font-size:14px;color:#2d5f4a;margin-bottom:8px">${chartTitles[i] || `Grafico ${i + 1}`}</h3>
-        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center">${svg}</div>
-      </div>`
-    ).join("");
 
     const printWin = window.open("", "_blank");
     if (!printWin) return;
@@ -328,8 +369,7 @@ const AdminReports = () => {
         <div class="kpi"><div class="val">${categories.length}</div><div class="lab">Categorias</div></div>
       </div>
 
-      <h2>Graficos</h2>
-      <div class="charts-grid">${chartsHtml || '<p style="color:#888">Nenhum grafico disponivel</p>'}</div>
+      ${chartsHtmlParts.length > 0 ? `<h2>Graficos (${chartsHtmlParts.length})</h2><div class="charts-grid">${chartsHtmlParts.join("")}</div>` : ''}
 
       <h2>Resumos</h2>
       <div class="summary-grid">
@@ -347,16 +387,25 @@ const AdminReports = () => {
     setTimeout(() => { printWin.print(); }, 500);
   };
 
+  const toggleChartSelection = (id: string) => {
+    setSelectedCharts(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
   return (
     <AppLayout pageName="Relatórios e Analytics" navItems={ADMIN_NAV} notificationCount={0}>
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-7 mb-6 flex justify-between items-center">
         <div>
           <h2 className="text-[22px] font-semibold mb-1.5">Relatórios e Analytics</h2>
-          <p className="text-sm opacity-90">Visão detalhada e personalizável do desempenho da plataforma</p>
+          <p className="text-sm opacity-90">Visao detalhada e personalizavel do desempenho da plataforma</p>
         </div>
-        <button onClick={exportPDF} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors">
-          <Download className="w-4 h-4" /> Exportar PDF
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => setShowCustomExport(true)} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors">
+            <Filter className="w-4 h-4" /> Exportar Personalizado
+          </button>
+          <button onClick={() => exportPDF()} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors">
+            <Download className="w-4 h-4" /> Exportar Tudo
+          </button>
+        </div>
       </div>
 
       {/* KPIs */}
@@ -488,28 +537,51 @@ const AdminReports = () => {
 
       {/* Charts Grid */}
       <div ref={chartsRef} className="grid grid-cols-2 gap-6 mb-6">
-        <div className="bg-card rounded-xl shadow-sm border border-border p-5">
-          <h3 className="text-sm font-semibold mb-4">Projetos por Status</h3>
+        <div data-chart-id="status" className="bg-card rounded-xl shadow-sm border border-border p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold">Projetos por Status</h3>
+            <button onClick={() => exportSingleChart("status")} className="px-2.5 py-1 text-xs font-medium rounded bg-muted hover:bg-muted/80 text-muted-foreground flex items-center gap-1">
+              <Download className="w-3 h-3" /> Exportar
+            </button>
+          </div>
           <RenderChart type={chartType} data={byStatus} />
         </div>
-        <div className="bg-card rounded-xl shadow-sm border border-border p-5">
-          <h3 className="text-sm font-semibold mb-4">Projetos por Categoria</h3>
+        <div data-chart-id="category" className="bg-card rounded-xl shadow-sm border border-border p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold">Projetos por Categoria</h3>
+            <button onClick={() => exportSingleChart("category")} className="px-2.5 py-1 text-xs font-medium rounded bg-muted hover:bg-muted/80 text-muted-foreground flex items-center gap-1">
+              <Download className="w-3 h-3" /> Exportar
+            </button>
+          </div>
           <RenderChart type={chartType} data={byCategory} />
         </div>
-        <div className="bg-card rounded-xl shadow-sm border border-border p-5">
-          <h3 className="text-sm font-semibold mb-4">Top 10 Usuários</h3>
+        <div data-chart-id="users" className="bg-card rounded-xl shadow-sm border border-border p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold">Top 10 Usuarios</h3>
+            <button onClick={() => exportSingleChart("users")} className="px-2.5 py-1 text-xs font-medium rounded bg-muted hover:bg-muted/80 text-muted-foreground flex items-center gap-1">
+              <Download className="w-3 h-3" /> Exportar
+            </button>
+          </div>
           <RenderChart type={chartType === "columns" ? "bars" : chartType} data={byUser} />
         </div>
-        <div className="bg-card rounded-xl shadow-sm border border-border p-5">
-          <h3 className="text-sm font-semibold mb-4">Evolução Temporal</h3>
+        <div data-chart-id="timeline" className="bg-card rounded-xl shadow-sm border border-border p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold">Evolucao Temporal</h3>
+            <button onClick={() => exportSingleChart("timeline")} className="px-2.5 py-1 text-xs font-medium rounded bg-muted hover:bg-muted/80 text-muted-foreground flex items-center gap-1">
+              <Download className="w-3 h-3" /> Exportar
+            </button>
+          </div>
           <RenderChart type={chartType === "pie" || chartType === "pictogram" ? "lines" : chartType} data={byMonth} />
         </div>
-      </div>
-
-      {/* Pictogram - User Types */}
-      <div className="bg-card rounded-xl shadow-sm border border-border p-5 mb-6">
-        <h3 className="text-sm font-semibold mb-4">Proporção Pesquisadores vs Bolsistas</h3>
-        <Pictogram data={byUserType.map((d, i) => ({ ...d, color: COLORS[i % COLORS.length] }))} />
+        <div data-chart-id="usertype" className="bg-card rounded-xl shadow-sm border border-border p-5 col-span-2">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold">Proporcao Pesquisadores vs Bolsistas</h3>
+            <button onClick={() => exportSingleChart("usertype")} className="px-2.5 py-1 text-xs font-medium rounded bg-muted hover:bg-muted/80 text-muted-foreground flex items-center gap-1">
+              <Download className="w-3 h-3" /> Exportar
+            </button>
+          </div>
+          <Pictogram data={byUserType.map((d, i) => ({ ...d, color: COLORS[i % COLORS.length] }))} />
+        </div>
       </div>
 
       {/* Summary Table */}
@@ -548,6 +620,53 @@ const AdminReports = () => {
           )}
         </div>
       </div>
+
+      {/* Custom Export Modal */}
+      {showCustomExport && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={() => setShowCustomExport(false)}>
+          <div className="bg-card border border-border rounded-xl p-6 w-[420px] shadow-xl" onClick={e => e.stopPropagation()}>
+            <h3 className="text-base font-semibold text-foreground mb-1">Exportar Personalizado</h3>
+            <p className="text-xs text-muted-foreground mb-4">Selecione os graficos que deseja incluir no PDF</p>
+
+            <div className="space-y-2 mb-5">
+              {CHART_CONFIGS.map(c => (
+                <label key={c.id} className="flex items-center gap-3 p-2.5 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={selectedCharts.includes(c.id)}
+                    onChange={() => toggleChartSelection(c.id)}
+                    className="accent-primary w-4 h-4"
+                  />
+                  <span className="text-sm text-foreground">{c.title}</span>
+                </label>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex gap-2">
+                <button onClick={() => setSelectedCharts(CHART_CONFIGS.map(c => c.id))} className="text-xs text-primary hover:underline">
+                  Selecionar todos
+                </button>
+                <button onClick={() => setSelectedCharts([])} className="text-xs text-muted-foreground hover:underline">
+                  Limpar
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setShowCustomExport(false)} className="px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-muted">
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => { exportPDF(selectedCharts); setShowCustomExport(false); }}
+                  disabled={selectedCharts.length === 0}
+                  className="px-4 py-2 text-sm font-semibold bg-primary text-primary-foreground rounded-lg hover:bg-secondary transition-colors disabled:opacity-50"
+                >
+                  Exportar ({selectedCharts.length})
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 };
