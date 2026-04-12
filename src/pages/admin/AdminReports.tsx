@@ -605,10 +605,10 @@ const AdminReports = () => {
 
   const DatePickerInline = ({ label, value, onChange }: { label: string; value?: Date; onChange: (d: Date | undefined) => void }) => (
     <div>
-      <label className="text-xs text-muted-foreground mb-1 block">{label}</label>
+      <label className="block text-[13px] font-semibold text-muted-foreground mb-2">{label}</label>
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !value && "text-muted-foreground")}>
+          <Button variant="outline" className={cn("w-full justify-start text-left font-normal min-h-[42px]", !value && "text-muted-foreground")}>
             <CalendarIcon className="mr-2 h-4 w-4" />
             {value ? format(value, "dd/MM/yyyy") : "Selecionar"}
           </Button>
