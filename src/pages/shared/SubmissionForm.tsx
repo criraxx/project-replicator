@@ -297,15 +297,22 @@ const SubmissionForm = () => {
   }
 
   return (
-    <AppLayout pageName={editId ? "Editar Projeto" : "Submissão de Projeto"} navItems={navItems} notificationCount={isPesquisador ? 1 : 0}>
+    <AppLayout pageName={editId ? "Ajustar Projeto" : "Submissão de Projeto"} navItems={navItems} notificationCount={isPesquisador ? 1 : 0}>
       <div className="max-w-[800px] mx-auto">
         <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
           {/* Title */}
           <div className="p-6 border-b border-border">
-            <h3 className="text-base font-semibold">{editId ? "Editar Projeto" : "Nova Submissão"} - CEBIO Brasil</h3>
+            <h3 className="text-base font-semibold">{editId ? "Ajustar Projeto" : "Nova Submissão"} - CEBIO Brasil</h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              {editId ? "Atualize as informações do seu projeto" : "Preencha todas as informações necessárias para submeter seu projeto acadêmico"}
+              {editId 
+                ? "Faça os ajustes necessários e reenvie o projeto para análise. O ID do projeto será mantido." 
+                : "Preencha todas as informações necessárias para submeter seu projeto acadêmico"}
             </p>
+            {editId && (
+              <div className="mt-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700 font-medium">
+                📝 Editando projeto #{editId} — as alterações serão salvas no mesmo registro, sem criar duplicata.
+              </div>
+            )}
           </div>
 
           <form onSubmit={(e) => handleSubmit(e)} className="p-6">
