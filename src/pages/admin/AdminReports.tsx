@@ -184,8 +184,11 @@ const AdminReports = () => {
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [chartType, setChartType] = useState<ChartType>("columns");
   const chartsRef = useRef<HTMLDivElement>(null);
+  const ownerDropdownRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
   const [activeTab, setActiveTab] = useState("geral");
+  const [ownerSearch, setOwnerSearch] = useState("");
+  const [ownerDropdownOpen, setOwnerDropdownOpen] = useState(false);
 
   // Comparison state
   const [compareMode, setCompareMode] = useState(false);
@@ -198,6 +201,17 @@ const AdminReports = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Close owner dropdown on click outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ownerDropdownRef.current && !ownerDropdownRef.current.contains(e.target as Node)) {
+        setOwnerDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -427,17 +441,23 @@ const AdminReports = () => {
     setCategoryFilters([]);
     setUserTypeFilters([]);
     setOwnerFilters([]);
+    setOwnerSearch("");
     setStartDate(undefined);
     setEndDate(undefined);
   };
 
   const uniqueOwners = useMemo(() => {
     const seen = new Set<number>();
-    return projects.reduce<{ id: number; name: string }[]>((acc, p) => {
+    return projects.reduce<{ id: number; name: string; email?: string; cpf?: string }[]>((acc, p) => {
       if (!seen.has(p.owner_id)) {
         seen.add(p.owner_id);
         const owner = users.find(u => u.id === p.owner_id);
-        acc.push({ id: p.owner_id, name: owner?.name || p.owner?.name || `Usuário ${p.owner_id}` });
+        acc.push({
+          id: p.owner_id,
+          name: owner?.name || p.owner?.name || `Usuário ${p.owner_id}`,
+          email: owner?.email,
+          cpf: owner?.cpf,
+        });
       }
       return acc;
     }, []);
@@ -606,7 +626,75 @@ const AdminReports = () => {
             <MultiSelectFilter label="Status" options={STATUS_OPTIONS.filter(o => o.value !== "all")} selected={statusFilters} onChange={setStatusFilters} placeholder="Todos" />
             <MultiSelectFilter label="Categoria" options={categories.map(c => ({ value: c.name, label: c.name }))} selected={categoryFilters} onChange={setCategoryFilters} placeholder="Todas" />
             <MultiSelectFilter label="Tipo de Usuario" options={USER_TYPE_OPTIONS.filter(o => o.value !== "all")} selected={userTypeFilters} onChange={setUserTypeFilters} placeholder="Todos" />
-            <MultiSelectFilter label="Proprietario" options={uniqueOwners.map(o => ({ value: String(o.id), label: o.name }))} selected={ownerFilters} onChange={setOwnerFilters} placeholder="Todos" />
+            <div>
+              <label className="block text-[13px] font-semibold text-muted-foreground mb-2">Proprietário</label>
+              <div ref={ownerDropdownRef} className="relative">
+                <input
+                  type="text"
+                  value={ownerSearch}
+                  onChange={(e) => { setOwnerSearch(e.target.value); setOwnerDropdownOpen(true); }}
+                  onFocus={() => setOwnerDropdownOpen(true)}
+                  placeholder="Buscar por nome, CPF ou email..."
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                {ownerFilters.length > 0 && (
+                  <button onClick={() => { setOwnerFilters([]); setOwnerSearch(""); }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs">✕</button>
+                )}
+                {ownerDropdownOpen && (
+                  <div className="absolute z-50 mt-1 w-full bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {uniqueOwners
+                      .filter(o => {
+                        if (!ownerSearch) return true;
+                        const q = ownerSearch.toLowerCase().replace(/[.\-/]/g, "");
+                        return o.name.toLowerCase().includes(q)
+                          || (o.email && o.email.toLowerCase().includes(q))
+                          || (o.cpf && o.cpf.replace(/\D/g, "").includes(q));
+                      })
+                      .map(o => (
+                        <button
+                          key={o.id}
+                          onClick={() => {
+                            const id = String(o.id);
+                            setOwnerFilters(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+                          }}
+                          className={cn("w-full text-left px-3 py-2 hover:bg-muted transition-colors", ownerFilters.includes(String(o.id)) && "bg-muted font-medium")}
+                        >
+                          <span className="flex items-center gap-2">
+                            <input type="checkbox" checked={ownerFilters.includes(String(o.id))} readOnly className="w-3.5 h-3.5 accent-primary" />
+                            <span>
+                              <span className="text-sm font-medium text-foreground">{o.name}</span>
+                              <span className="block text-xs text-muted-foreground">
+                                {o.email || ""}
+                                {o.cpf ? ` · CPF: ${o.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}` : ""}
+                              </span>
+                            </span>
+                          </span>
+                        </button>
+                      ))}
+                    {uniqueOwners.filter(o => {
+                      if (!ownerSearch) return true;
+                      const q = ownerSearch.toLowerCase().replace(/[.\-/]/g, "");
+                      return o.name.toLowerCase().includes(q) || (o.email && o.email.toLowerCase().includes(q)) || (o.cpf && o.cpf.replace(/\D/g, "").includes(q));
+                    }).length === 0 && (
+                      <p className="px-3 py-2 text-sm text-muted-foreground">Nenhum usuário encontrado</p>
+                    )}
+                  </div>
+                )}
+                {ownerFilters.length > 0 && !ownerDropdownOpen && (
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {ownerFilters.map(id => {
+                      const o = uniqueOwners.find(u => String(u.id) === id);
+                      return (
+                        <span key={id} className="inline-flex items-center gap-1 text-[11px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                          {o?.name || id}
+                          <button onClick={() => setOwnerFilters(prev => prev.filter(x => x !== id))} className="hover:text-destructive">✕</button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
             <DatePickerInline label="Data Início" value={startDate} onChange={setStartDate} />
             <DatePickerInline label="Data Fim" value={endDate} onChange={setEndDate} />
           </div>
