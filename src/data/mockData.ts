@@ -55,7 +55,7 @@ export interface Project {
   keywords?: string[];
   category: string;
   academic_level: string;
-  status: "pendente" | "em_revisao" | "aprovado" | "rejeitado";
+  status: "pendente" | "em_revisao" | "aprovado" | "rejeitado" | "rascunho" | "aguardando_autores" | "devolvido";
   owner_id: number;
   owner_name: string;
   owner_email: string;

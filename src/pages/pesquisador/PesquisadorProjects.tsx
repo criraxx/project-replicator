@@ -8,6 +8,7 @@ import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { formatDateBrasilia } from "@/lib/formatters";
+import { useDemoData } from "@/hooks/useDemoData";
 
 const PesquisadorProjects = () => {
   const { user } = useAuth();
@@ -19,8 +20,15 @@ const PesquisadorProjects = () => {
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [processing, setProcessing] = useState(false);
+  const demo = useDemoData();
 
   const fetchData = async () => {
+    if (demo.isDemoMode) {
+      setProjects(demo.getProjects(true) || []);
+      setPendingApprovals([]);
+      setLoading(false);
+      return;
+    }
     try {
       const [projData, approvals] = await Promise.allSettled([
         api.listProjects({}),

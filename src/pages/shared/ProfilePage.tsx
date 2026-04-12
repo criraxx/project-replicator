@@ -5,13 +5,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import api from "@/services/api";
 import { formatDateBrasilia } from "@/lib/formatters";
+import { demoUsers } from "@/data/demoData";
 
 interface ProfilePageProps {
   backPath: string;
 }
 
 const ProfilePage = ({ backPath }: ProfilePageProps) => {
-  const { user } = useAuth();
+  const { user, isDemoMode } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -39,6 +40,16 @@ const ProfilePage = ({ backPath }: ProfilePageProps) => {
   };
 
   useEffect(() => {
+    if (isDemoMode && user) {
+      const du = demoUsers[user.role];
+      setProfile({
+        name: du.name, email: du.email, phone: "(62) 99999-0000", institution: du.institution,
+        department: "Departamento de Bioinsumos", cpf: du.cpf || "", birth_date: "1985-03-15",
+        registration_number: "REG-" + du.id, role: du.role,
+      });
+      setLoading(false);
+      return;
+    }
     const fetchProfile = async () => {
       try {
         const data = await api.getProfile();

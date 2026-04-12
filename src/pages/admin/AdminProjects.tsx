@@ -6,6 +6,7 @@ import { ADMIN_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { useDemoData } from "@/hooks/useDemoData";
 
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
 import { formatDateBrasilia } from "@/lib/formatters";
@@ -33,7 +34,18 @@ const AdminProjects = () => {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const { toast } = useToast();
 
+  const demo = useDemoData();
+
   useEffect(() => {
+    if (demo.isDemoMode) {
+      const p = demo.getProjects()!;
+      setProjects(p);
+      setStats(demo.getStats()!);
+      setCategories(demo.getCategories()!);
+      setLevels([{ id: 1, name: "Graduação" }, { id: 2, name: "Mestrado" }, { id: 3, name: "Doutorado" }, { id: 4, name: "Pós-Doutorado" }]);
+      setLoading(false);
+      return;
+    }
     const fetchAll = async () => {
       try {
         const [projData, statsData, catsData, lvlsData] = await Promise.allSettled([

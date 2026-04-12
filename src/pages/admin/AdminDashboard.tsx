@@ -8,6 +8,7 @@ import { ADMIN_NAV } from "@/constants/navigation";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { statusColors, statusLabels } from "@/constants/ui";
+import { useDemoData } from "@/hooks/useDemoData";
 
 const COLORS = ["hsl(170,37%,30%)", "hsl(43,96%,56%)", "hsl(210,72%,46%)", "hsl(3,81%,55%)"];
 
@@ -21,7 +22,18 @@ const AdminDashboard = () => {
   const [levels, setLevels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const demo = useDemoData();
+
   useEffect(() => {
+    if (demo.isDemoMode) {
+      setStats(demo.getStats()!);
+      setUsers(demo.getUsers()!);
+      setProjects(demo.getProjects()!);
+      setCategories(demo.getCategories()!);
+      setLevels([{ id: 1, name: "Graduação" }, { id: 2, name: "Mestrado" }, { id: 3, name: "Doutorado" }, { id: 4, name: "Pós-Doutorado" }]);
+      setLoading(false);
+      return;
+    }
     const fetchAll = async () => {
       try {
         const [statsData, usersData, projectsData, catsData, levelsData] = await Promise.allSettled([

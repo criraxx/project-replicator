@@ -7,6 +7,7 @@ import { BOLSISTA_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
 import { formatDateBrasilia, formatDateTimeBrasilia } from "@/lib/formatters";
+import { useDemoData } from "@/hooks/useDemoData";
 
 const BolsistaHistory = () => {
   const { user } = useAuth();
@@ -18,8 +19,15 @@ const BolsistaHistory = () => {
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"projetos" | "atividades">("projetos");
+  const demo = useDemoData();
 
   useEffect(() => {
+    if (demo.isDemoMode) {
+      setProjects(demo.getProjects(true) || []);
+      setAuditLogs((demo.getAuditLogs() || []).filter(l => l.user_id === user?.id));
+      setLoading(false);
+      return;
+    }
     const fetchData = async () => {
       try {
         const [projectData, auditData] = await Promise.all([
