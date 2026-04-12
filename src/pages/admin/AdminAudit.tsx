@@ -99,6 +99,53 @@ const AdminAudit = () => {
 
   const clearFilters = () => { setSearch(""); setSeverityFilters([]); setActionFilters([]); setSelectedUserId(""); };
 
+  const buildExportPayload = () => {
+    const userName = viewMode === "meus"
+      ? currentUser?.name
+      : viewMode === "usuario"
+        ? logUsers.find(u => u.id === Number(selectedUserId))?.name
+        : undefined;
+    return {
+      logs: filtered.map(l => ({
+        action: l.action,
+        details: l.details,
+        user_name: l.user?.name || allUsers.find(u => u.id === l.user_id)?.name || `Usuário #${l.user_id}`,
+        ip_address: l.ip_address,
+        severity: l.severity,
+        created_at: l.created_at,
+      })),
+      viewMode,
+      userName,
+    };
+  };
+
+  const exportLogs = async (format: "pdf" | "excel") => {
+    setExporting(true);
+    try {
+      const token = localStorage.getItem("cebio_token");
+      const apiBase = import.meta.env.VITE_API_URL || "/api";
+      const url = format === "pdf" ? "/audit/export/pdf" : "/audit/export/excel";
+      const ext = format === "pdf" ? "pdf" : "xlsx";
+      const res = await fetch(`${apiBase}${url}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: token ? `Bearer ${token}` : "" },
+        body: JSON.stringify(buildExportPayload()),
+      });
+      if (!res.ok) throw new Error("Falha na exportação");
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `auditoria_cebio_${new Date().toISOString().slice(0, 10)}.${ext}`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast({ title: "Exportação concluída", description: `Arquivo ${ext.toUpperCase()} baixado com sucesso.` });
+    } catch {
+      toast({ title: "Erro", description: "Falha ao exportar logs.", variant: "destructive" });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <AppLayout pageName="Auditoria" navItems={ADMIN_NAV} notificationCount={0}>
       {/* Banner */}
