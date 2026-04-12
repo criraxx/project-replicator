@@ -160,9 +160,21 @@ const AdminAudit = () => {
               <span className="flex items-center gap-1.5 text-[12px] sm:text-[13px] opacity-90"><Download className="w-4 h-4" /> Exportação</span>
             </div>
           </div>
-          <button className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 self-start">
-            <Download className="w-4 h-4" /> Exportar Logs
-          </button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button disabled={exporting} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 disabled:opacity-50 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 self-start">
+                <Download className="w-4 h-4" /> {exporting ? "Exportando..." : "Exportar Logs"}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-1" align="end">
+              <button onClick={() => exportLogs("pdf")} className="w-full text-left px-3 py-2 text-sm rounded hover:bg-muted flex items-center gap-2">
+                <Download className="w-4 h-4" /> Exportar PDF
+              </button>
+              <button onClick={() => exportLogs("excel")} className="w-full text-left px-3 py-2 text-sm rounded hover:bg-muted flex items-center gap-2">
+                <FileSpreadsheet className="w-4 h-4" /> Exportar Excel
+              </button>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
