@@ -422,8 +422,26 @@ const AdminReports = () => {
     });
   };
 
-  const periodAProjects = useMemo(() => filterByPeriod(periodA_start, periodA_end), [projects, periodA_start, periodA_end]);
-  const periodBProjects = useMemo(() => filterByPeriod(periodB_start, periodB_end), [projects, periodB_start, periodB_end]);
+  const filterByUser = (userId: number) => {
+    return projects.filter(p => p.owner_id === userId);
+  };
+
+  const periodMetrics = useMemo(() => {
+    return periods.map(p => ({
+      label: p.label,
+      metrics: getMetrics(filterByPeriod(p.start, p.end)),
+    }));
+  }, [projects, periods]);
+
+  const userMetrics = useMemo(() => {
+    return compareUserIds.map(uid => {
+      const u = users.find((x: any) => x.id === uid);
+      return {
+        label: u?.name || `Usuário #${uid}`,
+        metrics: getMetrics(filterByUser(uid)),
+      };
+    });
+  }, [projects, users, compareUserIds]);
 
   const getMetrics = (list: any[]) => {
     const total = list.length;
@@ -436,8 +454,30 @@ const AdminReports = () => {
     return { total, approved, rejected, returned, pending, approvalRate, uniqueAuthors };
   };
 
-  const metricsA = useMemo(() => getMetrics(periodAProjects), [periodAProjects]);
-  const metricsB = useMemo(() => getMetrics(periodBProjects), [periodBProjects]);
+  const addPeriod = () => {
+    const letter = String.fromCharCode(65 + periods.length);
+    setPeriods(prev => [...prev, { label: `Período ${letter}` }]);
+  };
+
+  const removePeriod = (index: number) => {
+    if (periods.length <= 2) return;
+    setPeriods(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updatePeriod = (index: number, field: "start" | "end", value: Date | undefined) => {
+    setPeriods(prev => prev.map((p, i) => i === index ? { ...p, [field]: value } : p));
+  };
+
+  // Close compare user dropdown on click outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (compareUserDropdownRef.current && !compareUserDropdownRef.current.contains(e.target as Node)) {
+        setCompareUserDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const approvalRate = filtered.length > 0 ? Math.round((filtered.filter(p => p.status === "aprovado").length / filtered.length) * 100) : 0;
 
