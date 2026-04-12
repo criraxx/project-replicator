@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Search, Shield, AlertTriangle, Clock, Users, Download, Inbox, Info, User, Eye, FileSpreadsheet } from "lucide-react";
 import { formatDateTimeBrasilia } from "@/lib/formatters";
 import AppLayout from "@/components/layout/AppLayout";
@@ -207,7 +207,7 @@ const AdminAudit = () => {
             <Eye className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-semibold">Visualização</span>
           </div>
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
+          <Tabs value={viewMode} onValueChange={(v) => { setViewMode(v as ViewMode); setUserSearch(""); setSelectedUserId(""); setUserDropdownOpen(false); }}>
             <TabsList>
               <TabsTrigger value="geral"><Shield className="w-3.5 h-3.5 mr-1.5" />Logs Gerais</TabsTrigger>
               <TabsTrigger value="usuario"><User className="w-3.5 h-3.5 mr-1.5" />Por Usuário</TabsTrigger>
