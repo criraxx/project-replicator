@@ -186,8 +186,8 @@ router.delete('/projects/:id/files/:fileId', authMiddleware, async (req: Request
   }
 });
 
-// GET /api/projects/:id/files/:fileId/download - Download de arquivo (Aberto para permitir exibição em <img> e <a>)
-router.get('/projects/:id/files/:fileId/download', async (req: Request, res: Response) => {
+// GET /api/projects/:id/files/:fileId/download - Download de arquivo (protegido por autenticação)
+router.get('/projects/:id/files/:fileId/download', authMiddleware, async (req: Request, res: Response) => {
   try {
     const file = await fileRepo.findOne({
       where: { id: Number(req.params.fileId), project_id: Number(req.params.id) },

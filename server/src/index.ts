@@ -151,6 +151,13 @@ app.use(errorHandler);
 
 const startServer = async () => {
   try {
+    // Validar JWT_SECRET
+    const jwtSecret = process.env.JWT_SECRET || '';
+    if (jwtSecret.length < 32) {
+      logger.error('❌ JWT_SECRET muito fraco! Use uma chave de pelo menos 32 caracteres.');
+      process.exit(1);
+    }
+
     // Inicializar banco de dados
     await AppDataSource.initialize();
     logger.info('✅ Database connection established');
