@@ -312,10 +312,6 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
                     {isPending && (
                       <button
                         onClick={async () => {
-                          if (demo.isDemoMode) {
-                            toast({ title: "Notificação enviada!", description: `Lembrete enviado para ${author.name}.` });
-                            return;
-                          }
                           try {
                             await api.sendNotification({
                               user_id: author.user_id || author.id,
