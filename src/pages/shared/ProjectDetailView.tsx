@@ -9,7 +9,6 @@ import { ADMIN_NAV, PESQUISADOR_NAV, BOLSISTA_NAV } from "@/constants/navigation
 import { statusColors, statusLabels } from "@/constants/ui";
 
 import { useToast } from "@/hooks/use-toast";
-import { useDemoData } from "@/hooks/useDemoData";
 import { usePolling } from "@/hooks/usePolling";
 
 interface ProjectDetailViewProps {
@@ -22,7 +21,6 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get("id");
   const { toast } = useToast();
-  const demo = useDemoData();
 
   const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -37,11 +35,6 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
 
   const loadProject = useCallback(async () => {
     if (!projectId) return;
-    if (demo.isDemoMode) {
-      setProject(demo.getProjectById(Number(projectId)));
-      setLoading(false);
-      return;
-    }
     try {
       const data = await api.getProject(Number(projectId));
       setProject(data);
@@ -50,13 +43,13 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
     } finally {
       setLoading(false);
     }
-  }, [projectId, demo.isDemoMode]);
+  }, [projectId]);
 
   // Initial load
   useEffect(() => { loadProject(); }, [projectId]);
 
   // Poll for updates every 20s
-  usePolling(loadProject, 20000, !demo.isDemoMode && !!projectId);
+  usePolling(loadProject, 20000, !!projectId);
 
   const formatDate = (d: string) => formatDateBrasilia(d);
   const formatDateTime = (d: string) => formatDateTimeBrasilia(d);
@@ -319,10 +312,6 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
                     {isPending && (
                       <button
                         onClick={async () => {
-                          if (demo.isDemoMode) {
-                            toast({ title: "Notificação enviada!", description: `Lembrete enviado para ${author.name}.` });
-                            return;
-                          }
                           try {
                             await api.sendNotification({
                               user_id: author.user_id || author.id,

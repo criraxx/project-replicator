@@ -6,7 +6,6 @@ import { ADMIN_NAV } from "@/constants/navigation";
 import { severityColors } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
-import { useDemoData } from "@/hooks/useDemoData";
 import { useAuth } from "@/contexts/AuthContext";
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,7 +52,6 @@ const AdminAudit = () => {
   const [allUsers, setAllUsers] = useState<{ id: number; name: string; email?: string; cpf?: string }[]>([]);
   const [exporting, setExporting] = useState(false);
   const { toast } = useToast();
-  const demo = useDemoData();
   const { user: currentUser } = useAuth();
   const userDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -69,11 +67,6 @@ const AdminAudit = () => {
   }, []);
 
   useEffect(() => {
-    if (demo.isDemoMode) {
-      setLogs(demo.getAuditLogs()!.map(l => ({ ...l, user: { name: l.user_name } })));
-      setLoading(false);
-      return;
-    }
     const fetchData = async () => {
       try {
         const [logData, userData] = await Promise.allSettled([

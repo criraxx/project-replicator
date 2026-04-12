@@ -8,7 +8,6 @@ import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { formatDateBrasilia } from "@/lib/formatters";
-import { useDemoData } from "@/hooks/useDemoData";
 import { usePolling } from "@/hooks/usePolling";
 
 const PesquisadorProjects = () => {
@@ -21,15 +20,8 @@ const PesquisadorProjects = () => {
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [processing, setProcessing] = useState(false);
-  const demo = useDemoData();
 
   const fetchData = useCallback(async () => {
-    if (demo.isDemoMode) {
-      setProjects(demo.getProjects(true) || []);
-      setPendingApprovals([]);
-      setLoading(false);
-      return;
-    }
     try {
       const [projData, approvals] = await Promise.allSettled([
         api.listProjects({}),
@@ -39,7 +31,7 @@ const PesquisadorProjects = () => {
       setPendingApprovals(approvals.status === "fulfilled" ? approvals.value || [] : []);
     } catch { /* silent */ }
     setLoading(false);
-  }, [demo.isDemoMode]);
+  }, []);
 
   usePolling(fetchData, 30000);
 

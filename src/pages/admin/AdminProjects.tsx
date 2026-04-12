@@ -6,7 +6,6 @@ import { ADMIN_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
-import { useDemoData } from "@/hooks/useDemoData";
 import { usePolling } from "@/hooks/usePolling";
 
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
@@ -35,18 +34,7 @@ const AdminProjects = () => {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const { toast } = useToast();
 
-  const demo = useDemoData();
-
   const fetchAll = useCallback(async () => {
-    if (demo.isDemoMode) {
-      const p = demo.getProjects()!;
-      setProjects(p);
-      setStats(demo.getStats()!);
-      setCategories(demo.getCategories()!);
-      setLevels([{ id: 1, name: "Graduação" }, { id: 2, name: "Mestrado" }, { id: 3, name: "Doutorado" }, { id: 4, name: "Pós-Doutorado" }]);
-      setLoading(false);
-      return;
-    }
     try {
       const [projData, statsData, catsData, lvlsData] = await Promise.allSettled([
         api.listProjects({ limit: 100 }),
@@ -70,7 +58,7 @@ const AdminProjects = () => {
       setLevels([]);
     }
     setLoading(false);
-  }, [demo.isDemoMode]);
+  }, []);
 
   usePolling(fetchAll, 30000);
 

@@ -6,7 +6,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ADMIN_NAV, PESQUISADOR_NAV, BOLSISTA_NAV } from "@/constants/navigation";
 import api from "@/services/api";
 import { formatDateBrasilia } from "@/lib/formatters";
-import { useDemoData } from "@/hooks/useDemoData";
 import { usePolling } from "@/hooks/usePolling";
 
 const NotificationsPage = ({ backPath }: { backPath?: string }) => {
@@ -16,7 +15,6 @@ const NotificationsPage = ({ backPath }: { backPath?: string }) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
-  const demo = useDemoData();
 
   const pathRole = location.pathname.startsWith("/admin") ? "admin" : location.pathname.startsWith("/pesquisador") ? "pesquisador" : "bolsista";
   const navItems = pathRole === "admin" ? ADMIN_NAV : pathRole === "pesquisador" ? PESQUISADOR_NAV : BOLSISTA_NAV;
@@ -24,18 +22,13 @@ const NotificationsPage = ({ backPath }: { backPath?: string }) => {
   const back = backPath || `${roleBase}/dashboard`;
 
   const fetchNotifications = useCallback(async () => {
-    if (demo.isDemoMode) {
-      setNotifications(demo.getNotifications()!.map(n => ({ ...n, is_read: n.read })));
-      setLoading(false);
-      return;
-    }
     try {
       const data = await api.listNotifications();
       setNotifications(Array.isArray(data) ? data : (data as any).notifications || []);
     } catch { /* ignore */ } finally {
       setLoading(false);
     }
-  }, [demo.isDemoMode]);
+  }, []);
 
   // usePolling handles both initial fetch + periodic refresh; for demo mode, just fetch once
   usePolling(fetchNotifications, 15000);
