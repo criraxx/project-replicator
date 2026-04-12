@@ -71,8 +71,16 @@ export class UserService {
       return null;
     }
 
-    if (!verifyPassword(password, user.hashed_password)) {
+    const result = verifyPassword(password, user.hashed_password);
+    if (!result.valid) {
       return null;
+    }
+
+    // Auto-migrate SHA256 → bcrypt
+    if (result.needsRehash) {
+      await this.userRepository.update(user.id, {
+        hashed_password: hashPassword(password),
+      });
     }
 
     return user;
@@ -113,7 +121,8 @@ export class UserService {
       throw new AppError(404, 'Usuário não encontrado');
     }
 
-    if (!verifyPassword(oldPassword, user.hashed_password)) {
+    const result = verifyPassword(oldPassword, user.hashed_password);
+    if (!result.valid) {
       throw new AppError(400, 'Senha atual incorreta');
     }
 

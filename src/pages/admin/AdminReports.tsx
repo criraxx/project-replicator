@@ -292,7 +292,8 @@ const AdminReports = () => {
     setExporting(true);
     try {
       const token = localStorage.getItem("cebio_token");
-      const res = await fetch(`https://8000-ic0wocwek8fkyj0l4wen8-a1d98c48.us2.manus.computer/api${url}`, {
+      const apiBase = import.meta.env.VITE_API_URL || '/api';
+      const res = await fetch(`${apiBase}${url}`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
