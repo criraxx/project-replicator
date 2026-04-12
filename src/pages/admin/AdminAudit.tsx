@@ -301,13 +301,6 @@ const AdminAudit = () => {
                 </div>
               )}
             </div>
-                    ))}
-                  {logUsers.filter(u => !userSearch || u.name.toLowerCase().includes(userSearch.toLowerCase())).length === 0 && (
-                    <p className="px-3 py-2 text-sm text-muted-foreground">Nenhum usuário encontrado</p>
-                  )}
-                </div>
-              )}
-            </div>
           )}
         </div>
 
