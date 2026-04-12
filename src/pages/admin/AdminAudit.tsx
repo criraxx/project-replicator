@@ -217,16 +217,44 @@ const AdminAudit = () => {
 
           {/* User selector when "Por Usuário" is active */}
           {viewMode === "usuario" && (
-            <select
-              value={selectedUserId}
-              onChange={(e) => setSelectedUserId(e.target.value)}
-              className="px-3 py-2 border border-border rounded-lg text-sm bg-card min-w-[200px]"
-            >
-              <option value="">Selecione um usuário...</option>
-              {logUsers.map(u => (
-                <option key={u.id} value={String(u.id)}>{u.name}</option>
-              ))}
-            </select>
+            <div className="relative min-w-[250px]">
+              <input
+                type="text"
+                value={userSearch}
+                onChange={(e) => { setUserSearch(e.target.value); setUserDropdownOpen(true); }}
+                onFocus={() => setUserDropdownOpen(true)}
+                placeholder="Digitar para filtrar usuário..."
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              {selectedUserId && (
+                <button
+                  onClick={() => { setSelectedUserId(""); setUserSearch(""); }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
+                >✕</button>
+              )}
+              {userDropdownOpen && (
+                <div className="absolute z-50 mt-1 w-full bg-card border border-border rounded-lg shadow-lg max-h-52 overflow-y-auto">
+                  {logUsers
+                    .filter(u => !userSearch || u.name.toLowerCase().includes(userSearch.toLowerCase()))
+                    .map(u => (
+                      <button
+                        key={u.id}
+                        onClick={() => {
+                          setSelectedUserId(String(u.id));
+                          setUserSearch(u.name);
+                          setUserDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors ${String(u.id) === selectedUserId ? "bg-muted font-medium" : ""}`}
+                      >
+                        {u.name}
+                      </button>
+                    ))}
+                  {logUsers.filter(u => !userSearch || u.name.toLowerCase().includes(userSearch.toLowerCase())).length === 0 && (
+                    <p className="px-3 py-2 text-sm text-muted-foreground">Nenhum usuário encontrado</p>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
 
