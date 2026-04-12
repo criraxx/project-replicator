@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ADMIN_NAV, PESQUISADOR_NAV, BOLSISTA_NAV } from "@/constants/navigation";
 import api from "@/services/api";
 import { formatDateBrasilia } from "@/lib/formatters";
+import { useDemoData } from "@/hooks/useDemoData";
 
 const NotificationsPage = ({ backPath }: { backPath?: string }) => {
   const { user } = useAuth();
@@ -14,14 +15,19 @@ const NotificationsPage = ({ backPath }: { backPath?: string }) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
+  const demo = useDemoData();
 
-  // Derive role from current URL path to avoid mismatch
   const pathRole = location.pathname.startsWith("/admin") ? "admin" : location.pathname.startsWith("/pesquisador") ? "pesquisador" : "bolsista";
   const navItems = pathRole === "admin" ? ADMIN_NAV : pathRole === "pesquisador" ? PESQUISADOR_NAV : BOLSISTA_NAV;
   const roleBase = `/${pathRole}`;
   const back = backPath || `${roleBase}/dashboard`;
 
   const fetchNotifications = async () => {
+    if (demo.isDemoMode) {
+      setNotifications(demo.getNotifications()!.map(n => ({ ...n, is_read: n.read })));
+      setLoading(false);
+      return;
+    }
     try {
       const data = await api.listNotifications();
       setNotifications(Array.isArray(data) ? data : (data as any).notifications || []);
