@@ -5,29 +5,28 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Copiar arquivos de dependências
-COPY package.json pnpm-lock.yaml ./
+# Copiar package.json (npm install gera o lock automaticamente)
+COPY package.json ./
 
-# Instalar dependências de build
-RUN npm install -g pnpm && pnpm install --no-frozen-lockfile
+# Instalar todas as dependências (incluindo dev para compilar TS)
+RUN npm install
 
 # Copiar código fonte
 COPY . .
 
 # Compilar TypeScript
-RUN pnpm run build
+RUN npm run build
 
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Copiar arquivos de dependências
-COPY package.json pnpm-lock.yaml ./
+COPY package.json ./
 
 # Instalar apenas dependências de produção
-RUN npm install -g pnpm && pnpm install --prod --no-frozen-lockfile
+RUN npm install --omit=dev
 
-# Copiar build final
+# Copiar build compilado
 COPY --from=build /app/dist ./dist
 
 # Criar pasta de uploads
