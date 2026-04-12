@@ -37,6 +37,7 @@ const AdminAudit = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("geral");
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [allUsers, setAllUsers] = useState<{ id: number; name: string }[]>([]);
+  const [exporting, setExporting] = useState(false);
   const { toast } = useToast();
   const demo = useDemoData();
   const { user: currentUser } = useAuth();
