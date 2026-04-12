@@ -99,6 +99,15 @@ class ApiClient {
     });
   }
 
+  async logout() {
+    try {
+      await this.request<any>('POST', '/logout');
+    } catch {
+      // silently fail
+    }
+    this.clearToken();
+  }
+
   // ============================================
   // USERS
   // ============================================

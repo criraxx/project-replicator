@@ -21,9 +21,21 @@ const SEVERITY_OPTIONS = [
 
 const ACTION_OPTIONS = [
   { value: "LOGIN", label: "Login" },
-  { value: "PROJECT", label: "Project" },
-  { value: "USER", label: "User" },
-  { value: "SYSTEM", label: "System" },
+  { value: "LOGOUT", label: "Logout" },
+  { value: "CREATE_PROJECT", label: "Criar Projeto" },
+  { value: "UPDATE_PROJECT", label: "Editar Projeto" },
+  { value: "APPROVE", label: "Aprovação" },
+  { value: "REJECT", label: "Rejeição" },
+  { value: "RETURN", label: "Devolução" },
+  { value: "VIEW_PROJECT", label: "Visualizar Projeto" },
+  { value: "DELETE", label: "Exclusão" },
+  { value: "USER", label: "Usuário" },
+  { value: "PASSWORD", label: "Senha" },
+  { value: "CATEGORY", label: "Categoria" },
+  { value: "UPLOAD", label: "Upload" },
+  { value: "COAUTHOR", label: "Coautoria" },
+  { value: "NOTIFICATION", label: "Notificação" },
+  { value: "PROFILE", label: "Perfil" },
 ];
 
 type ViewMode = "geral" | "usuario" | "meus";

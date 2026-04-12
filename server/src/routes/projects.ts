@@ -154,6 +154,17 @@ router.get('/projects/:id', authMiddleware, async (req: Request, res: Response) 
     if (!project) {
       return res.status(404).json({ error: 'Projeto nao encontrado' });
     }
+
+    await auditService.logAction(
+      'VIEW_PROJECT',
+      req.user!.id,
+      Number(req.params.id),
+      undefined,
+      `Visualizou projeto: ${project.title}`,
+      req.ip || 'unknown',
+      'low'
+    );
+
     res.json(project);
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Erro interno' });

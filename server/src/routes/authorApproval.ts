@@ -1,9 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { AuthorApprovalService } from '../services/AuthorApprovalService';
 import { authMiddleware } from '../utils/auth';
+import { AuditService } from '../services/AuditService';
 
 const router = Router();
 const authorApprovalService = new AuthorApprovalService();
+const auditService = new AuditService();
 
 // GET /api/author-approvals/pending — get my pending co-author requests
 router.get('/author-approvals/pending', authMiddleware, async (req: Request, res: Response) => {
@@ -29,6 +31,7 @@ router.get('/projects/:id/authors', authMiddleware, async (req: Request, res: Re
 router.post('/author-approvals/:id/approve', authMiddleware, async (req: Request, res: Response) => {
   try {
     const result = await authorApprovalService.approveParticipation(Number(req.params.id), req.user!.id);
+    await auditService.logAction('APPROVE_COAUTHOR', req.user!.id, undefined, undefined, `Coautoria aprovada: ID ${req.params.id}`, req.ip || 'unknown', 'medium');
     res.json(result);
   } catch (error: any) {
     res.status(error.statusCode || 500).json({ error: error.message || 'Erro interno' });
@@ -40,6 +43,7 @@ router.post('/author-approvals/:id/reject', authMiddleware, async (req: Request,
   try {
     const { reason } = req.body;
     const result = await authorApprovalService.rejectParticipation(Number(req.params.id), req.user!.id, reason);
+    await auditService.logAction('REJECT_COAUTHOR', req.user!.id, undefined, undefined, `Coautoria rejeitada: ID ${req.params.id}, motivo: ${reason || 'N/A'}`, req.ip || 'unknown', 'medium');
     res.json(result);
   } catch (error: any) {
     res.status(error.statusCode || 500).json({ error: error.message || 'Erro interno' });

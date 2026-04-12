@@ -106,14 +106,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsDemoMode(true);
   }, []);
 
-  const logout = useCallback(() => {
-    api.clearToken();
+  const logout = useCallback(async () => {
+    if (!isDemoMode) {
+      await api.logout();
+    } else {
+      api.clearToken();
+    }
     localStorage.removeItem("cebio_user");
     localStorage.removeItem("cebio_token");
     localStorage.removeItem("cebio_demo_role");
     setUser(null);
     setIsDemoMode(false);
-  }, []);
+  }, [isDemoMode]);
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, isDemoMode, login, loginDemo, logout }}>
