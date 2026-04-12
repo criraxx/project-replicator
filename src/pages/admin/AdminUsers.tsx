@@ -7,7 +7,7 @@ import { roleBadge } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
-import { type User } from "@/data/mockData";
+import { type User } from "@/data/types";
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
 import { formatCpf, formatDate, formatPhone, parseDateToISO, validatePassword } from "@/lib/formatters";
 import { formatDateBrasilia } from "@/lib/formatters";
