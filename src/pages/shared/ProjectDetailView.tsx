@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Image, ExternalLink, CheckCircle, XCircle, Clock, AlertTriangle, Download, Eye, X, Edit3, Users, RotateCcw } from "lucide-react";
+import { ArrowLeft, FileText, Image, ExternalLink, CheckCircle, XCircle, Clock, AlertTriangle, Download, Eye, X, Edit3, Users, RotateCcw, Bell, Send } from "lucide-react";
 import { formatDateBrasilia, formatDateTimeBrasilia } from "@/lib/formatters";
 import AppLayout from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -234,8 +234,8 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
         </div>
       </div>
 
-      {/* Admin Actions */}
-      {isAdmin && (project.status === "pendente" || project.status === "em_revisao" || project.status === "aguardando_autores") && (
+      {/* Admin Actions - only for pendente/em_revisao (NOT aguardando_autores) */}
+      {isAdmin && (project.status === "pendente" || project.status === "em_revisao") && (
         <div className="bg-card border border-border rounded-xl p-5 mb-5">
           <h3 className="text-base font-semibold text-primary mb-4">Ações do Administrador</h3>
           <div className="mb-4">
@@ -271,6 +271,89 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
               <RotateCcw className="w-4 h-4" /> Devolver para Correções
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Admin - Aguardando Colaboradores Panel */}
+      {isAdmin && project.status === "aguardando_autores" && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-5">
+          <h3 className="text-base font-semibold text-amber-700 mb-2 flex items-center gap-2">
+            <Users className="w-5 h-5" /> Aguardando Aprovação dos Colaboradores
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Este projeto não pode ser avaliado ainda. É necessário que todos os colaboradores aprovem sua participação antes da análise administrativa.
+          </p>
+
+          {/* Authors status list */}
+          <div className="space-y-2 mb-4">
+            {(project.authors || []).filter((a: any) => !a.is_owner).map((author: any, i: number) => {
+              const isPending = author.approval_status === "pendente";
+              const isApproved = author.approval_status === "aprovado";
+              const isRejected = author.approval_status === "rejeitado";
+              return (
+                <div key={i} className="flex items-center justify-between bg-card border border-border rounded-lg p-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      isApproved ? "bg-cebio-green-bg text-primary" : isRejected ? "bg-cebio-red-bg text-cebio-red" : "bg-cebio-yellow-bg text-cebio-yellow"
+                    }`}>
+                      {isApproved ? <CheckCircle className="w-4 h-4" /> : isRejected ? <XCircle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-foreground">{author.name}</div>
+                      <div className="text-xs text-muted-foreground">{author.email || author.cpf || "—"} • {author.role_in_project || author.role || "Colaborador"}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
+                      isApproved ? "bg-cebio-green-bg text-primary" : isRejected ? "bg-cebio-red-bg text-cebio-red" : "bg-cebio-yellow-bg text-cebio-yellow"
+                    }`}>
+                      {isApproved ? "Aprovado" : isRejected ? "Rejeitado" : "Pendente"}
+                    </span>
+                    {isPending && (
+                      <button
+                        onClick={async () => {
+                          if (isDemoMode) {
+                            toast({ title: "Notificação enviada!", description: `Lembrete enviado para ${author.name}.` });
+                            return;
+                          }
+                          try {
+                            await api.sendNotificationToUser(author.user_id || author.id, {
+                              title: "Sua confirmação é necessária",
+                              message: `Você foi adicionado como colaborador no projeto "${project.title}". Acesse o sistema para revisar e confirmar sua participação.`,
+                              type: "warning",
+                            });
+                            toast({ title: "Notificação enviada!", description: `Lembrete enviado para ${author.name}.` });
+                          } catch (err: any) {
+                            toast({ title: "Erro", description: err.message || "Não foi possível enviar a notificação.", variant: "destructive" });
+                          }
+                        }}
+                        disabled={actionLoading}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-700 border border-amber-300 rounded-lg text-xs font-semibold hover:bg-amber-200 transition-colors disabled:opacity-50"
+                      >
+                        <Bell className="w-3.5 h-3.5" /> Notificar
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Summary */}
+          {(() => {
+            const nonOwners = (project.authors || []).filter((a: any) => !a.is_owner);
+            const pendingCount = nonOwners.filter((a: any) => a.approval_status === "pendente").length;
+            const approvedCount = nonOwners.filter((a: any) => a.approval_status === "aprovado").length;
+            const rejectedCount = nonOwners.filter((a: any) => a.approval_status === "rejeitado").length;
+            return (
+              <div className="flex items-center gap-4 text-xs text-muted-foreground bg-card border border-border rounded-lg p-3">
+                <span className="font-medium">Resumo:</span>
+                <span className="text-primary font-semibold">{approvedCount} aprovado(s)</span>
+                <span className="text-cebio-yellow font-semibold">{pendingCount} pendente(s)</span>
+                {rejectedCount > 0 && <span className="text-cebio-red font-semibold">{rejectedCount} rejeitado(s)</span>}
+              </div>
+            );
+          })()}
         </div>
       )}
 
