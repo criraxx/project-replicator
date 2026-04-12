@@ -257,6 +257,8 @@ router.put('/projects/:id', authMiddleware, ...validateUpdateProject, handleVali
       // If project is being submitted ('pendente') and has co-authors, 
       // it should go to 'aguardando_autores' until all approve
       if (!isAdmin && projectUpdates.status === 'pendente' && authors && authors.length > 1) {
+        // Reset all non-owner author statuses so they need to re-approve
+        await authorApprovalService.resetAuthorStatuses(targetProjectId);
         project.status = 'aguardando_autores';
         await AppDataSource.getRepository('Project').save(project);
       }
