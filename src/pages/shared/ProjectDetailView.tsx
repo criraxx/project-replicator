@@ -208,7 +208,11 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
         </button>
         {(project.status === "rascunho" || project.status === "devolvido") && project.owner_id === user?.id && (
           <button 
-            onClick={() => navigate(`/${user?.role === "bolsista" ? "bolsista" : "pesquisador"}/submissao?edit=${project.id}`)} 
+            onClick={() => {
+              const basePath = user?.role === "bolsista" ? "/bolsista" : "/pesquisador";
+              const route = project.status === "rascunho" ? `${basePath}/submissao?edit=${project.id}` : `${basePath}/editar?edit=${project.id}`;
+              navigate(route);
+            }} 
             className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-secondary transition-colors"
           >
             <Edit3 className="w-4 h-4" /> {project.status === "rascunho" ? "Editar Rascunho" : "Editar e Reenviar"}
