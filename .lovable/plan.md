@@ -1,88 +1,54 @@
 
 
-## Plano: Documento de Metodologia e Tecnologias do Sistema CEBIO Brasil
+## Plano: Gerar SQL Limpo e Completo para o Banco de Dados
 
-### Resumo
+### O que sera feito
 
-Gerar um documento PDF profissional descrevendo toda a metodologia do projeto, incluindo as tecnologias utilizadas, a arquitetura, os modulos funcionais e a logica de cada funcionalidade — tanto no frontend quanto no backend.
+Criar um novo arquivo `server/cebio_database_production.sql` — um SQL limpo, organizado e pronto para producao, substituindo o `cebio_database.sql` desatualizado.
 
-### O que o documento contera
+### Problemas no SQL atual
 
-**1. Introducao e Visao Geral do Sistema**
-- Descricao do CEBIO Brasil como plataforma de gestao de projetos academicos/cientificos
-- Tres perfis de acesso: Administrador, Pesquisador, Bolsista
+- O `cebio_database.sql` tem o ENUM de status de projetos incompleto (falta `rascunho`, `aguardando_autores`, `devolvido`)
+- Contem dados de teste misturados com a estrutura
+- A tabela `project_links` nao tem os campos `link_type` e `description` que o dump atualizado mostra
+- Senhas em SHA256 puro (o backend ja migra para bcrypt, mas o seed deve usar bcrypt)
 
-**2. Arquitetura do Sistema**
-- Diagrama textual da arquitetura: Frontend SPA → Nginx (proxy reverso) → Backend API → MySQL
-- Separacao clara entre cliente e servidor
-- Comunicacao via API REST com caminhos relativos (`/api`)
+### Conteudo do novo SQL
 
-**3. Stack Tecnologico Detalhado**
+**Estrutura (12 tabelas na ordem correta de dependencias):**
+1. `users` — com todos os campos (cpf, phone, department, birth_date, registration_number)
+2. `categories` — com slug, color, icon
+3. `academic_levels` — com order
+4. `projects` — com ENUM completo (7 status) e campos de pending_edit
+5. `project_authors` — com approval_status e vinculo por CPF
+6. `project_versions` — versionamento por campo
+7. `project_comments`
+8. `project_links` — com link_type e description
+9. `project_files` — com file_category
+10. `audit_logs` — com severity
+11. `notifications` — com notification_type e category
+12. `system_config`
 
-*Frontend:*
-- React 18, TypeScript 5, Vite 5 (bundler/dev server)
-- Tailwind CSS 3 (estilizacao utilitaria)
-- Shadcn/UI + Radix UI (componentes acessiveis)
-- React Router DOM 6 (roteamento SPA)
-- TanStack React Query 5 (gerenciamento de estado servidor)
-- React Hook Form + Zod (formularios e validacao)
-- Recharts (graficos e visualizacoes)
-- Lucide React (icones)
-- date-fns (manipulacao de datas)
-- Sonner (notificacoes toast)
+**Dados iniciais (seed limpo):**
+- 3 usuarios padrao (admin, pesquisador, bolsista) com senhas SHA256 (o backend migra automaticamente para bcrypt no primeiro login)
+- 5 categorias
+- 5 niveis academicos
+- 5 projetos de exemplo
+- Configuracoes do sistema
 
-*Backend:*
-- Node.js + Express 4 (servidor HTTP)
-- TypeScript 5 (tipagem estatica)
-- TypeORM 0.3 (ORM para MySQL)
-- MySQL 8.x (banco de dados relacional)
-- JSON Web Token (autenticacao stateless)
-- bcryptjs (hashing de senhas com migracao SHA256→bcrypt)
-- Helmet (headers de seguranca HTTP)
-- express-rate-limit (protecao contra abuso)
-- express-validator + xss (validacao e sanitizacao de entrada)
-- Multer (upload de arquivos)
-- ExcelJS + PDFKit (exportacao de relatorios)
-- Winston (logging estruturado)
+**Indices e constraints:**
+- Foreign keys com ON DELETE CASCADE/SET NULL conforme as entidades TypeORM
+- Indices em campos de busca frequente (status, owner_id, cpf, user_id)
 
-*Infraestrutura/DevOps:*
-- Docker + Docker Compose (containerizacao)
-- Nginx (proxy reverso e servidor de arquivos estaticos)
-- Let's Encrypt / Certbot (SSL/HTTPS)
-- Azure VM (hospedagem)
+### Detalhes tecnicos
 
-**4. Descricao de Cada Modulo Funcional**
-
-Para cada modulo, descreverei: o que faz, como funciona no frontend, como funciona no backend, e o fluxo de dados.
-
-- **Autenticacao**: Login com JWT, validacao de sessao via `/auth/me`, logout, troca de senha, migracao transparente SHA256→bcrypt
-- **Gestao de Usuarios**: CRUD completo (admin), cadastro individual e em lote, reset de senha, busca por CPF, validacao de duplicidade (email+CPF)
-- **Gestao de Projetos**: Criacao, edicao, submissao com ciclo de vida completo (rascunho → pendente → aprovado/rejeitado/devolvido), soft-delete, versionamento de campos, busca
-- **Fluxo de Coautoria**: Adicao de coautores por CPF, status `aguardando_autores`, aprovacao/rejeicao individual, notificacao automatica, avanço automatico para `pendente`
-- **Solicitacao de Edicao**: Projetos aprovados permitem edicoes pendentes que requerem aprovacao administrativa
-- **Upload de Arquivos**: Fotos (JPG/PNG/GIF/WEBP) e PDFs, limite de 5 cada, 50MB max, armazenamento em disco organizado por projeto
-- **Notificacoes**: Criacao automatica por eventos, notificacao em massa (broadcast), marcar como lida, listagem paginada
-- **Auditoria**: Log de todas as acoes criticas (login, CRUD, aprovacoes), com severidade, IP, usuario e timestamp
-- **Relatorios e Exportacao**: Dashboards com KPIs, graficos (pizza, barras, linhas, pictograma), exportacao em PDF/Excel/JSON, exportacao completa do banco
-- **Categorias e Niveis Academicos**: CRUD administrativo com slug, cor, descricao
-- **Seguranca**: Helmet, rate limiting (5 login/15min, 200 global/15min), validacao de Content-Type, sanitizacao XSS, protecao de rotas por role
-
-**5. Modelo de Dados**
-- 12 entidades: User, Project, ProjectVersion, ProjectComment, ProjectAuthor, ProjectLink, ProjectFile, Category, AcademicLevel, AuditLog, Notification, SystemConfig
-- Relacionamentos principais documentados
-
-**6. Padroes de Seguranca**
-- JWT com expiracao de 4h
-- Bcrypt com 10 rounds
-- Controle de acesso por middleware (authMiddleware + requireRole)
-- Validacao e sanitizacao de todas as entradas
-- Soft-delete para projetos (preserva dados)
-
-### Como sera feito
-
-Gerarei o documento como PDF profissional em `/mnt/documents/metodologia_cebio_brasil.pdf` usando um script Python com a biblioteca `reportlab`, formatado com capa, sumario, secoes numeradas e diagramas textuais.
+- Compativel com MySQL 8.x e MariaDB 10.6+
+- Charset utf8mb4 com collation unicode_ci
+- DROP TABLE IF EXISTS na ordem inversa de dependencias (evita erro de FK)
+- Comentarios em portugues para facilitar manutencao
+- Separacao clara entre ESTRUTURA e DADOS INICIAIS
 
 ### Resultado
 
-Um PDF completo e profissional descrevendo toda a metodologia e tecnologias do sistema CEBIO Brasil, pronto para uso academico ou institucional.
+Um unico arquivo SQL que pode ser importado com `mysql -u root -p cebio_brasil < cebio_database_production.sql` para criar o banco completo do zero, pronto para producao.
 
