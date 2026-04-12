@@ -50,7 +50,7 @@ const AdminAudit = () => {
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [userSearch, setUserSearch] = useState("");
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [allUsers, setAllUsers] = useState<{ id: number; name: string }[]>([]);
+  const [allUsers, setAllUsers] = useState<{ id: number; name: string; email?: string; cpf?: string }[]>([]);
   const [exporting, setExporting] = useState(false);
   const { toast } = useToast();
   const demo = useDemoData();
@@ -82,7 +82,7 @@ const AdminAudit = () => {
         ]);
         setLogs(logData.status === "fulfilled" && logData.value.logs?.length ? logData.value.logs : []);
         if (userData.status === "fulfilled" && userData.value?.length) {
-          setAllUsers(userData.value.map((u: any) => ({ id: u.id, name: u.name })));
+          setAllUsers(userData.value.map((u: any) => ({ id: u.id, name: u.name, email: u.email, cpf: u.cpf })));
         }
       } catch {
         setLogs([]);
@@ -92,15 +92,21 @@ const AdminAudit = () => {
     fetchData();
   }, []);
 
-  // Unique users from logs for the dropdown
+  // Unique users from logs for the dropdown (with email/cpf for search)
   const logUsers = useMemo(() => {
-    const map = new Map<number, string>();
+    const map = new Map<number, { id: number; name: string; email?: string; cpf?: string }>();
     logs.forEach(l => {
       if (l.user_id && !map.has(l.user_id)) {
-        map.set(l.user_id, l.user?.name || allUsers.find(u => u.id === l.user_id)?.name || `Usuário #${l.user_id}`);
+        const full = allUsers.find(u => u.id === l.user_id);
+        map.set(l.user_id, {
+          id: l.user_id,
+          name: full?.name || l.user?.name || `Usuário #${l.user_id}`,
+          email: full?.email,
+          cpf: full?.cpf,
+        });
       }
     });
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [logs, allUsers]);
 
   const filtered = useMemo(() => {
