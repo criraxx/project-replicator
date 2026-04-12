@@ -7,6 +7,7 @@ import { PESQUISADOR_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
 import { formatDateBrasilia } from "@/lib/formatters";
+import { useDemoData } from "@/hooks/useDemoData";
 
 
 const PesquisadorDashboard = () => {
@@ -14,8 +15,14 @@ const PesquisadorDashboard = () => {
   const navigate = useNavigate();
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const demo = useDemoData();
 
   useEffect(() => {
+    if (demo.isDemoMode) {
+      setProjects(demo.getProjects(true) || []);
+      setLoading(false);
+      return;
+    }
     const fetchProjects = async () => {
       try {
         const data = await api.listProjects({ limit: 100 });
