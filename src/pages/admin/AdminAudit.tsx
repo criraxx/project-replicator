@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Search, Shield, AlertTriangle, Clock, Users, Download, Inbox, Info, User, Eye, FileSpreadsheet } from "lucide-react";
 import { formatDateTimeBrasilia } from "@/lib/formatters";
 import AppLayout from "@/components/layout/AppLayout";
@@ -36,11 +36,25 @@ const AdminAudit = () => {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("geral");
   const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [userSearch, setUserSearch] = useState("");
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [allUsers, setAllUsers] = useState<{ id: number; name: string }[]>([]);
   const [exporting, setExporting] = useState(false);
   const { toast } = useToast();
   const demo = useDemoData();
   const { user: currentUser } = useAuth();
+  const userDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(e.target as Node)) {
+        setUserDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   useEffect(() => {
     if (demo.isDemoMode) {
@@ -205,7 +219,7 @@ const AdminAudit = () => {
             <Eye className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-semibold">Visualização</span>
           </div>
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
+          <Tabs value={viewMode} onValueChange={(v) => { setViewMode(v as ViewMode); setUserSearch(""); setSelectedUserId(""); setUserDropdownOpen(false); }}>
             <TabsList>
               <TabsTrigger value="geral"><Shield className="w-3.5 h-3.5 mr-1.5" />Logs Gerais</TabsTrigger>
               <TabsTrigger value="usuario"><User className="w-3.5 h-3.5 mr-1.5" />Por Usuário</TabsTrigger>
@@ -215,16 +229,44 @@ const AdminAudit = () => {
 
           {/* User selector when "Por Usuário" is active */}
           {viewMode === "usuario" && (
-            <select
-              value={selectedUserId}
-              onChange={(e) => setSelectedUserId(e.target.value)}
-              className="px-3 py-2 border border-border rounded-lg text-sm bg-card min-w-[200px]"
-            >
-              <option value="">Selecione um usuário...</option>
-              {logUsers.map(u => (
-                <option key={u.id} value={String(u.id)}>{u.name}</option>
-              ))}
-            </select>
+            <div ref={userDropdownRef} className="relative min-w-[250px]">
+              <input
+                type="text"
+                value={userSearch}
+                onChange={(e) => { setUserSearch(e.target.value); setUserDropdownOpen(true); }}
+                onFocus={() => setUserDropdownOpen(true)}
+                placeholder="Digitar para filtrar usuário..."
+                className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              {selectedUserId && (
+                <button
+                  onClick={() => { setSelectedUserId(""); setUserSearch(""); }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
+                >✕</button>
+              )}
+              {userDropdownOpen && (
+                <div className="absolute z-50 mt-1 w-full bg-card border border-border rounded-lg shadow-lg max-h-52 overflow-y-auto">
+                  {logUsers
+                    .filter(u => !userSearch || u.name.toLowerCase().includes(userSearch.toLowerCase()))
+                    .map(u => (
+                      <button
+                        key={u.id}
+                        onClick={() => {
+                          setSelectedUserId(String(u.id));
+                          setUserSearch(u.name);
+                          setUserDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors ${String(u.id) === selectedUserId ? "bg-muted font-medium" : ""}`}
+                      >
+                        {u.name}
+                      </button>
+                    ))}
+                  {logUsers.filter(u => !userSearch || u.name.toLowerCase().includes(userSearch.toLowerCase())).length === 0 && (
+                    <p className="px-3 py-2 text-sm text-muted-foreground">Nenhum usuário encontrado</p>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
 
