@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { BarChart3, FileText, Users, TrendingUp, Download, Filter, RefreshCw, User, FileSpreadsheet, ArrowUpRight, ArrowDownRight, Minus, Clock, GitCompare } from "lucide-react";
+import { BarChart3, FileText, Users, TrendingUp, Download, Filter, RefreshCw, User, FileSpreadsheet, ArrowUpRight, ArrowDownRight, Minus, Clock, GitCompare, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
@@ -523,6 +523,11 @@ const AdminReports = () => {
     downloadBlob("/exports/pdf", payload, `relatorio_cebio_${format(new Date(), "yyyy-MM-dd")}.pdf`);
   };
 
+  const exportExcel = async () => {
+    const payload = await buildPayload();
+    downloadBlob("/exports/excel", payload, `relatorio_cebio_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+  };
+
   const exportSectionPDF = async (title: string, data: { name: string; value: number }[]) => {
     const payload = await buildPayload();
     downloadBlob("/exports/pdf-section", {
@@ -554,13 +559,16 @@ const AdminReports = () => {
     <AppLayout pageName="Relatórios e Analytics" navItems={ADMIN_NAV} notificationCount={0}>
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-5 sm:p-7 mb-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-          <div>
+         <div>
             <h2 className="text-lg sm:text-[22px] font-semibold mb-1.5">Relatórios e Analytics</h2>
             <p className="text-sm opacity-90">Visão detalhada e personalizável do desempenho da plataforma</p>
           </div>
           <div className="flex gap-2">
             <button onClick={exportPDF} disabled={exporting} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 disabled:opacity-50 text-primary-foreground px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors">
-              <Download className="w-4 h-4" /> {exporting ? "Gerando..." : "Exportar PDF"}
+              <FileText className="w-4 h-4" /> {exporting ? "Gerando..." : "PDF"}
+            </button>
+            <button onClick={exportExcel} disabled={exporting} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 disabled:opacity-50 text-primary-foreground px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors">
+              <FileSpreadsheet className="w-4 h-4" /> {exporting ? "Gerando..." : "Excel"}
             </button>
           </div>
         </div>
@@ -816,41 +824,8 @@ const AdminReports = () => {
         </Tabs>
 
         {/* Summary Table */}
-        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
-          <div className="p-5 pb-0">
-            <h3 className="text-sm font-semibold mb-1">Tabela Resumo</h3>
-            <p className="text-xs text-muted-foreground mb-4">{filtered.length} projetos com os filtros aplicados</p>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left p-3 font-medium text-muted-foreground">Título</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Proprietário</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Categoria</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Status</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Data</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 ? (
-                  <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum projeto encontrado</td></tr>
-                ) : filtered.slice(0, 20).map((p: any) => (
-                  <tr key={p.id} className="border-b border-border hover:bg-muted/30">
-                    <td className="p-3 font-medium text-foreground">{p.title}</td>
-                    <td className="p-3 text-muted-foreground">{p.owner?.name || "—"}</td>
-                    <td className="p-3 text-muted-foreground">{p.category || "—"}</td>
-                    <td className="p-3"><span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-muted">{p.status}</span></td>
-                    <td className="p-3 text-muted-foreground">{formatDateBrasilia(p.created_at)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {filtered.length > 20 && (
-              <div className="p-3 text-center text-xs text-muted-foreground">Mostrando 20 de {filtered.length} projetos</div>
-            )}
-          </div>
-        </div>
+        <SummaryTable projects={filtered} users={users} />
+      </div>
       </div>
     </AppLayout>
   );
