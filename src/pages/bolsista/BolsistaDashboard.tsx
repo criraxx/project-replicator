@@ -7,7 +7,6 @@ import { BOLSISTA_NAV } from "@/constants/navigation";
 import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
 import { formatDateBrasilia } from "@/lib/formatters";
-import { useDemoData } from "@/hooks/useDemoData";
 import { usePolling } from "@/hooks/usePolling";
 
 
@@ -16,14 +15,8 @@ const BolsistaDashboard = () => {
   const navigate = useNavigate();
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const demo = useDemoData();
 
   const fetchProjects = useCallback(async () => {
-    if (demo.isDemoMode) {
-      setProjects(demo.getProjects(true) || []);
-      setLoading(false);
-      return;
-    }
     try {
       const data = await api.listProjects({ limit: 100 });
       setProjects(data.projects?.length ? data.projects : []);
@@ -31,7 +24,7 @@ const BolsistaDashboard = () => {
       setProjects([]);
     }
     setLoading(false);
-  }, [demo.isDemoMode]);
+  }, []);
 
   usePolling(fetchProjects, 30000);
 

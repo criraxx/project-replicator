@@ -28,7 +28,6 @@ const AdminUsers = () => {
   const [notifyMessage, setNotifyMessage] = useState("");
   const { toast } = useToast();
   const confirm = useConfirmDialog();
-  const demo = useDemoData();
 
   // Form state for new user
   const [newUser, setNewUser] = useState({
@@ -43,11 +42,6 @@ const AdminUsers = () => {
   // parseDateToISO, formatCpf, formatDate, formatPhone now imported from @/lib/formatters
 
   const fetchUsers = async () => {
-    if (demo.isDemoMode) {
-      setUsers(demo.getUsers()! as User[]);
-      setLoading(false);
-      return;
-    }
     try {
       setLoading(true);
       const data = await api.listUsers(

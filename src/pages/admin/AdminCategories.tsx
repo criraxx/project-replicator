@@ -19,7 +19,6 @@ const AdminCategories = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const confirm = useConfirmDialog();
-  const demo = useDemoData();
 
   // Category form
   const [catForm, setCatForm] = useState({ name: "", slug: "", description: "", color: "#1a9a4a", icon: "" });
@@ -31,17 +30,6 @@ const AdminCategories = () => {
   const [editForm, setEditForm] = useState<any>({});
 
   const fetchData = async () => {
-    if (demo.isDemoMode) {
-      setCategories(demo.getCategories()! as any);
-      setLevels([
-        { id: 1, name: "Graduação", slug: "graduacao", order: 1, is_active: true },
-        { id: 2, name: "Mestrado", slug: "mestrado", order: 2, is_active: true },
-        { id: 3, name: "Doutorado", slug: "doutorado", order: 3, is_active: true },
-        { id: 4, name: "Pós-Doutorado", slug: "pos-doutorado", order: 4, is_active: true },
-      ]);
-      setLoading(false);
-      return;
-    }
     try {
       setLoading(true);
       const [cats, lvls] = await Promise.allSettled([api.listCategories(), api.listAcademicLevels()]);
