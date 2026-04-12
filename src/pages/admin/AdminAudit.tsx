@@ -6,6 +6,7 @@ import { ADMIN_NAV } from "@/constants/navigation";
 import { severityColors } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { useDemoData } from "@/hooks/useDemoData";
 
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
 
@@ -30,8 +31,14 @@ const AdminAudit = () => {
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const demo = useDemoData();
 
   useEffect(() => {
+    if (demo.isDemoMode) {
+      setLogs(demo.getAuditLogs()!.map(l => ({ ...l, user: { name: l.user_name } })));
+      setLoading(false);
+      return;
+    }
     const fetchLogs = async () => {
       try {
         const data = await api.listAuditLogs(200);
