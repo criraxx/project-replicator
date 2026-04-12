@@ -9,6 +9,7 @@ import { ADMIN_NAV, PESQUISADOR_NAV, BOLSISTA_NAV } from "@/constants/navigation
 import { statusColors, statusLabels } from "@/constants/ui";
 
 import { useToast } from "@/hooks/use-toast";
+import { useDemoData } from "@/hooks/useDemoData";
 
 interface ProjectDetailViewProps {
   isAdmin?: boolean;
@@ -20,6 +21,7 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get("id");
   const { toast } = useToast();
+  const demo = useDemoData();
 
   const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +36,11 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
 
   useEffect(() => {
     if (!projectId) return;
+    if (demo.isDemoMode) {
+      setProject(demo.getProjectById(Number(projectId)));
+      setLoading(false);
+      return;
+    }
     const load = async () => {
       setLoading(true);
       try {
