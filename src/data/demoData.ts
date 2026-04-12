@@ -100,8 +100,9 @@ export const demoProjects: Project[] = [
     status: "aguardando_autores", owner_id: 3, owner_name: "João Bolsista", owner_email: "joao@cebio.com",
     created_at: "2025-04-05", updated_at: "2025-04-05", version: 1,
     authors: [
-      { id: 8, project_id: 6, name: "João Bolsista", email: "joao@cebio.com", institution: "IF Goiano", role: "Autor Principal", order: 1 },
-      { id: 9, project_id: 6, name: "Luciana Ferreira", email: "luciana@ifgoiano.edu.br", institution: "IF Goiano", role: "Orientadora", order: 2 },
+      { id: 8, project_id: 6, name: "João Bolsista", email: "joao@cebio.com", institution: "IF Goiano", role: "Autor Principal", order: 1, is_owner: true, approval_status: "aprovado" } as any,
+      { id: 9, project_id: 6, name: "Luciana Ferreira", email: "luciana@ifgoiano.edu.br", institution: "IF Goiano", role: "Orientadora", order: 2, is_owner: false, approval_status: "pendente", user_id: 6, role_in_project: "Orientadora" } as any,
+      { id: 10, project_id: 6, name: "Dr. Pedro Silva", email: "pedro@ufg.com", institution: "UFG", role: "Colaborador", order: 3, is_owner: false, approval_status: "aprovado", user_id: 4, role_in_project: "Colaborador" } as any,
     ],
     links: [{ id: 4, project_id: 6, title: "Documentação Técnica", url: "https://docs.example.com/drone", type: "documentation" }],
     files: [], comments: [],
