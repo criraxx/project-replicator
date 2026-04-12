@@ -56,6 +56,7 @@ const AdminAudit = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  useEffect(() => {
     if (demo.isDemoMode) {
       setLogs(demo.getAuditLogs()!.map(l => ({ ...l, user: { name: l.user_name } })));
       setLoading(false);
