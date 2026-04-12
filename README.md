@@ -1,3 +1,3 @@
-# Welcome to your Lovable project
+# CEBIO Brasil - Centro de Excelência em Bioinsumos
 
-TODO: Document your project here
+Sistema de Gestão de Projetos do Centro de Excelência em Bioinsumos (CEBIO Brasil).
