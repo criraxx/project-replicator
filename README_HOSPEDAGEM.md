@@ -68,4 +68,4 @@ Após iniciar o sistema, você pode acessar com o usuário administrador padrão
 - **Uploads:** Os arquivos enviados ficam armazenados na pasta `uploads/` na raiz do projeto.
 
 ---
-*Desenvolvido e corrigido por Manus AI.*
+*CEBIO Brasil - Centro de Excelência em Bioinsumos*
