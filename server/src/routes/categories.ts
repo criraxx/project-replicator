@@ -1,9 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { CategoryService } from '../services/CategoryService';
 import { authMiddleware, requireRole } from '../utils/auth';
+import { AuditService } from '../services/AuditService';
 
 const router = Router();
 const categoryService = new CategoryService();
+const auditService = new AuditService();
 
 // GET /api/categories
 router.get('/categories', authMiddleware, async (req: Request, res: Response) => {
@@ -20,6 +22,7 @@ router.post('/categories', authMiddleware, requireRole('admin'), async (req: Req
   try {
     const { name, slug, description, color, icon } = req.body;
     const category = await categoryService.createCategory(name, slug, description, color, icon, req.user!.id);
+    await auditService.logAction('CREATE_CATEGORY', req.user!.id, undefined, undefined, `Categoria criada: ${name}`, req.ip || 'unknown', 'medium');
     res.status(201).json(category);
   } catch (error: any) {
     res.status(error.statusCode || 500).json({ error: error.message || 'Erro interno' });
@@ -30,6 +33,7 @@ router.post('/categories', authMiddleware, requireRole('admin'), async (req: Req
 router.put('/categories/:id', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
   try {
     const category = await categoryService.updateCategory(Number(req.params.id), req.body);
+    await auditService.logAction('UPDATE_CATEGORY', req.user!.id, undefined, undefined, `Categoria atualizada: ${category.name}`, req.ip || 'unknown', 'medium');
     res.json(category);
   } catch (error: any) {
     res.status(error.statusCode || 500).json({ error: error.message || 'Erro interno' });
@@ -40,6 +44,7 @@ router.put('/categories/:id', authMiddleware, requireRole('admin'), async (req: 
 router.delete('/categories/:id', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
   try {
     await categoryService.deleteCategory(Number(req.params.id));
+    await auditService.logAction('DELETE_CATEGORY', req.user!.id, undefined, undefined, `Categoria removida: ID ${req.params.id}`, req.ip || 'unknown', 'high');
     res.json({ message: 'Categoria removida com sucesso' });
   } catch (error: any) {
     res.status(error.statusCode || 500).json({ error: error.message || 'Erro interno' });

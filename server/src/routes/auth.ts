@@ -54,6 +54,24 @@ router.post('/login', loginLimiter, validateLogin, handleValidationErrors, async
   }
 });
 
+// POST /api/logout
+router.post('/logout', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    await auditService.logAction(
+      'LOGOUT',
+      req.user!.id,
+      undefined,
+      undefined,
+      'Logout realizado',
+      req.ip || 'unknown',
+      'low'
+    );
+    res.json({ message: 'Logout realizado com sucesso' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Erro interno' });
+  }
+});
+
 // GET /api/auth/me
 router.get('/auth/me', authMiddleware, async (req: Request, res: Response) => {
   try {
