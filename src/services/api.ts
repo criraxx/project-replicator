@@ -1,7 +1,7 @@
 // API Client for CEBIO Brasil Backend
 // Configure API_BASE_URL to point to your backend server
 
-const API_BASE_URL = 'https://8000-ic0wocwek8fkyj0l4wen8-a1d98c48.us2.manus.computer/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface ApiResponse<T> {
   data: T;

@@ -34,14 +34,14 @@ const PORT = process.env.PORT || 8000;
 // SEGURANÇA - Middleware de Segurança
 // ============================================
 
-// Helmet - Headers de segurança HTTP desativados para depuração
-// app.use(securityHeaders);
+// Helmet - Headers de segurança HTTP
+app.use(securityHeaders);
 
-// Headers customizados desativados para depuração
-// app.use(customSecurityHeaders);
+// Headers customizados
+app.use(customSecurityHeaders);
 
-	// Rate Limiting Global desativado
-	// app.use(globalLimiter);
+// Rate Limiting Global
+app.use(globalLimiter);
 
 // Validação de Content-Type
 app.use(validateContentType);
@@ -53,12 +53,16 @@ app.use(suspiciousRequestLogger);
 // CORS - Configuração de CORS
 // ============================================
 
+const corsOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map(o => o.trim())
+  : true; // em dev aceita tudo; em prod configure CORS_ORIGINS no .env
+
 app.use(cors({
-  origin: true,
+  origin: corsOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: 86400, // 24 horas
+  maxAge: 86400,
 }));
 
 // ============================================
