@@ -43,8 +43,19 @@ const AdminAudit = () => {
   const { toast } = useToast();
   const demo = useDemoData();
   const { user: currentUser } = useAuth();
+  const userDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Close dropdown on click outside
   useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(e.target as Node)) {
+        setUserDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
     if (demo.isDemoMode) {
       setLogs(demo.getAuditLogs()!.map(l => ({ ...l, user: { name: l.user_name } })));
       setLoading(false);
