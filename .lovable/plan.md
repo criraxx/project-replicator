@@ -1,54 +1,49 @@
 
 
-## Plano: Gerar SQL Limpo e Completo para o Banco de Dados
+## Plano: SQL limpo + limpeza de arquivos nao utilizados
 
-### O que sera feito
+### 1. Criar `server/cebio_database_production.sql` (SQL limpo)
 
-Criar um novo arquivo `server/cebio_database_production.sql` — um SQL limpo, organizado e pronto para producao, substituindo o `cebio_database.sql` desatualizado.
+Script SQL com a estrutura completa das 12 tabelas (extraida do `cebio_database_updated.sql` que e a versao mais atual) mas com **apenas 1 registro de seed**: o usuario admin.
 
-### Problemas no SQL atual
+- 12 tabelas na ordem correta de dependencias (users primeiro, depois as que referenciam users)
+- ENUM de status completo: `rascunho, pendente, em_revisao, aprovado, rejeitado, aguardando_autores, devolvido`
+- Todos os indices e foreign keys
+- Configuracoes do sistema (system_config) com valores padrao
+- **Unico dado**: admin@cebio.org.br / admin123 (SHA256)
+- Tabelas de categorias, niveis academicos, projetos, etc: **vazias**
 
-- O `cebio_database.sql` tem o ENUM de status de projetos incompleto (falta `rascunho`, `aguardando_autores`, `devolvido`)
-- Contem dados de teste misturados com a estrutura
-- A tabela `project_links` nao tem os campos `link_type` e `description` que o dump atualizado mostra
-- Senhas em SHA256 puro (o backend ja migra para bcrypt, mas o seed deve usar bcrypt)
+### 2. Remover arquivos nao utilizados
 
-### Conteudo do novo SQL
+| Arquivo | Motivo da remocao |
+|---|---|
+| `server/cebio_database.sql` | SQL antigo, substituido pelo novo production.sql |
+| `server/cebio_database_updated.sql` | Dump de teste com dados lixo, substituido pelo novo |
+| `server/src/database/seed.ts` | Script de seed com dados fictícios, desnecessario em producao |
+| `server/uploads/project_10/*` | Arquivos de teste (3 arquivos) |
+| `server/uploads/project_11/*` | Arquivos de teste |
+| `server/uploads/project_13/*` | Arquivos de teste |
+| `src/test/setup.ts` | Setup de testes sem nenhum teste no frontend |
+| `vitest.config.ts` | Config de testes sem nenhum teste no frontend |
+| `bun.lock` | Lock file duplicado (ja existe pnpm-lock.yaml) |
+| `bun.lockb` | Lock file duplicado |
+| `package-lock.json` | Lock file duplicado |
+| `pnpm-lock.yaml` (raiz) | Lock file duplicado (projeto usa bun no Lovable) |
+| `server/package-lock.json` | Lock file duplicado (server usa pnpm) |
 
-**Estrutura (12 tabelas na ordem correta de dependencias):**
-1. `users` — com todos os campos (cpf, phone, department, birth_date, registration_number)
-2. `categories` — com slug, color, icon
-3. `academic_levels` — com order
-4. `projects` — com ENUM completo (7 status) e campos de pending_edit
-5. `project_authors` — com approval_status e vinculo por CPF
-6. `project_versions` — versionamento por campo
-7. `project_comments`
-8. `project_links` — com link_type e description
-9. `project_files` — com file_category
-10. `audit_logs` — com severity
-11. `notifications` — com notification_type e category
-12. `system_config`
+### 3. Atualizar `src/pages/admin/AdminUsers.tsx`
 
-**Dados iniciais (seed limpo):**
-- 3 usuarios padrao (admin, pesquisador, bolsista) com senhas SHA256 (o backend migra automaticamente para bcrypt no primeiro login)
-- 5 categorias
-- 5 niveis academicos
-- 5 projetos de exemplo
-- Configuracoes do sistema
+Remover o import `type User` de `@/data/mockData` — verificar se o tipo User ja existe em `src/services/api.ts` ou definir inline.
 
-**Indices e constraints:**
-- Foreign keys com ON DELETE CASCADE/SET NULL conforme as entidades TypeORM
-- Indices em campos de busca frequente (status, owner_id, cpf, user_id)
+### 4. Avaliar `src/data/mockData.ts`
 
-### Detalhes tecnicos
+O arquivo contem apenas **interfaces TypeScript** (nao dados mock de verdade). So e importado em AdminUsers.tsx. Se o tipo User ja existir em api.ts, remover o mockData.ts inteiro. Caso contrario, mover o tipo para um local mais adequado.
 
-- Compativel com MySQL 8.x e MariaDB 10.6+
-- Charset utf8mb4 com collation unicode_ci
-- DROP TABLE IF EXISTS na ordem inversa de dependencias (evita erro de FK)
-- Comentarios em portugues para facilitar manutencao
-- Separacao clara entre ESTRUTURA e DADOS INICIAIS
+### Detalhes tecnicos do SQL
 
-### Resultado
-
-Um unico arquivo SQL que pode ser importado com `mysql -u root -p cebio_brasil < cebio_database_production.sql` para criar o banco completo do zero, pronto para producao.
+- Senha do admin: `240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9` (SHA256 de "admin123")
+- O backend migra automaticamente para bcrypt no primeiro login
+- Charset: utf8mb4, collation: utf8mb4_unicode_ci
+- Engine: InnoDB
+- Compatible com MySQL 8.x e MariaDB 10.6+
 
