@@ -148,7 +148,22 @@ const AdminAudit = () => {
       })),
       viewMode,
       userName,
+      filters: {
+        severity: severityFilters,
+        actions: actionFilters,
+        search,
+      },
     };
+  };
+
+  const getExportFilename = (ext: string) => {
+    const date = new Date().toISOString().slice(0, 10);
+    const suffix = viewMode === "meus"
+      ? `_meus_logs`
+      : viewMode === "usuario" && selectedUserId
+        ? `_${(logUsers.find(u => u.id === Number(selectedUserId))?.name || "usuario").replace(/\s+/g, "_").substring(0, 30)}`
+        : "_geral";
+    return `auditoria_cebio${suffix}_${date}.${ext}`;
   };
 
   const exportLogs = async (format: "pdf" | "excel") => {
@@ -167,7 +182,7 @@ const AdminAudit = () => {
       const blob = await res.blob();
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = `auditoria_cebio_${new Date().toISOString().slice(0, 10)}.${ext}`;
+      a.download = getExportFilename(ext);
       a.click();
       URL.revokeObjectURL(a.href);
       toast({ title: "Exportação concluída", description: `Arquivo ${ext.toUpperCase()} baixado com sucesso.` });

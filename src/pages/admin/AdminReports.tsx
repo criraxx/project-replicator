@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { BarChart3, FileText, Users, TrendingUp, Download, Filter, RefreshCw, User, FileSpreadsheet, ArrowUpRight, ArrowDownRight, Minus, Clock, GitCompare } from "lucide-react";
+import { BarChart3, FileText, Users, TrendingUp, Download, Filter, RefreshCw, User, FileSpreadsheet, ArrowUpRight, ArrowDownRight, Minus, Clock, GitCompare, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
@@ -523,6 +523,11 @@ const AdminReports = () => {
     downloadBlob("/exports/pdf", payload, `relatorio_cebio_${format(new Date(), "yyyy-MM-dd")}.pdf`);
   };
 
+  const exportExcel = async () => {
+    const payload = await buildPayload();
+    downloadBlob("/exports/excel", payload, `relatorio_cebio_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+  };
+
   const exportSectionPDF = async (title: string, data: { name: string; value: number }[]) => {
     const payload = await buildPayload();
     downloadBlob("/exports/pdf-section", {
@@ -554,13 +559,16 @@ const AdminReports = () => {
     <AppLayout pageName="Relatórios e Analytics" navItems={ADMIN_NAV} notificationCount={0}>
       <div className="bg-gradient-to-r from-primary via-secondary to-green-700 text-primary-foreground rounded-xl p-5 sm:p-7 mb-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-          <div>
+         <div>
             <h2 className="text-lg sm:text-[22px] font-semibold mb-1.5">Relatórios e Analytics</h2>
             <p className="text-sm opacity-90">Visão detalhada e personalizável do desempenho da plataforma</p>
           </div>
           <div className="flex gap-2">
             <button onClick={exportPDF} disabled={exporting} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 disabled:opacity-50 text-primary-foreground px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors">
-              <Download className="w-4 h-4" /> {exporting ? "Gerando..." : "Exportar PDF"}
+              <FileText className="w-4 h-4" /> {exporting ? "Gerando..." : "PDF"}
+            </button>
+            <button onClick={exportExcel} disabled={exporting} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 disabled:opacity-50 text-primary-foreground px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors">
+              <FileSpreadsheet className="w-4 h-4" /> {exporting ? "Gerando..." : "Excel"}
             </button>
           </div>
         </div>
@@ -816,43 +824,142 @@ const AdminReports = () => {
         </Tabs>
 
         {/* Summary Table */}
-        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
-          <div className="p-5 pb-0">
-            <h3 className="text-sm font-semibold mb-1">Tabela Resumo</h3>
-            <p className="text-xs text-muted-foreground mb-4">{filtered.length} projetos com os filtros aplicados</p>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="text-left p-3 font-medium text-muted-foreground">Título</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Proprietário</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Categoria</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Status</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Data</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 ? (
-                  <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum projeto encontrado</td></tr>
-                ) : filtered.slice(0, 20).map((p: any) => (
-                  <tr key={p.id} className="border-b border-border hover:bg-muted/30">
-                    <td className="p-3 font-medium text-foreground">{p.title}</td>
-                    <td className="p-3 text-muted-foreground">{p.owner?.name || "—"}</td>
-                    <td className="p-3 text-muted-foreground">{p.category || "—"}</td>
-                    <td className="p-3"><span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-muted">{p.status}</span></td>
-                    <td className="p-3 text-muted-foreground">{formatDateBrasilia(p.created_at)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {filtered.length > 20 && (
-              <div className="p-3 text-center text-xs text-muted-foreground">Mostrando 20 de {filtered.length} projetos</div>
-            )}
-          </div>
-        </div>
+        <SummaryTable projects={filtered} users={users} />
       </div>
     </AppLayout>
+  );
+};
+
+const STATUS_BADGE_COLORS: Record<string, string> = {
+  aprovado: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+  rejeitado: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+  pendente: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+  em_revisao: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+  devolvido: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  aprovado: "Aprovado",
+  rejeitado: "Rejeitado",
+  pendente: "Pendente",
+  em_revisao: "Em Revisão",
+  devolvido: "Devolvido",
+};
+
+type SortField = "title" | "owner" | "category" | "status" | "date";
+type SortDir = "asc" | "desc";
+
+const SummaryTable = ({ projects, users }: { projects: any[]; users: any[] }) => {
+  const [page, setPage] = useState(0);
+  const [sortField, setSortField] = useState<SortField>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const perPage = 15;
+
+  const sorted = useMemo(() => {
+    const arr = [...projects];
+    arr.sort((a, b) => {
+      let va: string, vb: string;
+      switch (sortField) {
+        case "title": va = a.title || ""; vb = b.title || ""; break;
+        case "owner":
+          va = users.find((u: any) => u.id === a.owner_id)?.name || a.owner?.name || "";
+          vb = users.find((u: any) => u.id === b.owner_id)?.name || b.owner?.name || "";
+          break;
+        case "category": va = a.category || ""; vb = b.category || ""; break;
+        case "status": va = a.status || ""; vb = b.status || ""; break;
+        case "date": va = a.created_at || ""; vb = b.created_at || ""; break;
+        default: va = ""; vb = "";
+      }
+      const cmp = va.localeCompare(vb);
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return arr;
+  }, [projects, users, sortField, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / perPage));
+  const paged = sorted.slice(page * perPage, (page + 1) * perPage);
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+    setPage(0);
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="w-3 h-3 opacity-40" />;
+    return sortDir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />;
+  };
+
+  return (
+    <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+      <div className="p-5 pb-3 flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold mb-0.5">Tabela Resumo</h3>
+          <p className="text-xs text-muted-foreground">{sorted.length} projetos com os filtros aplicados</p>
+        </div>
+        <span className="text-xs text-muted-foreground">Página {page + 1} de {totalPages}</span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/50">
+              {([
+                { field: "title" as SortField, label: "Título" },
+                { field: "owner" as SortField, label: "Proprietário" },
+                { field: "category" as SortField, label: "Categoria" },
+                { field: "status" as SortField, label: "Status" },
+                { field: "date" as SortField, label: "Data" },
+              ]).map(col => (
+                <th key={col.field} onClick={() => toggleSort(col.field)}
+                  className="text-left p-3 font-medium text-muted-foreground cursor-pointer hover:text-foreground select-none">
+                  <span className="flex items-center gap-1">{col.label} <SortIcon field={col.field} /></span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {paged.length === 0 ? (
+              <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum projeto encontrado</td></tr>
+            ) : paged.map((p: any, i: number) => (
+              <tr key={p.id} className={cn("border-b border-border hover:bg-muted/30 transition-colors", i % 2 === 0 && "bg-muted/20")}>
+                <td className="p-3 font-medium text-foreground max-w-[250px] truncate">{p.title}</td>
+                <td className="p-3 text-muted-foreground">{users.find((u: any) => u.id === p.owner_id)?.name || p.owner?.name || "—"}</td>
+                <td className="p-3 text-muted-foreground">{p.category || "—"}</td>
+                <td className="p-3">
+                  <span className={cn("text-[11px] font-semibold px-2.5 py-1 rounded-full", STATUS_BADGE_COLORS[p.status] || "bg-muted text-muted-foreground")}>
+                    {STATUS_LABELS[p.status] || p.status}
+                  </span>
+                </td>
+                <td className="p-3 text-muted-foreground text-xs">{formatDateBrasilia(p.created_at)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-5 py-3 border-t border-border">
+          <div className="flex items-center gap-1">
+            <button onClick={() => setPage(0)} disabled={page === 0} className="p-1.5 rounded hover:bg-muted disabled:opacity-30"><ChevronsLeft className="w-4 h-4" /></button>
+            <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0} className="p-1.5 rounded hover:bg-muted disabled:opacity-30"><ChevronLeft className="w-4 h-4" /></button>
+          </div>
+          <div className="flex gap-1">
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const start = Math.max(0, Math.min(page - 2, totalPages - 5));
+              const pg = start + i;
+              if (pg >= totalPages) return null;
+              return (
+                <button key={pg} onClick={() => setPage(pg)}
+                  className={cn("w-8 h-8 rounded text-xs font-medium", pg === page ? "bg-primary text-primary-foreground" : "hover:bg-muted text-muted-foreground")}>{pg + 1}</button>
+              );
+            })}
+          </div>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1} className="p-1.5 rounded hover:bg-muted disabled:opacity-30"><ChevronRight className="w-4 h-4" /></button>
+            <button onClick={() => setPage(totalPages - 1)} disabled={page >= totalPages - 1} className="p-1.5 rounded hover:bg-muted disabled:opacity-30"><ChevronsRight className="w-4 h-4" /></button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
