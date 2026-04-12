@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FolderOpen, Clock, CheckCircle, AlertCircle, Plus, Calendar, Inbox } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
@@ -8,6 +8,7 @@ import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
 import { formatDateBrasilia } from "@/lib/formatters";
 import { useDemoData } from "@/hooks/useDemoData";
+import { usePolling } from "@/hooks/usePolling";
 
 
 const PesquisadorDashboard = () => {
@@ -17,23 +18,22 @@ const PesquisadorDashboard = () => {
   const [loading, setLoading] = useState(true);
   const demo = useDemoData();
 
-  useEffect(() => {
+  const fetchProjects = useCallback(async () => {
     if (demo.isDemoMode) {
       setProjects(demo.getProjects(true) || []);
       setLoading(false);
       return;
     }
-    const fetchProjects = async () => {
-      try {
-        const data = await api.listProjects({ limit: 100 });
-        setProjects(data.projects?.length ? data.projects : []);
-      } catch {
-        setProjects([]);
-      }
-      setLoading(false);
-    };
-    fetchProjects();
-  }, []);
+    try {
+      const data = await api.listProjects({ limit: 100 });
+      setProjects(data.projects?.length ? data.projects : []);
+    } catch {
+      setProjects([]);
+    }
+    setLoading(false);
+  }, [demo.isDemoMode]);
+
+  usePolling(fetchProjects, 30000, !demo.isDemoMode);
 
   const approved = projects.filter(p => p.status === "aprovado").length;
   const pending = projects.filter(p => p.status === "pendente" || p.status === "em_revisao").length;

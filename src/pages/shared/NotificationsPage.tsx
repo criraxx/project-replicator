@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Bell, Check, CheckCheck, ExternalLink, ArrowLeft } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
@@ -7,6 +7,7 @@ import { ADMIN_NAV, PESQUISADOR_NAV, BOLSISTA_NAV } from "@/constants/navigation
 import api from "@/services/api";
 import { formatDateBrasilia } from "@/lib/formatters";
 import { useDemoData } from "@/hooks/useDemoData";
+import { usePolling } from "@/hooks/usePolling";
 
 const NotificationsPage = ({ backPath }: { backPath?: string }) => {
   const { user } = useAuth();
@@ -22,7 +23,7 @@ const NotificationsPage = ({ backPath }: { backPath?: string }) => {
   const roleBase = `/${pathRole}`;
   const back = backPath || `${roleBase}/dashboard`;
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (demo.isDemoMode) {
       setNotifications(demo.getNotifications()!.map(n => ({ ...n, is_read: n.read })));
       setLoading(false);
@@ -34,9 +35,9 @@ const NotificationsPage = ({ backPath }: { backPath?: string }) => {
     } catch { /* ignore */ } finally {
       setLoading(false);
     }
-  };
+  }, [demo.isDemoMode]);
 
-  useEffect(() => { fetchNotifications(); }, []);
+  usePolling(fetchNotifications, 15000, !demo.isDemoMode);
 
   const handleMarkAsRead = async (id: number) => {
     try {
