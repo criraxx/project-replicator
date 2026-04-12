@@ -9,6 +9,7 @@ export interface User {
   email: string;
   role: UserRole;
   institution: string;
+  cpf?: string;
   must_change_password?: boolean;
 }
 
