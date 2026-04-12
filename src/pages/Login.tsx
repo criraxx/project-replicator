@@ -1,23 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Shield, FlaskConical, GraduationCap } from "lucide-react";
-import { useAuth, type UserRole } from "@/contexts/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import logoIf from "@/assets/logo-if.png";
 import logoCebio from "@/assets/logo-cebio.png";
-
-const demoButtons: { role: UserRole; label: string; icon: React.ReactNode; desc: string }[] = [
-  { role: "admin", label: "Administrador", icon: <Shield className="w-4 h-4" />, desc: "Painel completo" },
-  { role: "pesquisador", label: "Pesquisador", icon: <FlaskConical className="w-4 h-4" />, desc: "Submissão e acompanhamento" },
-  { role: "bolsista", label: "Bolsista", icon: <GraduationCap className="w-4 h-4" />, desc: "Projetos e histórico" },
-];
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login, loginDemo } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -37,14 +31,6 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDemoLogin = (role: UserRole) => {
-    loginDemo(role);
-    toast({ title: "Modo Demonstração", description: `Entrando como ${role}.` });
-    if (role === "admin") navigate("/admin/dashboard");
-    else if (role === "pesquisador") navigate("/pesquisador/dashboard");
-    else navigate("/bolsista/dashboard");
   };
 
   return (
@@ -85,27 +71,6 @@ const Login = () => {
         <div className="text-center mt-5">
           <a href="#" className="text-sm text-primary hover:underline">Esqueceu sua senha?</a>
         </div>
-
-        {/* Demo Mode */}
-        <div className="mt-8 pt-6 border-t border-border">
-          <p className="text-xs text-muted-foreground text-center mb-3 uppercase tracking-wider font-medium">Acesso Demonstração</p>
-          <div className="flex flex-col gap-2">
-            {demoButtons.map((btn) => (
-              <button
-                key={btn.role}
-                onClick={() => handleDemoLogin(btn.role)}
-                className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg border border-border hover:bg-accent/50 transition-colors text-left"
-              >
-                <span className="text-primary">{btn.icon}</span>
-                <div>
-                  <span className="text-sm font-medium text-foreground">{btn.label}</span>
-                  <span className="text-xs text-muted-foreground ml-2">{btn.desc}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
       </div>
     </div>
   );

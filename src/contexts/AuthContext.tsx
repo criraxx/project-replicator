@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import api from "@/services/api";
-import { demoUsers } from "@/data/demoData";
 
 export type UserRole = "admin" | "pesquisador" | "bolsista";
 
@@ -18,9 +17,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  isDemoMode: boolean;
   login: (email: string, password: string) => Promise<void>;
-  loginDemo: (role: UserRole) => void;
   logout: () => void;
 }
 
@@ -29,20 +26,9 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
     const validateSession = async () => {
-      // Check for demo session first
-      const demoRole = localStorage.getItem("cebio_demo_role");
-      if (demoRole && (demoRole === "admin" || demoRole === "pesquisador" || demoRole === "bolsista")) {
-        const du = demoUsers[demoRole];
-        setUser({ id: du.id, name: du.name, email: du.email, role: du.role as UserRole, institution: du.institution, cpf: du.cpf });
-        setIsDemoMode(true);
-        setIsLoading(false);
-        return;
-      }
-
       const savedToken = localStorage.getItem("cebio_token");
       const savedUser = localStorage.getItem("cebio_user");
 
@@ -78,9 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     api.clearToken();
     localStorage.removeItem("cebio_user");
     localStorage.removeItem("cebio_token");
-    localStorage.removeItem("cebio_demo_role");
     setUser(null);
-    setIsDemoMode(false);
 
     try {
       const data = await api.login(email, password);
@@ -95,32 +79,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const loginDemo = useCallback((role: UserRole) => {
-    api.clearToken();
+  const logout = useCallback(async () => {
+    await api.logout();
     localStorage.removeItem("cebio_user");
     localStorage.removeItem("cebio_token");
-    localStorage.setItem("cebio_demo_role", role);
-    const du = demoUsers[role];
-    const userData: User = { id: du.id, name: du.name, email: du.email, role: du.role as UserRole, institution: du.institution, cpf: du.cpf };
-    setUser(userData);
-    setIsDemoMode(true);
+    setUser(null);
   }, []);
 
-  const logout = useCallback(async () => {
-    if (!isDemoMode) {
-      await api.logout();
-    } else {
-      api.clearToken();
-    }
-    localStorage.removeItem("cebio_user");
-    localStorage.removeItem("cebio_token");
-    localStorage.removeItem("cebio_demo_role");
-    setUser(null);
-    setIsDemoMode(false);
-  }, [isDemoMode]);
-
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, isDemoMode, login, loginDemo, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
