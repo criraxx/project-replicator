@@ -147,22 +147,63 @@ const STATUS_LABELS: Record<string, string> = {
   devolvido: "Devolvido",
 };
 
-const DatePickerInline = ({ label, value, onChange }: { label: string; value?: Date; onChange: (d: Date | undefined) => void }) => (
-  <div>
-    <label className="block text-[13px] font-semibold text-muted-foreground mb-2">{label}</label>
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" className={cn("w-full justify-start text-left font-normal min-h-[42px]", !value && "text-muted-foreground")}>
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {value ? format(value, "dd/MM/yyyy") : "Selecionar"}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar mode="single" selected={value} onSelect={onChange} initialFocus className="p-3 pointer-events-auto" />
-      </PopoverContent>
-    </Popover>
-  </div>
-);
+const DatePickerInline = ({ label, value, onChange }: { label: string; value?: Date; onChange: (d: Date | undefined) => void }) => {
+  const [inputValue, setInputValue] = useState(value ? format(value, "dd/MM/yyyy") : "");
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let raw = e.target.value.replace(/\D/g, "");
+    if (raw.length > 8) raw = raw.slice(0, 8);
+    let formatted = raw;
+    if (raw.length > 2) formatted = raw.slice(0, 2) + "/" + raw.slice(2);
+    if (raw.length > 4) formatted = raw.slice(0, 2) + "/" + raw.slice(2, 4) + "/" + raw.slice(4);
+    setInputValue(formatted);
+
+    if (raw.length === 8) {
+      const day = parseInt(raw.slice(0, 2), 10);
+      const month = parseInt(raw.slice(2, 4), 10) - 1;
+      const year = parseInt(raw.slice(4, 8), 10);
+      const d = new Date(year, month, day);
+      if (!isNaN(d.getTime()) && d.getDate() === day && d.getMonth() === month) {
+        onChange(d);
+      }
+    }
+  };
+
+  const handleCalendarSelect = (d: Date | undefined) => {
+    onChange(d);
+    setInputValue(d ? format(d, "dd/MM/yyyy") : "");
+  };
+
+  useEffect(() => {
+    setInputValue(value ? format(value, "dd/MM/yyyy") : "");
+  }, [value]);
+
+  return (
+    <div>
+      <label className="block text-[13px] font-semibold text-muted-foreground mb-2">{label}</label>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={inputValue}
+          onChange={handleInputChange}
+          placeholder="dd/mm/aaaa"
+          maxLength={10}
+          className="flex-1 px-3 py-2 border border-border rounded-lg text-sm bg-card min-h-[42px] focus:outline-none focus:ring-2 focus:ring-primary/30"
+        />
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="icon" className="min-h-[42px] min-w-[42px]">
+              <CalendarIcon className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar mode="single" selected={value} onSelect={handleCalendarSelect} initialFocus className="p-3 pointer-events-auto" />
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
+  );
+};
 
 type SortField = "title" | "category" | "status" | "date";
 type SortDir = "asc" | "desc";
