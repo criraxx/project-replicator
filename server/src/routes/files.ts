@@ -164,12 +164,22 @@ router.delete('/projects/:id/files/:fileId', authMiddleware, async (req: Request
       return res.status(404).json({ error: 'Arquivo não encontrado' });
     }
 
-    // Remover do disco
     if (fs.existsSync(file.file_path)) {
       fs.unlinkSync(file.file_path);
     }
 
     await fileRepo.remove(file);
+
+    await auditService.logAction(
+      'DELETE_FILE',
+      req.user!.id,
+      Number(req.params.id),
+      undefined,
+      `Arquivo removido: ${file.original_name}`,
+      req.ip || 'unknown',
+      'medium'
+    );
+
     res.json({ message: 'Arquivo removido com sucesso' });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Erro ao remover arquivo' });
