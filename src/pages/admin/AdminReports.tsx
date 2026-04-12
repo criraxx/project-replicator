@@ -426,6 +426,17 @@ const AdminReports = () => {
     return projects.filter(p => p.owner_id === userId);
   };
 
+  const getMetrics = (list: any[]) => {
+    const total = list.length;
+    const approved = list.filter(p => p.status === "aprovado").length;
+    const rejected = list.filter(p => p.status === "rejeitado").length;
+    const returned = list.filter(p => p.status === "devolvido").length;
+    const pending = list.filter(p => p.status === "pendente").length;
+    const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
+    const uniqueAuthors = new Set(list.map(p => p.owner_id)).size;
+    return { total, approved, rejected, returned, pending, approvalRate, uniqueAuthors };
+  };
+
   const periodMetrics = useMemo(() => {
     return periods.map(p => ({
       label: p.label,
@@ -442,17 +453,6 @@ const AdminReports = () => {
       };
     });
   }, [projects, users, compareUserIds]);
-
-  const getMetrics = (list: any[]) => {
-    const total = list.length;
-    const approved = list.filter(p => p.status === "aprovado").length;
-    const rejected = list.filter(p => p.status === "rejeitado").length;
-    const returned = list.filter(p => p.status === "devolvido").length;
-    const pending = list.filter(p => p.status === "pendente").length;
-    const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
-    const uniqueAuthors = new Set(list.map(p => p.owner_id)).size;
-    return { total, approved, rejected, returned, pending, approvalRate, uniqueAuthors };
-  };
 
   const addPeriod = () => {
     const letter = String.fromCharCode(65 + periods.length);
