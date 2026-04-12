@@ -1,9 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { NotificationService } from '../services/NotificationService';
 import { authMiddleware, requireRole } from '../utils/auth';
+import { AuditService } from '../services/AuditService';
 
 const router = Router();
 const notificationService = new NotificationService();
+const auditService = new AuditService();
 
 // GET /api/notifications
 router.get('/notifications', authMiddleware, async (req: Request, res: Response) => {
@@ -51,6 +53,7 @@ router.post('/notifications/broadcast', authMiddleware, requireRole('admin'), as
   try {
     const { title, message, type } = req.body;
     await notificationService.broadcastNotification(title, message, type);
+    await auditService.logAction('BROADCAST_NOTIFICATION', req.user!.id, undefined, undefined, `Notificação em massa: ${title}`, req.ip || 'unknown', 'high');
     res.json({ message: 'Notificação enviada para todos' });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Erro interno' });
