@@ -11,7 +11,7 @@ import { type User } from "@/data/mockData";
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
 import { formatCpf, formatDate, formatPhone, parseDateToISO, validatePassword } from "@/lib/formatters";
 import { formatDateBrasilia } from "@/lib/formatters";
-import { useDemoData } from "@/hooks/useDemoData";
+
 
 const AdminUsers = () => {
   const navigate = useNavigate();

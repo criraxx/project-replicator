@@ -5,7 +5,7 @@ import { ADMIN_NAV } from "@/constants/navigation";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
-import { useDemoData } from "@/hooks/useDemoData";
+
 
 interface CategoryItem { id: number; name: string; slug: string; description?: string; color?: string; icon?: string; is_active: boolean; }
 interface LevelItem { id: number; name: string; slug: string; description?: string; order: number; is_active: boolean; }
