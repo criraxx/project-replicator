@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Search, Shield, AlertTriangle, Clock, Users, Download, Inbox, Info } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Search, Shield, AlertTriangle, Clock, Users, Download, Inbox, Info, User, Eye } from "lucide-react";
 import { formatDateTimeBrasilia } from "@/lib/formatters";
 import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
@@ -7,8 +7,9 @@ import { severityColors } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { useDemoData } from "@/hooks/useDemoData";
-
+import { useAuth } from "@/contexts/AuthContext";
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const SEVERITY_OPTIONS = [
   { value: "low", label: "Low" },
@@ -24,14 +25,20 @@ const ACTION_OPTIONS = [
   { value: "SYSTEM", label: "System" },
 ];
 
+type ViewMode = "geral" | "usuario" | "meus";
+
 const AdminAudit = () => {
   const [search, setSearch] = useState("");
   const [severityFilters, setSeverityFilters] = useState<string[]>([]);
   const [actionFilters, setActionFilters] = useState<string[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>("geral");
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [allUsers, setAllUsers] = useState<{ id: number; name: string }[]>([]);
   const { toast } = useToast();
   const demo = useDemoData();
+  const { user: currentUser } = useAuth();
 
   useEffect(() => {
     if (demo.isDemoMode) {
@@ -39,24 +46,47 @@ const AdminAudit = () => {
       setLoading(false);
       return;
     }
-    const fetchLogs = async () => {
+    const fetchData = async () => {
       try {
-        const data = await api.listAuditLogs(200);
-        setLogs(data.logs && data.logs.length > 0 ? data.logs : []);
+        const [logData, userData] = await Promise.allSettled([
+          api.listAuditLogs(500),
+          api.listUsers(),
+        ]);
+        setLogs(logData.status === "fulfilled" && logData.value.logs?.length ? logData.value.logs : []);
+        if (userData.status === "fulfilled" && userData.value?.length) {
+          setAllUsers(userData.value.map((u: any) => ({ id: u.id, name: u.name })));
+        }
       } catch {
         setLogs([]);
       }
       setLoading(false);
     };
-    fetchLogs();
+    fetchData();
   }, []);
 
-  const filtered = logs.filter((l) => {
-    const matchSearch = !search || l.action?.toLowerCase().includes(search.toLowerCase()) || l.details?.toLowerCase().includes(search.toLowerCase()) || l.user?.name?.toLowerCase().includes(search.toLowerCase());
-    const matchSeverity = severityFilters.length === 0 || severityFilters.includes(l.severity);
-    const matchAction = actionFilters.length === 0 || actionFilters.some((af: string) => l.action?.toLowerCase().includes(af.toLowerCase()));
-    return matchSearch && matchSeverity && matchAction;
-  });
+  // Unique users from logs for the dropdown
+  const logUsers = useMemo(() => {
+    const map = new Map<number, string>();
+    logs.forEach(l => {
+      if (l.user_id && !map.has(l.user_id)) {
+        map.set(l.user_id, l.user?.name || allUsers.find(u => u.id === l.user_id)?.name || `Usuário #${l.user_id}`);
+      }
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+  }, [logs, allUsers]);
+
+  const filtered = useMemo(() => {
+    return logs.filter((l) => {
+      // View mode filter
+      if (viewMode === "meus" && l.user_id !== currentUser?.id) return false;
+      if (viewMode === "usuario" && selectedUserId && l.user_id !== Number(selectedUserId)) return false;
+
+      const matchSearch = !search || l.action?.toLowerCase().includes(search.toLowerCase()) || l.details?.toLowerCase().includes(search.toLowerCase()) || l.user?.name?.toLowerCase().includes(search.toLowerCase());
+      const matchSeverity = severityFilters.length === 0 || severityFilters.includes(l.severity);
+      const matchAction = actionFilters.length === 0 || actionFilters.some((af: string) => l.action?.toLowerCase().includes(af.toLowerCase()));
+      return matchSearch && matchSeverity && matchAction;
+    });
+  }, [logs, search, severityFilters, actionFilters, viewMode, selectedUserId, currentUser]);
 
   const criticalCount = logs.filter(l => l.severity === "high" || l.severity === "critical").length;
   const todayCount = logs.filter(l => {
@@ -65,7 +95,7 @@ const AdminAudit = () => {
     return d.toDateString() === today.toDateString();
   }).length;
 
-  const clearFilters = () => { setSearch(""); setSeverityFilters([]); setActionFilters([]); };
+  const clearFilters = () => { setSearch(""); setSeverityFilters([]); setActionFilters([]); setSelectedUserId(""); };
 
   return (
     <AppLayout pageName="Auditoria" navItems={ADMIN_NAV} notificationCount={0}>
@@ -107,6 +137,46 @@ const AdminAudit = () => {
         ))}
       </div>
 
+      {/* View Mode Tabs */}
+      <div className="bg-card rounded-xl shadow-sm border border-border p-4 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Eye className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-semibold">Visualização</span>
+          </div>
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
+            <TabsList>
+              <TabsTrigger value="geral"><Shield className="w-3.5 h-3.5 mr-1.5" />Logs Gerais</TabsTrigger>
+              <TabsTrigger value="usuario"><User className="w-3.5 h-3.5 mr-1.5" />Por Usuário</TabsTrigger>
+              <TabsTrigger value="meus"><Search className="w-3.5 h-3.5 mr-1.5" />Meus Logs</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {/* User selector when "Por Usuário" is active */}
+          {viewMode === "usuario" && (
+            <select
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+              className="px-3 py-2 border border-border rounded-lg text-sm bg-card min-w-[200px]"
+            >
+              <option value="">Selecione um usuário...</option>
+              {logUsers.map(u => (
+                <option key={u.id} value={String(u.id)}>{u.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {viewMode === "meus" && currentUser && (
+          <p className="text-xs text-muted-foreground mt-2">Exibindo logs de: <strong>{currentUser.name}</strong> ({currentUser.email})</p>
+        )}
+        {viewMode === "usuario" && selectedUserId && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Exibindo logs de: <strong>{logUsers.find(u => u.id === Number(selectedUserId))?.name}</strong> — {filtered.length} registro(s)
+          </p>
+        )}
+      </div>
+
       {/* Filters */}
       <div className="bg-card rounded-xl shadow-sm border border-border p-4 mb-6">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 items-end">
@@ -128,7 +198,9 @@ const AdminAudit = () => {
       <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden mb-6">
         <div className="p-5 pb-0 flex justify-between items-center">
           <div>
-            <h3 className="text-base font-semibold mb-0.5">Logs de Auditoria</h3>
+            <h3 className="text-base font-semibold mb-0.5">
+              {viewMode === "geral" ? "Logs de Auditoria" : viewMode === "meus" ? "Meus Logs" : "Logs do Usuário"}
+            </h3>
             <p className="text-[13px] text-muted-foreground">{filtered.length} registro(s)</p>
           </div>
           <span className="text-xs text-muted-foreground">Atualizado em tempo real</span>
@@ -138,7 +210,11 @@ const AdminAudit = () => {
         ) : filtered.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <Inbox className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p className="text-sm font-medium">Nenhum log de auditoria encontrado.</p>
+            <p className="text-sm font-medium">
+              {viewMode === "usuario" && !selectedUserId
+                ? "Selecione um usuário para ver seus logs."
+                : "Nenhum log de auditoria encontrado."}
+            </p>
           </div>
         ) : (
           <>
