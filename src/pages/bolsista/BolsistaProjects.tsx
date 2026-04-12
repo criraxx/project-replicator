@@ -88,7 +88,10 @@ const BolsistaProjects = () => {
                 <div key={approval.id} className="border border-border rounded-lg overflow-hidden">
                   <div className="p-4 flex items-start justify-between">
                     <div>
-                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                      <h4 
+                        className="font-semibold text-foreground flex items-center gap-2 hover:text-primary cursor-pointer transition-colors"
+                        onClick={() => navigate(`/projeto?id=${approval.project_id}`)}
+                      >
                         <FileText className="w-4 h-4 text-primary" />
                         {approval.project?.title || `Projeto #${approval.project_id}`}
                       </h4>

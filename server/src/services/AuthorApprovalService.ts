@@ -50,13 +50,13 @@ export class AuthorApprovalService {
       const saved = await this.authorRepository.save(author);
       savedAuthors.push(saved);
 
-      // Send notification to co-authors (not the owner)
+      // Send notification to collaborators (not the owner)
       if (!authorData.is_owner && matchedUser) {
         const project = await this.projectRepository.findOne({ where: { id: projectId } });
         await this.notificationService.createNotification(
           matchedUser.id,
-          'Solicitação de Coautoria',
-          `Você foi adicionado como coautor no projeto "${project?.title}". Acesse seus projetos para aprovar ou rejeitar sua participação.`,
+          'Solicitação de Participação',
+          `Você foi adicionado como colaborador no projeto "${project?.title}". Acesse seus projetos para aprovar ou rejeitar sua participação.`,
           'warning',
           'coautoria',
           projectId
@@ -65,6 +65,13 @@ export class AuthorApprovalService {
     }
 
     return savedAuthors;
+  }
+
+  /**
+   * Clear all authors for a project (used before re-adding during update)
+   */
+  async clearAuthors(projectId: number): Promise<void> {
+    await this.authorRepository.delete({ project_id: projectId });
   }
 
   /**
@@ -124,23 +131,24 @@ export class AuthorApprovalService {
     await this.authorRepository.save(author);
 
     // Notify the project owner about the rejection
-    const project = author.project;
+    const projToNotify = author.project;
     await this.notificationService.createNotification(
-      project.owner_id,
-      'Coautor Rejeitou Participação',
-      `${author.name} rejeitou participar do projeto "${project.title}". Motivo: ${reason.trim()}`,
+      projToNotify.owner_id,
+      'Colaborador Rejeitou Participação',
+      `${author.name} rejeitou participar do projeto "${projToNotify.title}". Motivo: ${reason.trim()}`,
       'error',
       'coautoria',
-      project.id
+      projToNotify.id
     );
 
-    // Send project back to owner (keep as aguardando_autores but owner needs to fix)
+    // Send project back to owner (devolvido)
+    await this.projectRepository.update(author.project_id, { status: 'devolvido' });
+
     return author;
   }
 
   /**
-   * Check if all co-authors approved. If yes, notify the owner.
-   * The project is already 'pendente' for admin — this just updates notifications.
+   * Check if all co-authors approved. If yes, advance to 'pendente' and notify the owner.
    */
   private async checkAndAdvanceProject(projectId: number): Promise<void> {
     const allAuthors = await this.authorRepository.find({ where: { project_id: projectId } });
@@ -149,11 +157,14 @@ export class AuthorApprovalService {
 
     if (allApproved) {
       const project = await this.projectRepository.findOne({ where: { id: projectId } });
-      if (project) {
+      if (project && project.status === 'aguardando_autores') {
+        project.status = 'pendente';
+        await this.projectRepository.save(project);
+
         await this.notificationService.createNotification(
           project.owner_id,
-          'Todos os Coautores Aprovaram',
-          `Todos os coautores do projeto "${project.title}" aprovaram sua participação.`,
+          'Todos os Colaboradores Aprovaram',
+          `Todos os colaboradores do projeto "${project.title}" aprovaram sua participação. O projeto agora está pendente de revisão administrativa.`,
           'success',
           'coautoria',
           projectId

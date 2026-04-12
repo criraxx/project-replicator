@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Image, ExternalLink, CheckCircle, XCircle, Clock, AlertTriangle, Download, Eye, X } from "lucide-react";
+import { ArrowLeft, FileText, Image, ExternalLink, CheckCircle, XCircle, Clock, AlertTriangle, Download, Eye, X, Edit3, Users } from "lucide-react";
 import { formatDateBrasilia, formatDateTimeBrasilia } from "@/lib/formatters";
 import AppLayout from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +26,8 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
   const [reviewComment, setReviewComment] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [showRejectInput, setShowRejectInput] = useState(false);
   const isAdmin = isAdminProp ?? user?.role === "admin";
   const isPesquisador = user?.role === "pesquisador";
   const navItems = isAdmin ? ADMIN_NAV : isPesquisador ? PESQUISADOR_NAV : BOLSISTA_NAV;
@@ -89,6 +91,49 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
     }
   };
 
+  const handleAuthorApprove = async () => {
+    if (!project) return;
+    const author = project.authors?.find((a: any) => a.cpf?.replace(/\D/g, '') === user?.cpf?.replace(/\D/g, ''));
+    if (!author) return;
+
+    setActionLoading(true);
+    try {
+      await api.approveAuthorParticipation(author.id);
+      toast({ title: "Sucesso", description: "Sua participação foi aprovada!" });
+      // Reload project to update status
+      const data = await api.getProject(project.id);
+      setProject(data);
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleAuthorReject = async () => {
+    if (!project || !rejectReason.trim()) {
+      toast({ title: "Atenção", description: "Informe o motivo da rejeição.", variant: "destructive" });
+      return;
+    }
+    const author = project.authors?.find((a: any) => a.cpf?.replace(/\D/g, '') === user?.cpf?.replace(/\D/g, ''));
+    if (!author) return;
+
+    setActionLoading(true);
+    try {
+      await api.rejectAuthorParticipation(author.id, rejectReason.trim());
+      toast({ title: "Sucesso", description: "Sua participação foi rejeitada." });
+      setRejectReason("");
+      setShowRejectInput(false);
+      // Reload project to update status
+      const data = await api.getProject(project.id);
+      setProject(data);
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <AppLayout pageName="Detalhes do Projeto" navItems={navItems}>
@@ -108,15 +153,24 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
   const photos = (project.files || []).filter((f: any) => f.file_category === "photo");
   const documents = (project.files || []).filter((f: any) => f.file_category === "pdf");
   const statusColor = statusColors[project.status as keyof typeof statusColors] || "bg-muted text-muted-foreground";
-  const statusLabel = statusLabels[project.status as keyof typeof statusLabels] || project.status;
+  const statusLabel = project.status === 'aguardando_autores' ? 'Aguardando Colaboradores' : (statusLabels[project.status as keyof typeof statusLabels] || project.status);
   const versions = project.versions || [];
   const comments = project.comments || [];
+  
+  const currentUserAuthor = project.authors?.find((a: any) => {
+    const authorCpf = a.cpf?.replace(/\D/g, '');
+    const userCpf = user?.cpf?.replace(/\D/g, '');
+    return authorCpf === userCpf && a.approval_status === 'pendente' && !a.is_owner;
+  });
 
   const statusIcon = {
     aprovado: <CheckCircle className="w-5 h-5" />,
     rejeitado: <XCircle className="w-5 h-5" />,
     pendente: <Clock className="w-5 h-5" />,
     em_revisao: <AlertTriangle className="w-5 h-5" />,
+    aguardando_autores: <Clock className="w-5 h-5" />,
+    devolvido: <AlertTriangle className="w-5 h-5" />,
+    aguardando_colaboradores: <Clock className="w-5 h-5" />,
   }[project.status] || <Clock className="w-5 h-5" />;
 
   return (
@@ -126,6 +180,14 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors">
           <ArrowLeft className="w-4 h-4" /> Voltar
         </button>
+        {(project.status === "rascunho" || project.status === "devolvido") && project.owner_id === user?.id && (
+          <button 
+            onClick={() => navigate(`/pesquisador/submissao?edit=${project.id}`)} 
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-secondary transition-colors"
+          >
+            <Edit3 className="w-4 h-4" /> {project.status === "rascunho" ? "Editar Rascunho" : "Editar e Reenviar"}
+          </button>
+        )}
       </div>
 
       {/* Project Header */}
@@ -147,15 +209,15 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
       </div>
 
       {/* Admin Actions */}
-      {isAdmin && (project.status === "pendente" || project.status === "em_revisao") && (
+      {isAdmin && (project.status === "pendente" || project.status === "em_revisao" || project.status === "aguardando_autores") && (
         <div className="bg-card border border-border rounded-xl p-5 mb-5">
-          <h3 className="text-base font-semibold text-primary mb-4">Acoes do Administrador</h3>
+          <h3 className="text-base font-semibold text-primary mb-4">Ações do Administrador</h3>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-muted-foreground mb-2">Comentario de revisao (obrigatorio para rejeicao)</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">Comentário de revisão (obrigatório para rejeição)</label>
             <textarea
               value={reviewComment}
               onChange={e => setReviewComment(e.target.value)}
-              placeholder="Escreva um comentario sobre sua decisao..."
+              placeholder="Escreva um comentário sobre sua decisão..."
               rows={3}
               className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card resize-none"
             />
@@ -176,6 +238,57 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
               <XCircle className="w-4 h-4" /> Rejeitar Projeto
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Colaborador Actions */}
+      {currentUserAuthor && (
+        <div className="bg-cebio-yellow-bg border border-cebio-yellow/30 rounded-xl p-5 mb-5">
+          <h3 className="text-base font-semibold text-cebio-yellow mb-2 flex items-center gap-2">
+            <Users className="w-5 h-5" /> Sua Confirmação é Necessária
+          </h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Você foi adicionado como <strong>{currentUserAuthor.role_in_project || currentUserAuthor.role || "colaborador"}</strong> neste projeto. 
+            Por favor, revise as informações acima e confirme sua participação.
+          </p>
+          
+          {showRejectInput ? (
+            <div className="space-y-3 mb-4">
+              <label className="block text-sm font-semibold">Motivo da rejeição <span className="text-destructive">*</span></label>
+              <textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Explique por que você não deseja participar deste projeto..."
+                rows={3}
+                className="w-full px-4 py-3 border border-border rounded-lg text-sm outline-none focus:border-primary bg-background resize-y"
+              />
+              <div className="flex gap-2 justify-end">
+                <button onClick={() => { setShowRejectInput(false); setRejectReason(""); }} className="px-4 py-2 border border-border rounded-lg text-sm font-semibold bg-muted hover:bg-muted/80">
+                  Cancelar
+                </button>
+                <button onClick={handleAuthorReject} disabled={actionLoading || !rejectReason.trim()} className="px-4 py-2 bg-destructive text-destructive-foreground rounded-lg text-sm font-semibold hover:bg-destructive/90 disabled:opacity-50 flex items-center gap-2">
+                  <XCircle className="w-4 h-4" /> Confirmar Rejeição
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-3">
+              <button
+                onClick={handleAuthorApprove}
+                disabled={actionLoading}
+                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:bg-secondary transition-colors disabled:opacity-50"
+              >
+                <CheckCircle className="w-4 h-4" /> Aprovar Participação
+              </button>
+              <button
+                onClick={() => setShowRejectInput(true)}
+                disabled={actionLoading}
+                className="flex items-center gap-2 px-5 py-2.5 border border-destructive text-destructive rounded-lg text-sm font-semibold hover:bg-destructive/10 transition-colors disabled:opacity-50"
+              >
+                <XCircle className="w-4 h-4" /> Rejeitar Participação
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -262,6 +375,11 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
                   {author.cpf && <div>CPF: {author.cpf}</div>}
                   {author.institution && <div>Instituicao: {author.institution}</div>}
                   <div>{author.academic_level || "—"} - {author.role_in_project || author.role || "—"}</div>
+                  {author.approval_status === "rejeitado" && author.rejection_reason && (
+                    <div className="mt-2 p-2 bg-destructive/10 border border-destructive/20 rounded text-destructive text-xs italic">
+                      Motivo da rejeicao: {author.rejection_reason}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -346,11 +464,37 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
             {project.links.map((link: any, i: number) => (
               <div key={i} className="flex items-center gap-3 bg-muted/50 border border-border rounded-lg p-3">
                 <div className="w-10 h-10 bg-cebio-blue-bg rounded flex items-center justify-center"><ExternalLink className="w-5 h-5 text-cebio-blue" /></div>
-                <div className="flex-1">
-                  <div className="text-sm text-foreground">{link.title || link.url}</div>
-                  <div className="text-xs text-muted-foreground">{link.link_type || link.type}{link.description ? ` - ${link.description}` : ""}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <a 
+                      href={link.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-sm font-semibold text-primary hover:underline truncate"
+                    >
+                      {link.title || "Link sem título"}
+                    </a>
+                    <span className="text-[11px] text-muted-foreground truncate">
+                      ({link.url})
+                    </span>
+                  </div>
+                  {link.description && (
+                    <div className="text-xs text-muted-foreground mt-0.5 italic">
+                      {link.description}
+                    </div>
+                  )}
+                  <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70 mt-1">
+                    Tipo: {link.link_type || link.type || "outro"}
+                  </div>
                 </div>
-                <a href={link.url} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-secondary transition-colors">Abrir</a>
+                <a 
+                  href={link.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-medium hover:bg-secondary transition-colors shrink-0"
+                >
+                  Abrir
+                </a>
               </div>
             ))}
           </div>

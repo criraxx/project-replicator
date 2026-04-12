@@ -7,7 +7,24 @@ export const formatCpf = (v: string) => {
 };
 
 export const formatDate = (v: string) => {
-  const d = v.replace(/\D/g, "").slice(0, 8);
+  let d = v.replace(/\D/g, "").slice(0, 8);
+  
+  // Validar dia (máximo 31)
+  if (d.length >= 2) {
+    let day = parseInt(d.slice(0, 2));
+    if (day > 31) day = 31;
+    if (day === 0) day = 1;
+    d = day.toString().padStart(2, '0') + d.slice(2);
+  }
+  
+  // Validar mês (máximo 12)
+  if (d.length >= 4) {
+    let month = parseInt(d.slice(2, 4));
+    if (month > 12) month = 12;
+    if (month === 0) month = 1;
+    d = d.slice(0, 2) + month.toString().padStart(2, '0') + d.slice(4);
+  }
+
   if (d.length <= 2) return d;
   if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`;
   return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`;

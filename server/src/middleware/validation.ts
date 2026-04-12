@@ -116,9 +116,15 @@ export const validateCreateProject = [
     .withMessage('Título deve ter entre 5 e 255 caracteres')
     .customSanitizer(value => sanitizeString(value)),
   body('summary')
+    .if(body('status').equals('pendente'))
     .trim()
     .isLength({ min: 10, max: 500 })
     .withMessage('Resumo deve ter entre 10 e 500 caracteres')
+    .customSanitizer(value => sanitizeString(value)),
+  body('summary')
+    .if(body('status').equals('rascunho'))
+    .optional()
+    .trim()
     .customSanitizer(value => sanitizeString(value)),
   body('description')
     .optional()
@@ -126,21 +132,39 @@ export const validateCreateProject = [
     .isLength({ max: 5000 })
     .customSanitizer(value => sanitizeString(value)),
   body('category')
+    .if(body('status').equals('pendente'))
     .trim()
     .isLength({ min: 3, max: 100 })
+    .withMessage('Categoria é obrigatória')
+    .customSanitizer(value => sanitizeString(value)),
+  body('category')
+    .if(body('status').equals('rascunho'))
+    .optional()
+    .trim()
     .customSanitizer(value => sanitizeString(value)),
   body('academic_level')
+    .if(body('status').equals('pendente'))
     .trim()
     .isLength({ min: 3, max: 100 })
+    .withMessage('Nível acadêmico é obrigatório')
+    .customSanitizer(value => sanitizeString(value)),
+  body('academic_level')
+    .if(body('status').equals('rascunho'))
+    .optional()
+    .trim()
     .customSanitizer(value => sanitizeString(value)),
   body('start_date')
-    .optional()
+    .optional({ checkFalsy: true })
     .isISO8601()
     .withMessage('Data de início inválida'),
   body('end_date')
-    .optional()
+    .optional({ checkFalsy: true })
     .isISO8601()
     .withMessage('Data de término inválida'),
+  body('status')
+    .optional()
+    .isIn(['rascunho', 'pendente'])
+    .withMessage('Status inicial inválido'),
 ];
 
 export const validateUpdateProject = [
@@ -155,16 +179,23 @@ export const validateUpdateProject = [
   body('summary')
     .optional()
     .trim()
-    .isLength({ min: 10, max: 500 })
     .customSanitizer(value => sanitizeString(value)),
   body('description')
     .optional()
     .trim()
     .isLength({ max: 5000 })
     .customSanitizer(value => sanitizeString(value)),
+  body('start_date')
+    .optional({ checkFalsy: true })
+    .isISO8601()
+    .withMessage('Data de início inválida'),
+  body('end_date')
+    .optional({ checkFalsy: true })
+    .isISO8601()
+    .withMessage('Data de término inválida'),
   body('status')
     .optional()
-    .isIn(['pendente', 'em_revisao', 'aprovado', 'rejeitado']),
+    .isIn(['rascunho', 'pendente', 'em_revisao', 'aprovado', 'rejeitado', 'aguardando_autores', 'devolvido']),
 ];
 
 /**
@@ -234,7 +265,7 @@ export const validateUserFilter = [
 export const validateProjectFilter = [
   query('status')
     .optional()
-    .isIn(['pendente', 'em_revisao', 'aprovado', 'rejeitado']),
+    .isIn(['rascunho', 'pendente', 'em_revisao', 'aprovado', 'rejeitado', 'aguardando_autores', 'devolvido']),
   query('owner_id')
     .optional()
     .isInt({ min: 1 }),

@@ -11,6 +11,7 @@ import MultiSelectFilter from "@/components/ui/multi-select-filter";
 import { formatDateBrasilia } from "@/lib/formatters";
 
 const STATUS_OPTIONS = [
+  { value: "aguardando_autores", label: "Aguardando Colaboradores" },
   { value: "pendente", label: "Pendente" },
   { value: "em_revisao", label: "Em Revisao" },
   { value: "aprovado", label: "Aprovado" },

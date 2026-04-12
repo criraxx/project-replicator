@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Inbox, CheckCircle, XCircle, Clock, FileText, Users } from "lucide-react";
+import { Inbox, CheckCircle, XCircle, Clock, FileText, Users, Edit3 } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { PESQUISADOR_NAV } from "@/constants/navigation";
@@ -88,7 +88,10 @@ const PesquisadorProjects = () => {
                 <div key={approval.id} className="border border-border rounded-lg overflow-hidden">
                   <div className="p-4 flex items-start justify-between">
                     <div>
-                      <h4 className="font-semibold text-foreground flex items-center gap-2">
+                      <h4 
+                        className="font-semibold text-foreground flex items-center gap-2 hover:text-primary cursor-pointer transition-colors"
+                        onClick={() => navigate(`/projeto?id=${approval.project_id}`)}
+                      >
                         <FileText className="w-4 h-4 text-primary" />
                         {approval.project?.title || `Projeto #${approval.project_id}`}
                       </h4>
@@ -161,10 +164,24 @@ const PesquisadorProjects = () => {
                       <div className="font-semibold text-foreground">{p.title}</div>
                       <div className="text-xs text-muted-foreground mt-1">{p.category || "—"} • {p.academic_level || "—"} • {formatDateBrasilia(p.created_at)}</div>
                     </div>
-                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${statusColors[p.status as keyof typeof statusColors] || ""}`}>
-                      {statusLabels[p.status as keyof typeof statusLabels] || p.status}
-                    </span>
-                  </div>
+                    <div className="flex items-center gap-3">
+                      {p.status === "rascunho" && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/pesquisador/submissao?edit=${p.id}`);
+                          }}
+                          className="p-2 hover:bg-primary/10 rounded-full text-primary transition-colors"
+                          title="Editar Rascunho"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                      )}
+                      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${statusColors[p.status as keyof typeof statusColors] || ""}`}>
+                        {statusLabels[p.status as keyof typeof statusLabels] || p.status}
+                      </span>
+                    </div>
+	                  </div>
                 ))}
               </div>
             )}

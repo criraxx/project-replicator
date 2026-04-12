@@ -14,7 +14,9 @@ declare global {
 }
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  console.log('Auth Header:', req.headers.authorization);
   const token = extractToken(req.headers.authorization);
+  console.log('Extracted Token:', token);
 
   if (!token) {
     return res.status(401).json({ error: 'Token não fornecido' });

@@ -15,6 +15,12 @@ export class ProjectLink {
   @Column({ type: 'varchar', length: 2048 })
   url!: string;
 
+  @Column({ type: 'varchar', length: 50, default: 'outro' })
+  link_type!: string;
+
+  @Column({ type: 'text', nullable: true })
+  description!: string;
+
   @CreateDateColumn()
   created_at!: Date;
 

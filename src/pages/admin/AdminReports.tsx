@@ -53,7 +53,7 @@ const Pictogram = ({ data }: { data: { name: string; value: number; color: strin
     for (let i = 0; i < count; i++) icons.push({ color: d.color, label: d.name });
   });
   return (
-    <div>
+    <div className="bg-white p-4 rounded-lg">
       <div className="flex flex-wrap gap-1 justify-center mb-4">
         {icons.map((ic, i) => (
           <User key={i} className="w-4 h-4" style={{ color: ic.color }} />
@@ -244,14 +244,16 @@ const AdminReports = () => {
     }, []);
   }, [projects, users]);
 
-  const buildPayload = () => {
+  const buildPayload = async () => {
     const statusLabel = statusFilters.length > 0 ? statusFilters.map(s => STATUS_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos";
     const userTypeLabel = userTypeFilters.length > 0 ? userTypeFilters.map(s => USER_TYPE_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos";
     const catLabel = categoryFilters.length > 0 ? categoryFilters.join(", ") : "Todas";
     const ownerLabel = ownerFilters.length > 0 ? ownerFilters.map(id => uniqueOwners.find(o => String(o.id) === id)?.name || id).join(", ") : "Todos";
+    
     return {
       title: "Relatorio CEBIO Brasil",
       generatedAt: new Date().toLocaleString("pt-BR"),
+      chartType: chartType,
       filters: [
         { label: "Status", value: statusLabel },
         { label: "Categoria", value: catLabel },
@@ -289,9 +291,13 @@ const AdminReports = () => {
   const downloadBlob = async (url: string, body: any, filename: string) => {
     setExporting(true);
     try {
-      const res = await fetch(`/api${url}`, {
+      const token = localStorage.getItem("cebio_token");
+      const res = await fetch(`https://8000-ic0wocwek8fkyj0l4wen8-a1d98c48.us2.manus.computer/api${url}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": token ? `Bearer ${token}` : ""
+        },
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error("Falha na exportacao");
@@ -308,14 +314,20 @@ const AdminReports = () => {
     }
   };
 
-  const exportPDF = () => downloadBlob("/exports/pdf", buildPayload(), `relatorio_cebio_${format(new Date(), "yyyy-MM-dd")}.pdf`);
-  const exportExcel = () => downloadBlob("/exports/excel", buildPayload(), `relatorio_cebio_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+  const exportPDF = async () => {
+    const payload = await buildPayload();
+    downloadBlob("/exports/pdf", payload, `relatorio_cebio_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  };
 
-  const exportSectionPDF = (title: string, data: { name: string; value: number }[]) =>
-    downloadBlob("/exports/pdf-section", { sectionTitle: title, data }, `${title.replace(/\s+/g, "_")}.pdf`);
-
-  const exportSectionExcel = (title: string, data: { name: string; value: number }[]) =>
-    downloadBlob("/exports/excel-section", { sectionTitle: title, data }, `${title.replace(/\s+/g, "_")}.xlsx`);
+  const exportSectionPDF = async (title: string, data: { name: string; value: number }[]) => {
+    const payload = await buildPayload();
+    downloadBlob("/exports/pdf-section", { 
+      sectionTitle: title, 
+      data, 
+      chartType, 
+      projects: payload.projects 
+    }, `${title.replace(/\s+/g, "_")}.pdf`);
+  };
 
   return (
     <AppLayout pageName="Relatórios e Analytics" navItems={ADMIN_NAV} notificationCount={0}>
@@ -326,9 +338,6 @@ const AdminReports = () => {
             <p className="text-sm opacity-90">Visão detalhada e personalizável do desempenho da plataforma</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={exportExcel} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors">
-              <FileSpreadsheet className="w-4 h-4" /> Exportar Excel
-            </button>
             <button onClick={exportPDF} disabled={exporting} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 disabled:opacity-50 text-primary-foreground px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors">
               <Download className="w-4 h-4" /> {exporting ? "Gerando..." : "Exportar PDF"}
             </button>
@@ -457,7 +466,7 @@ const AdminReports = () => {
           { title: "Evolucao Temporal", data: byMonth, type: (chartType === "pie" || chartType === "pictogram" ? "lines" : chartType) as ChartType },
           { title: "Tipo de Usuario", data: byUserType, type: chartType },
         ].map((chart, i) => (
-          <div key={i} className="bg-card rounded-xl shadow-sm border border-border p-5">
+          <div key={i} className="bg-card rounded-xl shadow-sm border border-border p-5 chart-container" data-title={chart.title}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold">{chart.title}</h3>
               <div className="flex gap-1">
@@ -467,13 +476,6 @@ const AdminReports = () => {
                   className="px-2 py-1 rounded text-[11px] font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors flex items-center gap-1 disabled:opacity-50"
                 >
                   <Download className="w-3 h-3" /> PDF
-                </button>
-                <button
-                  onClick={() => exportSectionExcel(chart.title, chart.data)}
-                  disabled={exporting}
-                  className="px-2 py-1 rounded text-[11px] font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors flex items-center gap-1 disabled:opacity-50"
-                >
-                  <FileSpreadsheet className="w-3 h-3" /> Excel
                 </button>
               </div>
             </div>

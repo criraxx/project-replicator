@@ -13,167 +13,262 @@ interface ChartData {
   value: number;
 }
 
+interface ProjectData {
+  title: string;
+  owner: string;
+  category: string;
+  status: string;
+  date: string;
+}
+
 interface ExportPayload {
   title: string;
   generatedAt: string;
+  chartType?: string;
   filters: { label: string; value: string }[];
   kpis: { label: string; value: string | number }[];
   sections: { title: string; data: ChartData[] }[];
-  projects: { title: string; owner: string; category: string; status: string; date: string }[];
+  projects: ProjectData[];
 }
 
-// =====================
-// EXCEL EXPORT
-// =====================
-router.post('/exports/excel', async (req: Request, res: Response) => {
-  try {
-    const payload: ExportPayload = req.body;
-    const wb = new ExcelJS.Workbook();
-    wb.creator = 'CEBIO Brasil';
-    wb.created = new Date();
+const COLORS = ['#2D5F4A', '#D4A843', '#3B82F6', '#EF4444', '#8B5CF6', '#F59E0B', '#10B981', '#6366F1'];
 
-    const headerFill: ExcelJS.FillPattern = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2D5F4A' } };
-    const headerFont: Partial<ExcelJS.Font> = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
-    const titleFont: Partial<ExcelJS.Font> = { bold: true, color: { argb: 'FF2D5F4A' }, size: 14 };
-    const borderStyle: Partial<ExcelJS.Borders> = {
-      top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
-      bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
-      left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
-      right: { style: 'thin', color: { argb: 'FFE5E7EB' } },
-    };
+// Helper to draw a Pie Chart
+function drawPieChart(doc: PDFKit.PDFDocument, data: ChartData[], x: number, y: number, radius: number) {
+  const total = data.reduce((sum, d) => sum + d.value, 0);
+  if (total === 0) return;
 
-    // --- Aba Resumo ---
-    const wsResumo = wb.addWorksheet('Resumo');
-    wsResumo.columns = [{ width: 30 }, { width: 45 }];
+  let startAngle = 0;
+  data.forEach((d, i) => {
+    const sliceAngle = (d.value / total) * 2 * Math.PI;
+    const endAngle = startAngle + sliceAngle;
 
-    let row = wsResumo.addRow([payload.title || 'Relatorio CEBIO Brasil']);
-    row.getCell(1).font = titleFont;
-    wsResumo.mergeCells(row.number, 1, row.number, 2);
+    doc.save()
+       .moveTo(x, y)
+       .arc(x, y, radius, startAngle, endAngle)
+       .lineTo(x, y)
+       .fill(COLORS[i % COLORS.length]);
+    
+    startAngle = endAngle;
+    doc.restore();
+  });
 
-    wsResumo.addRow(['Gerado em', payload.generatedAt]);
-    wsResumo.addRow([]);
+  let legendY = y - radius;
+  data.forEach((d, i) => {
+    doc.save()
+       .rect(x + radius + 20, legendY, 10, 10)
+       .fill(COLORS[i % COLORS.length]);
+    doc.fillColor('#333').fontSize(8).text(`${d.name}: ${d.value} (${((d.value/total)*100).toFixed(1)}%)`, x + radius + 35, legendY + 1);
+    legendY += 15;
+    doc.restore();
+  });
+}
 
-    row = wsResumo.addRow(['Filtros Aplicados']);
-    row.getCell(1).font = { bold: true, size: 12, color: { argb: 'FF2D5F4A' } };
-    payload.filters.forEach(f => {
-      wsResumo.addRow([f.label, f.value]);
+// Helper to draw a Bar Chart (Vertical or Horizontal)
+function drawBarChart(doc: PDFKit.PDFDocument, data: ChartData[], x: number, y: number, width: number, height: number, isHorizontal: boolean = false) {
+  const maxVal = Math.max(...data.map(d => d.value), 1);
+  
+  if (isHorizontal) {
+    const barHeight = (height / data.length) * 0.7;
+    const spacing = (height / data.length) * 0.3;
+    
+    data.forEach((d, i) => {
+      const barWidth = (d.value / maxVal) * width;
+      const barY = y - height + i * (barHeight + spacing) + spacing/2;
+      
+      doc.save().rect(x, barY, barWidth, barHeight).fill(COLORS[0]).restore();
+      doc.fillColor('#666').fontSize(7).text(d.name.substring(0, 15), x - 75, barY + barHeight/2 - 3, { width: 70, align: 'right' });
+      doc.fillColor('#333').fontSize(7).text(String(d.value), x + barWidth + 5, barY + barHeight/2 - 3);
     });
-
-    wsResumo.addRow([]);
-    row = wsResumo.addRow(['Indicadores']);
-    row.getCell(1).font = { bold: true, size: 12, color: { argb: 'FF2D5F4A' } };
-    payload.kpis.forEach(k => {
-      wsResumo.addRow([k.label, k.value]);
-    });
-
-    // --- Abas de dados (cada secao) ---
-    payload.sections.forEach(section => {
-      const sheetName = section.title.substring(0, 31);
-      const ws = wb.addWorksheet(sheetName);
-      ws.columns = [{ width: 35 }, { width: 18 }];
-
-      const hdr = ws.addRow([section.title, 'Quantidade']);
-      hdr.eachCell(cell => {
-        cell.fill = headerFill;
-        cell.font = headerFont;
-        cell.alignment = { horizontal: 'center' };
-        cell.border = borderStyle;
-      });
-
-      section.data.forEach((d, i) => {
-        const r = ws.addRow([d.name, d.value]);
-        r.eachCell(cell => {
-          cell.border = borderStyle;
-          cell.alignment = { horizontal: i === 0 ? 'left' : 'left' };
-          if (i % 2 === 0) {
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF9FAFB' } };
-          }
-        });
-        r.getCell(2).alignment = { horizontal: 'right' };
-      });
-    });
-
-    // --- Aba Projetos ---
-    if (payload.projects?.length) {
-      const ws = wb.addWorksheet('Projetos');
-      ws.columns = [{ width: 40 }, { width: 30 }, { width: 25 }, { width: 15 }, { width: 15 }];
-
-      const hdr = ws.addRow(['Titulo', 'Proprietario', 'Categoria', 'Status', 'Data']);
-      hdr.eachCell(cell => {
-        cell.fill = headerFill;
-        cell.font = headerFont;
-        cell.alignment = { horizontal: 'center' };
-        cell.border = borderStyle;
-      });
-
-      payload.projects.forEach((p, i) => {
-        const r = ws.addRow([p.title, p.owner, p.category, p.status, p.date]);
-        r.eachCell(cell => {
-          cell.border = borderStyle;
-          if (i % 2 === 0) {
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF9FAFB' } };
-          }
-        });
-      });
-
-      ws.autoFilter = { from: 'A1', to: 'E1' };
-    }
-
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename=relatorio_cebio_${new Date().toISOString().slice(0, 10)}.xlsx`);
-    await wb.xlsx.write(res);
-    res.end();
-  } catch (err) {
-    console.error('Excel export error:', err);
-    res.status(500).json({ error: 'Falha ao gerar Excel' });
-  }
-});
-
-// =====================
-// EXCEL SINGLE SECTION
-// =====================
-router.post('/exports/excel-section', async (req: Request, res: Response) => {
-  try {
-    const { sectionTitle, data }: { sectionTitle: string; data: ChartData[] } = req.body;
-    const wb = new ExcelJS.Workbook();
-
-    const headerFill: ExcelJS.FillPattern = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2D5F4A' } };
-    const headerFont: Partial<ExcelJS.Font> = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
-    const borderStyle: Partial<ExcelJS.Borders> = {
-      top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
-      bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
-      left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
-      right: { style: 'thin', color: { argb: 'FFE5E7EB' } },
-    };
-
-    const ws = wb.addWorksheet(sectionTitle.substring(0, 31));
-    ws.columns = [{ width: 35 }, { width: 18 }];
-
-    const hdr = ws.addRow([sectionTitle, 'Quantidade']);
-    hdr.eachCell(cell => {
-      cell.fill = headerFill;
-      cell.font = headerFont;
-      cell.alignment = { horizontal: 'center' };
-      cell.border = borderStyle;
-    });
+  } else {
+    const barWidth = (width / data.length) * 0.7;
+    const spacing = (width / data.length) * 0.3;
 
     data.forEach((d, i) => {
-      const r = ws.addRow([d.name, d.value]);
-      r.eachCell(cell => {
-        cell.border = borderStyle;
-        if (i % 2 === 0) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF9FAFB' } };
-      });
-      r.getCell(2).alignment = { horizontal: 'right' };
+      const barHeight = (d.value / maxVal) * height;
+      const barX = x + i * (barWidth + spacing) + spacing/2;
+      
+      doc.save().rect(barX, y - barHeight, barWidth, barHeight).fill(COLORS[0]).restore();
+      doc.fillColor('#666').fontSize(7).text(d.name.substring(0, 10), barX, y + 5, { width: barWidth, align: 'center' });
+      doc.fillColor('#333').fontSize(7).text(String(d.value), barX, y - barHeight - 10, { width: barWidth, align: 'center' });
     });
-
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename=${sectionTitle.replace(/\s+/g, '_')}.xlsx`);
-    await wb.xlsx.write(res);
-    res.end();
-  } catch (err) {
-    console.error('Excel section export error:', err);
-    res.status(500).json({ error: 'Falha ao gerar Excel' });
   }
+}
+
+// Helper to draw a Line Chart
+function drawLineChart(doc: PDFKit.PDFDocument, data: ChartData[], x: number, y: number, width: number, height: number) {
+  const maxVal = Math.max(...data.map(d => d.value), 1);
+  const stepX = width / (data.length - 1 || 1);
+
+  if (data.length > 0) {
+    doc.save();
+    doc.moveTo(x, y - (data[0].value / maxVal) * height);
+    data.forEach((d, i) => {
+      const pointX = x + i * stepX;
+      const pointY = y - (d.value / maxVal) * height;
+      doc.lineTo(pointX, pointY);
+    });
+    doc.stroke(COLORS[0]).lineWidth(2);
+    doc.restore();
+
+    data.forEach((d, i) => {
+      const pointX = x + i * stepX;
+      const pointY = y - (d.value / maxVal) * height;
+      doc.save().circle(pointX, pointY, 3).fill(COLORS[0]).restore();
+      doc.save().fillColor('#666').fontSize(7).text(d.name.substring(0, 10), pointX - 15, y + 5, { width: 30, align: 'center' }).restore();
+    });
+  }
+}
+
+// Helper to draw a Pictogram
+function drawPictogram(doc: PDFKit.PDFDocument, data: ChartData[], x: number, y: number, width: number) {
+  const total = data.reduce((sum, d) => sum + d.value, 0);
+  if (total === 0) return;
+
+  const iconsPerRow = 10;
+  const iconSize = 15;
+  const spacing = 5;
+  let currentX = x;
+  let currentY = y;
+  let iconCount = 0;
+
+  data.forEach((d, colorIdx) => {
+    const count = Math.round((d.value / total) * 100);
+    for (let i = 0; i < count; i++) {
+      doc.save()
+         .circle(currentX + iconSize/2, currentY + iconSize/2, iconSize/2 - 2)
+         .fill(COLORS[colorIdx % COLORS.length]);
+      
+      iconCount++;
+      currentX += iconSize + spacing;
+      if (iconCount % iconsPerRow === 0) {
+        currentX = x;
+        currentY += iconSize + spacing;
+      }
+    }
+  });
+
+  doc.y = currentY + 30;
+  data.forEach((d, i) => {
+    doc.save().rect(x, doc.y, 10, 10).fill(COLORS[i % COLORS.length]).restore();
+    doc.fillColor('#333').fontSize(8).text(`${d.name}: ${d.value}`, x + 15, doc.y + 1);
+    doc.y += 15;
+  });
+}
+
+// Helper to draw Projects Table
+function drawProjectsTable(doc: PDFKit.PDFDocument, projects: ProjectData[]) {
+  const green = '#2D5F4A';
+  const lightGray = '#F3F4F6';
+
+  doc.addPage();
+  doc.fontSize(16).fillColor(green).text('Tabela Resumo de Projetos', { align: 'left' });
+  doc.moveDown(0.5);
+  doc.fontSize(10).fillColor('#6B7280').text(`Total de ${projects.length} projetos listados abaixo.`);
+  doc.moveDown(1);
+
+  const tableTop = doc.y;
+  const colX = [40, 220, 320, 420, 490];
+  const headers = ['Título', 'Proprietário', 'Categoria', 'Status', 'Data'];
+
+  doc.save().rect(40, tableTop - 5, 515, 20).fill(green);
+  headers.forEach((h, i) => {
+    doc.fillColor('white').fontSize(9).text(h, colX[i] + 5, tableTop);
+  });
+  doc.restore();
+  doc.y = tableTop + 20;
+
+  projects.forEach((p, i) => {
+    if (doc.y > 740) { doc.addPage(); doc.y = 40; }
+    const rowY = doc.y;
+    if (i % 2 === 0) doc.save().rect(40, rowY - 2, 515, 16).fill(lightGray).restore();
+    doc.fillColor('#333').fontSize(8);
+    doc.text(p.title.substring(0, 45) + (p.title.length > 45 ? '...' : ''), colX[0] + 5, rowY, { width: 175 });
+    doc.text(p.owner.substring(0, 20), colX[1] + 5, rowY, { width: 95 });
+    doc.text(p.category.substring(0, 20), colX[2] + 5, rowY, { width: 95 });
+    doc.text(p.status, colX[3] + 5, rowY, { width: 65 });
+    doc.text(p.date, colX[4] + 5, rowY, { width: 60 });
+    doc.y = rowY + 18;
+  });
+}
+
+// Helper to draw Advanced Comparison Tables
+function drawAdvancedComparisonTables(doc: PDFKit.PDFDocument, projects: ProjectData[]) {
+  const green = '#2D5F4A';
+  const lightGray = '#F3F4F6';
+
+  doc.addPage();
+  doc.fontSize(16).fillColor(green).text('Tabelas de Comparação Analítica', { align: 'left' });
+  doc.moveDown(1);
+
+  // 1. Matrix: Status x Category
+  doc.fontSize(12).fillColor(green).text('1. Matriz: Status por Categoria');
+  doc.moveDown(0.5);
+  
+  const categories = Array.from(new Set(projects.map(p => p.category || 'Sem Categoria')));
+  const statuses = Array.from(new Set(projects.map(p => p.status)));
+  
+  const matrixTop = doc.y;
+  const cellW = 50;
+  const labelW = 120;
+  
+  // Header
+  doc.save().rect(40, matrixTop - 2, labelW + statuses.length * cellW, 18).fill(green);
+  doc.fillColor('white').fontSize(8).text('Categoria', 45, matrixTop);
+  statuses.forEach((s, i) => {
+    doc.text(s.substring(0, 8), 40 + labelW + i * cellW, matrixTop, { width: cellW, align: 'center' });
+  });
+  doc.restore();
+  doc.y = matrixTop + 20;
+
+  categories.forEach((cat, i) => {
+    if (doc.y > 740) { doc.addPage(); doc.y = 40; }
+    const rowY = doc.y;
+    if (i % 2 === 0) doc.save().rect(40, rowY - 2, labelW + statuses.length * cellW, 16).fill(lightGray).restore();
+    
+    doc.fillColor('#333').fontSize(8).text(cat, 45, rowY, { width: labelW - 10 });
+    statuses.forEach((s, j) => {
+      const count = projects.filter(p => (p.category || 'Sem Categoria') === cat && p.status === s).length;
+      doc.text(String(count), 40 + labelW + j * cellW, rowY, { width: cellW, align: 'center' });
+    });
+    doc.y = rowY + 18;
+  });
+
+  doc.moveDown(1.5);
+
+  // 2. Performance by Owner (Full List)
+  doc.fontSize(12).fillColor(green).text('2. Engajamento por Proprietário (Lista Completa)');
+  doc.moveDown(0.5);
+  
+  const owners = Array.from(new Set(projects.map(p => p.owner)));
+  const ownerTop = doc.y;
+  doc.save().rect(40, ownerTop - 2, 515, 18).fill(green);
+  doc.fillColor('white').fontSize(8).text('Proprietário', 45, ownerTop);
+  doc.text('Total Projetos', 250, ownerTop, { width: 80, align: 'center' });
+  doc.text('Aprovados', 340, ownerTop, { width: 80, align: 'center' });
+  doc.text('% Aprovação', 430, ownerTop, { width: 80, align: 'center' });
+  doc.restore();
+  doc.y = ownerTop + 20;
+
+  owners.sort((a, b) => projects.filter(p => p.owner === b).length - projects.filter(p => p.owner === a).length).forEach((owner, i) => {
+    if (doc.y > 740) { doc.addPage(); doc.y = 40; }
+    const rowY = doc.y;
+    if (i % 2 === 0) doc.save().rect(40, rowY - 2, 515, 16).fill(lightGray).restore();
+    
+    const total = projects.filter(p => p.owner === owner).length;
+    const approved = projects.filter(p => p.owner === owner && p.status === 'aprovado').length;
+    const rate = total > 0 ? Math.round((approved / total) * 100) : 0;
+
+    doc.fillColor('#333').fontSize(8).text(owner, 45, rowY, { width: 200 });
+    doc.text(String(total), 250, rowY, { width: 80, align: 'center' });
+    doc.text(String(approved), 340, rowY, { width: 80, align: 'center' });
+    doc.text(`${rate}%`, 430, rowY, { width: 80, align: 'center' });
+    doc.y = rowY + 18;
+  });
+}
+
+router.post('/exports/excel', async (req: Request, res: Response) => {
+  res.status(404).json({ error: 'Excel export disabled' });
 });
 
 // =====================
@@ -190,123 +285,61 @@ router.post('/exports/pdf', async (req: Request, res: Response) => {
 
     const green = '#2D5F4A';
     const gray = '#6B7280';
-    const lightGray = '#F3F4F6';
 
-    // Title
-    doc.fontSize(20).fillColor(green).text(payload.title || 'Relatorio CEBIO Brasil', { align: 'center' });
+    doc.fontSize(20).fillColor(green).text(payload.title || 'Relatório CEBIO Brasil', { align: 'center' });
     doc.fontSize(10).fillColor(gray).text(`Gerado em ${payload.generatedAt}`, { align: 'center' });
     doc.moveDown(1.5);
 
-    // Filters
-    doc.fontSize(14).fillColor(green).text('Filtros Aplicados');
-    doc.moveTo(40, doc.y).lineTo(555, doc.y).strokeColor(green).lineWidth(1).stroke();
-    doc.moveDown(0.5);
-    payload.filters.forEach(f => {
-      doc.fontSize(10).fillColor('#111').text(`${f.label}: `, { continued: true }).fillColor(gray).text(f.value);
-    });
-    doc.moveDown(1);
-
-    // KPIs
-    doc.fontSize(14).fillColor(green).text('Indicadores');
-    doc.moveTo(40, doc.y).lineTo(555, doc.y).strokeColor(green).lineWidth(1).stroke();
-    doc.moveDown(0.5);
-
     const kpiX = 40;
-    const kpiWidth = (555 - 40 - 30) / 4;
+    const kpiWidth = (515 - 30) / 4;
     const kpiY = doc.y;
     payload.kpis.forEach((k, i) => {
       const x = kpiX + i * (kpiWidth + 10);
-      doc.save();
-      doc.roundedRect(x, kpiY, kpiWidth, 55, 5).fillAndStroke('#F0F7F4', '#E5E7EB');
-      doc.fillColor(green).fontSize(20).text(String(k.value), x, kpiY + 8, { width: kpiWidth, align: 'center' });
-      doc.fillColor(gray).fontSize(8).text(k.label, x, kpiY + 35, { width: kpiWidth, align: 'center' });
-      doc.restore();
+      doc.save()
+         .roundedRect(x, kpiY, kpiWidth, 50, 5).fillAndStroke('#F0F7F4', '#E5E7EB')
+         .fillColor(green).fontSize(16).text(String(k.value), x, kpiY + 10, { width: kpiWidth, align: 'center' })
+         .fillColor(gray).fontSize(8).text(k.label, x, kpiY + 30, { width: kpiWidth, align: 'center' })
+         .restore();
     });
     doc.y = kpiY + 70;
 
-    // Sections (data tables with bars)
-    payload.sections.forEach(section => {
-      if (doc.y > 650) doc.addPage();
-      doc.moveDown(0.5);
+    for (const section of payload.sections) {
+      if (doc.y > 500) doc.addPage();
+      doc.moveDown(1);
       doc.fontSize(14).fillColor(green).text(section.title);
       doc.moveTo(40, doc.y).lineTo(555, doc.y).strokeColor(green).lineWidth(1).stroke();
-      doc.moveDown(0.3);
+      doc.moveDown(1);
 
-      const maxVal = Math.max(...section.data.map(d => d.value), 1);
-      const barColors = ['#2D5F4A', '#D4A843', '#3B82F6', '#EF4444', '#8B5CF6', '#F59E0B'];
+      const chartY = doc.y + 80;
+      const chartX = 80;
 
+      if (payload.chartType === 'pie') drawPieChart(doc, section.data, 150, chartY, 60);
+      else if (payload.chartType === 'lines') drawLineChart(doc, section.data, chartX, chartY + 40, 350, 100);
+      else if (payload.chartType === 'pictogram') drawPictogram(doc, section.data, 100, chartY - 40, 350);
+      else if (payload.chartType === 'bars') drawBarChart(doc, section.data, 120, chartY + 40, 300, 100, true);
+      else drawBarChart(doc, section.data, chartX, chartY + 40, 350, 100, false);
+
+      if (payload.chartType === 'pictogram') doc.y += 150;
+      else doc.y = chartY + 80;
+
+      doc.moveDown(2);
       section.data.forEach((d, i) => {
-        if (doc.y > 730) doc.addPage();
-        const rowY = doc.y;
-        const barWidth = (d.value / maxVal) * 200;
-
-        if (i % 2 === 0) {
-          doc.save();
-          doc.rect(40, rowY - 2, 515, 18).fill(lightGray);
-          doc.restore();
-        }
-
-        doc.fontSize(10).fillColor('#111').text(d.name, 45, rowY, { width: 180 });
-        doc.fontSize(10).fillColor(gray).text(String(d.value), 230, rowY, { width: 40, align: 'right' });
-
-        doc.save();
-        doc.roundedRect(280, rowY + 1, barWidth, 10, 3).fill(barColors[i % barColors.length]);
-        doc.restore();
-
-        doc.y = rowY + 20;
-      });
-    });
-
-    // Projects table
-    if (payload.projects?.length) {
-      doc.addPage();
-      doc.fontSize(14).fillColor(green).text(`Projetos (${payload.projects.length})`);
-      doc.moveTo(40, doc.y).lineTo(555, doc.y).strokeColor(green).lineWidth(1).stroke();
-      doc.moveDown(0.3);
-
-      // Table header
-      const cols = [40, 200, 320, 410, 480];
-      const colW = [155, 115, 85, 65, 75];
-      const headers = ['Titulo', 'Proprietario', 'Categoria', 'Status', 'Data'];
-      const headerY = doc.y;
-
-      doc.save();
-      doc.rect(40, headerY - 2, 515, 18).fill(green);
-      headers.forEach((h, i) => {
-        doc.fillColor('white').fontSize(9).text(h, cols[i] + 3, headerY, { width: colW[i] });
-      });
-      doc.restore();
-      doc.y = headerY + 20;
-
-      payload.projects.forEach((p, i) => {
-        if (doc.y > 740) {
-          doc.addPage();
-          doc.y = 40;
-        }
-        const rowY = doc.y;
-        if (i % 2 === 0) {
-          doc.save();
-          doc.rect(40, rowY - 2, 515, 16).fill(lightGray);
-          doc.restore();
-        }
-        const vals = [p.title, p.owner, p.category, p.status, p.date];
-        vals.forEach((v, j) => {
-          doc.fillColor('#111').fontSize(8).text(v || '---', cols[j] + 3, rowY, { width: colW[j], lineBreak: false });
-        });
-        doc.y = rowY + 17;
+        if (doc.y > 750) doc.addPage();
+        doc.fontSize(9).fillColor('#333').text(d.name, 45, doc.y, { continued: true })
+           .fillColor(gray).text(`: ${d.value}`, { align: 'right' });
       });
     }
 
-    // Footer on all pages
+    if (payload.projects && payload.projects.length > 0) {
+      drawAdvancedComparisonTables(doc, payload.projects);
+      drawProjectsTable(doc, payload.projects);
+    }
+
     const totalPages = doc.bufferedPageRange().count;
     for (let i = 0; i < totalPages; i++) {
       doc.switchToPage(i);
-      doc.fontSize(8).fillColor(gray).text(
-        `CEBIO Brasil - Pagina ${i + 1} de ${totalPages}`,
-        40, 780, { align: 'center', width: 515 }
-      );
+      doc.fontSize(8).fillColor(gray).text(`CEBIO Brasil - Página ${i + 1} de ${totalPages}`, 40, 780, { align: 'center', width: 515 });
     }
-
     doc.end();
   } catch (err) {
     console.error('PDF export error:', err);
@@ -319,57 +352,38 @@ router.post('/exports/pdf', async (req: Request, res: Response) => {
 // =====================
 router.post('/exports/pdf-section', async (req: Request, res: Response) => {
   try {
-    const { sectionTitle, data }: { sectionTitle: string; data: ChartData[] } = req.body;
-    const doc = new PDFDocument({ size: 'A4', margin: 40 });
+    const { sectionTitle, data, chartType, projects }: { sectionTitle: string; data: ChartData[]; chartType?: string; projects?: ProjectData[] } = req.body;
+    const doc = new PDFDocument({ size: 'A4', margin: 40, bufferPages: true });
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=${sectionTitle.replace(/\s+/g, '_')}.pdf`);
     doc.pipe(res);
 
     const green = '#2D5F4A';
-    const gray = '#6B7280';
-    const lightGray = '#F3F4F6';
-
     doc.fontSize(18).fillColor(green).text(sectionTitle, { align: 'center' });
-    doc.fontSize(9).fillColor(gray).text(`Gerado em ${new Date().toLocaleString('pt-BR')}`, { align: 'center' });
-    doc.moveDown(1.5);
+    doc.moveDown(2);
 
-    const maxVal = Math.max(...data.map(d => d.value), 1);
-    const barColors = ['#2D5F4A', '#D4A843', '#3B82F6', '#EF4444', '#8B5CF6', '#F59E0B'];
+    const chartY = doc.y + 100;
+    if (chartType === 'pie') drawPieChart(doc, data, 150, chartY, 80);
+    else if (chartType === 'lines') drawLineChart(doc, data, 80, chartY + 50, 400, 150);
+    else if (chartType === 'pictogram') drawPictogram(doc, data, 100, chartY - 40, 350);
+    else if (chartType === 'bars') drawBarChart(doc, data, 120, chartY + 50, 350, 150, true);
+    else drawBarChart(doc, data, 80, chartY + 50, 400, 150, false);
 
-    // Table header
-    const headerY = doc.y;
-    doc.save();
-    doc.rect(40, headerY - 2, 515, 20).fill(green);
-    doc.fillColor('white').fontSize(11).text('Item', 45, headerY + 2, { width: 250 });
-    doc.fillColor('white').fontSize(11).text('Quantidade', 300, headerY + 2, { width: 80, align: 'right' });
-    doc.restore();
-    doc.y = headerY + 24;
+    if (projects && projects.length > 0) {
+      drawAdvancedComparisonTables(doc, projects);
+      drawProjectsTable(doc, projects);
+    }
 
-    data.forEach((d, i) => {
-      const rowY = doc.y;
-      const barWidth = (d.value / maxVal) * 150;
-
-      if (i % 2 === 0) {
-        doc.save();
-        doc.rect(40, rowY - 2, 515, 20).fill(lightGray);
-        doc.restore();
-      }
-
-      doc.fontSize(10).fillColor('#111').text(d.name, 45, rowY + 2, { width: 250 });
-      doc.fontSize(10).fillColor(gray).text(String(d.value), 300, rowY + 2, { width: 80, align: 'right' });
-
-      doc.save();
-      doc.roundedRect(395, rowY + 3, barWidth, 12, 3).fill(barColors[i % barColors.length]);
-      doc.restore();
-
-      doc.y = rowY + 22;
-    });
+    const totalPages = doc.bufferedPageRange().count;
+    for (let i = 0; i < totalPages; i++) {
+      doc.switchToPage(i);
+      doc.fontSize(8).fillColor('#6B7280').text(`CEBIO Brasil - Página ${i + 1} de ${totalPages}`, 40, 780, { align: 'center', width: 515 });
+    }
 
     doc.end();
   } catch (err) {
-    console.error('PDF section export error:', err);
-    res.status(500).json({ error: 'Falha ao gerar PDF da secao' });
+    res.status(500).json({ error: 'Falha ao gerar PDF da seção' });
   }
 });
 

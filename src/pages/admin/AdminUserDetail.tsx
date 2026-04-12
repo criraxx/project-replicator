@@ -230,7 +230,7 @@ const AdminUserDetail = () => {
                     }`}>{p.status.replace("_", " ")}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{p.category || "—"} • {formatDateBrasilia(p.created_at)}</span>
+                    <span>{formatDateBrasilia(p.created_at)}</span>
                     <button onClick={() => navigate(`/admin/projeto?id=${p.id}`)} className="text-xs font-medium text-primary">Ver Projeto</button>
                   </div>
                 </div>
@@ -238,37 +238,39 @@ const AdminUserDetail = () => {
             </div>
 
             {/* Desktop: Table layout */}
-            <div className="hidden md:block overflow-x-auto"><table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="p-3 text-left font-medium text-muted-foreground">Titulo</th>
-                  <th className="p-3 text-left font-medium text-muted-foreground">Categoria</th>
-                  <th className="p-3 text-left font-medium text-muted-foreground">Status</th>
-                  <th className="p-3 text-left font-medium text-muted-foreground">Data</th>
-                  <th className="p-3 text-center font-medium text-muted-foreground">Acoes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {projects.map((p: any) => (
-                  <tr key={p.id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                    <td className="p-3 font-medium text-foreground">{p.title}</td>
-                    <td className="p-3 text-muted-foreground">{p.category || "---"}</td>
-                    <td className="p-3">
-                      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
-                        p.status === "aprovado" ? "bg-cebio-green-bg text-primary" :
-                        p.status === "rejeitado" ? "bg-cebio-red-bg text-cebio-red" :
-                        p.status === "em_revisao" ? "bg-cebio-blue-bg text-cebio-blue" :
-                        "bg-cebio-yellow-bg text-cebio-yellow"
-                      }`}>{p.status.replace("_", " ")}</span>
-                    </td>
-                    <td className="p-3 text-muted-foreground text-xs">{formatDateBrasilia(p.created_at)}</td>
-                    <td className="p-3 text-center">
-                      <button onClick={() => navigate(`/admin/projeto?id=${p.id}`)} className="text-xs font-medium text-primary hover:underline">Ver Projeto</button>
-                    </td>
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="p-3 text-left font-semibold text-muted-foreground uppercase text-xs">Projeto</th>
+                    <th className="p-3 text-left font-semibold text-muted-foreground uppercase text-xs">Categoria</th>
+                    <th className="p-3 text-left font-semibold text-muted-foreground uppercase text-xs">Status</th>
+                    <th className="p-3 text-left font-semibold text-muted-foreground uppercase text-xs">Data</th>
+                    <th className="p-3 text-left font-semibold text-muted-foreground uppercase text-xs">Acoes</th>
                   </tr>
-                ))}
-              </tbody>
-            </table></div>
+                </thead>
+                <tbody>
+                  {projects.map((p: any) => (
+                    <tr key={p.id} className="border-b border-border hover:bg-muted/30 transition-colors">
+                      <td className="p-3 font-medium text-foreground">{p.title}</td>
+                      <td className="p-3 text-muted-foreground">{p.category || "---"}</td>
+                      <td className="p-3">
+                        <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
+                          p.status === "aprovado" ? "bg-cebio-green-bg text-primary" :
+                          p.status === "rejeitado" ? "bg-cebio-red-bg text-cebio-red" :
+                          p.status === "em_revisao" ? "bg-cebio-blue-bg text-cebio-blue" :
+                          "bg-cebio-yellow-bg text-cebio-yellow"
+                        }`}>{p.status.replace("_", " ")}</span>
+                      </td>
+                      <td className="p-3 text-muted-foreground text-xs">{formatDateBrasilia(p.created_at)}</td>
+                      <td className="p-3">
+                        <button onClick={() => navigate(`/admin/projeto?id=${p.id}`)} className="text-xs font-medium text-primary hover:underline">Ver Projeto</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </>
         )}
       </div>

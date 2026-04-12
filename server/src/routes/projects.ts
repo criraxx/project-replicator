@@ -127,7 +127,8 @@ router.get('/projects', authMiddleware, async (req: Request, res: Response) => {
         owner_id ? Number(owner_id) : undefined,
         status as ProjectStatus | undefined,
         limit ? Number(limit) : undefined,
-        offset ? Number(offset) : undefined
+        offset ? Number(offset) : undefined,
+        true // isAdmin
       );
       return res.json(result);
     }
@@ -149,7 +150,7 @@ router.get('/projects', authMiddleware, async (req: Request, res: Response) => {
 // GET /api/projects/:id
 router.get('/projects/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const project = await projectService.getProjectById(Number(req.params.id));
+    const project = await projectService.getProjectById(Number(req.params.id), req.user!.id, req.user!.role === 'admin');
     if (!project) {
       return res.status(404).json({ error: 'Projeto nao encontrado' });
     }
@@ -162,7 +163,15 @@ router.get('/projects/:id', authMiddleware, async (req: Request, res: Response) 
 // POST /api/projects
 router.post('/projects', authMiddleware, ...validateCreateProject, handleValidationErrors, async (req: Request, res: Response) => {
   try {
-    const { title, summary, description, category, academic_level, start_date, end_date, authors, links } = req.body;
+    const { title, summary, description, category, academic_level, start_date, end_date, authors, links, status } = req.body;
+
+    const coAuthorsCount = authors && authors.length > 1;
+    let initialStatus = status || 'pendente';
+    
+    // If submitting (not draft) and has co-authors, status is 'aguardando_autores'
+    if (initialStatus === 'pendente' && coAuthorsCount) {
+      initialStatus = 'aguardando_autores';
+    }
 
     const project = await projectService.createProject(
       title,
@@ -173,7 +182,7 @@ router.post('/projects', authMiddleware, ...validateCreateProject, handleValidat
       req.user!.id,
       start_date ? new Date(start_date) : undefined,
       end_date ? new Date(end_date) : undefined,
-      'pendente'
+      initialStatus
     );
 
     if (authors && authors.length > 0) {
@@ -196,19 +205,20 @@ router.post('/projects', authMiddleware, ...validateCreateProject, handleValidat
             project_id: project.id,
             title: l.title || l.url,
             url: l.url,
+            link_type: l.link_type || l.type || 'outro',
+            description: l.description
           });
           await linkRepo.save(link);
         }
       }
     }
 
-    const hasCoAuthors = authors && authors.length > 1;
     await auditService.logAction(
       'CREATE_PROJECT',
       req.user!.id,
       undefined,
       project.id,
-      `Projeto criado: ${project.title}${hasCoAuthors ? ' (aguardando aprovacao de coautores)' : ''}`,
+      `Projeto criado: ${project.title}${coAuthorsCount ? ' (aguardando aprovacao de coautores)' : ''}`,
       req.ip || 'unknown',
       'low'
     );
@@ -223,7 +233,51 @@ router.post('/projects', authMiddleware, ...validateCreateProject, handleValidat
 router.put('/projects/:id', authMiddleware, ...validateUpdateProject, handleValidationErrors, async (req: Request, res: Response) => {
   try {
     const isAdmin = req.user!.role === 'admin';
-    const project = await projectService.updateProject(Number(req.params.id), req.body, req.user!.id, isAdmin);
+    const { authors, links, ...projectUpdates } = req.body;
+    const project = await projectService.updateProject(Number(req.params.id), projectUpdates, req.user!.id, isAdmin);
+
+    // If it's a draft, returned or admin, we can update authors and links directly
+    if (isAdmin || project.status === 'rascunho' || project.status === 'devolvido' || project.status === 'pendente') {
+      const targetProjectId = Number(req.params.id);
+      
+      if (authors && Array.isArray(authors)) {
+        // Clear existing authors and re-add
+        await authorApprovalService.clearAuthors(targetProjectId);
+        await authorApprovalService.addAuthorsToProject(
+          targetProjectId,
+          authors.map((a: any, i: number) => ({
+            ...a,
+            is_owner: i === 0,
+          })),
+          req.user!.id
+        );
+      }
+
+      // If project was 'devolvido' or 'rascunho' and is now being submitted ('pendente')
+      // and has co-authors, it should go to 'aguardando_autores'
+      if (!isAdmin && projectUpdates.status === 'pendente' && authors && authors.length > 1) {
+        project.status = 'aguardando_autores';
+        await AppDataSource.getRepository('Project').save(project);
+      }
+
+      if (links && Array.isArray(links)) {
+        const linkRepo = AppDataSource.getRepository(ProjectLink);
+        // Clear existing links and re-add
+        await linkRepo.delete({ project_id: targetProjectId });
+        for (const l of links) {
+          if (l.url) {
+            const link = linkRepo.create({
+              project_id: targetProjectId,
+              title: l.title || l.url,
+              url: l.url,
+              link_type: l.link_type || l.type || 'outro',
+              description: l.description
+            });
+            await linkRepo.save(link);
+          }
+        }
+      }
+    }
 
     const action = (!isAdmin && project.has_pending_edit) ? 'REQUEST_EDIT' : 'UPDATE_PROJECT';
     const desc = (!isAdmin && project.has_pending_edit)
@@ -333,7 +387,7 @@ router.post('/projects/:id/reject-edit', authMiddleware, requireRole('admin'), a
 // DELETE /api/projects/:id (admin only)
 router.delete('/projects/:id', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
   try {
-    const project = await projectService.getProjectById(Number(req.params.id));
+    const project = await projectService.getProjectById(Number(req.params.id), req.user!.id, req.user!.role === 'admin');
     if (!project) {
       return res.status(404).json({ error: 'Projeto nao encontrado' });
     }

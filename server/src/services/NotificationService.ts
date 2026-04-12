@@ -35,8 +35,8 @@ export class NotificationService {
     return { notifications, total };
   }
 
-  async markAsRead(notificationId: number): Promise<void> {
-    await this.notificationRepository.update(notificationId, { is_read: true });
+  async markAsRead(notificationId: number, userId: number): Promise<void> {
+    await this.notificationRepository.update({ id: notificationId, user_id: userId }, { is_read: true });
   }
 
   async markAllAsRead(userId: number): Promise<void> {

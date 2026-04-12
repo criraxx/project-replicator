@@ -15,7 +15,7 @@ import { ProjectAuthor } from './ProjectAuthor';
 import { ProjectLink } from './ProjectLink';
 import { ProjectFile } from './ProjectFile';
 
-export type ProjectStatus = 'pendente' | 'em_revisao' | 'aprovado' | 'rejeitado';
+export type ProjectStatus = 'rascunho' | 'pendente' | 'em_revisao' | 'aprovado' | 'rejeitado' | 'aguardando_autores' | 'devolvido';
 
 @Entity('projects')
 export class Project {
@@ -37,8 +37,8 @@ export class Project {
   @Column({ type: 'varchar', length: 100, nullable: true })
   academic_level?: string;
 
-  @Column({ type: 'enum', enum: ['pendente', 'em_revisao', 'aprovado', 'rejeitado'], default: 'pendente' })
-  status: ProjectStatus = 'pendente';
+  @Column({ type: 'enum', enum: ['rascunho', 'pendente', 'em_revisao', 'aprovado', 'rejeitado', 'aguardando_autores', 'devolvido'], default: 'rascunho' })
+  status: ProjectStatus = 'rascunho';
 
   @Column({ type: 'int' })
   owner_id!: number;

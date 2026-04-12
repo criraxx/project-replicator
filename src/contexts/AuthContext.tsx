@@ -83,10 +83,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         institution: data.user.institution || "",
         must_change_password: data.user.must_change_password,
       };
+      // api.login already sets the token in localStorage via api.setToken
       localStorage.setItem("cebio_user", JSON.stringify(userData));
       setUser(userData);
-    } catch {
-      throw new Error("Não foi possível conectar ao servidor. Verifique se o backend está ativo.");
+    } catch (err: any) {
+      throw new Error(err.message || "Não foi possível conectar ao servidor. Verifique se o backend está ativo.");
     }
   }, []);
 

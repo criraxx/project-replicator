@@ -100,9 +100,16 @@ router.post(
       }
 
       const savedFiles: ProjectFile[] = [];
+      const fileTypeFromReq = req.body.file_type; // Get file_type from frontend if available
+
       for (const file of files) {
         const ext = path.extname(file.originalname).toLowerCase();
         const isPhoto = photoExts.includes(ext);
+        
+        // Use file_type from request if it's valid, otherwise fallback to extension check
+        let category = isPhoto ? 'photo' : 'pdf';
+        if (fileTypeFromReq === 'photo' || fileTypeFromReq === 'foto') category = 'photo';
+        if (fileTypeFromReq === 'pdf' || fileTypeFromReq === 'documento') category = 'pdf';
 
         const projectFile = fileRepo.create({
           project_id: projectId,
@@ -111,7 +118,7 @@ router.post(
           file_type: file.mimetype,
           file_path: file.path,
           file_size: file.size,
-          file_category: isPhoto ? 'photo' : 'pdf',
+          file_category: category,
           uploaded_by: req.user!.id,
         });
         savedFiles.push(await fileRepo.save(projectFile));
@@ -169,8 +176,8 @@ router.delete('/projects/:id/files/:fileId', authMiddleware, async (req: Request
   }
 });
 
-// GET /api/projects/:id/files/:fileId/download - Download de arquivo
-router.get('/projects/:id/files/:fileId/download', authMiddleware, async (req: Request, res: Response) => {
+// GET /api/projects/:id/files/:fileId/download - Download de arquivo (Aberto para permitir exibição em <img> e <a>)
+router.get('/projects/:id/files/:fileId/download', async (req: Request, res: Response) => {
   try {
     const file = await fileRepo.findOne({
       where: { id: Number(req.params.fileId), project_id: Number(req.params.id) },
@@ -202,12 +209,18 @@ router.post('/projects/:id/links', authMiddleware, async (req: Request, res: Res
       return res.status(403).json({ error: 'Sem permissão' });
     }
 
-    const { title, url } = req.body;
+    const { title, url, link_type, description } = req.body;
     if (!title || !url) {
       return res.status(400).json({ error: 'Título e URL são obrigatórios' });
     }
 
-    const link = linkRepo.create({ project_id: projectId, title, url });
+    const link = linkRepo.create({ 
+      project_id: projectId, 
+      title, 
+      url, 
+      link_type: link_type || 'outro', 
+      description 
+    });
     const saved = await linkRepo.save(link);
     res.status(201).json(saved);
   } catch (error: any) {

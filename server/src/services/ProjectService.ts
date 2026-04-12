@@ -1,15 +1,20 @@
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { AppDataSource } from '../config/database';
 import { Project, ProjectStatus } from '../entities/Project';
 import { ProjectVersion } from '../entities/ProjectVersion';
 import { ProjectComment } from '../entities/ProjectComment';
-import { ProjectAuthor } from '../entities/ProjectAuthor';
 import { AppError } from '../middleware/errorHandler';
 
 export class ProjectService {
-  private projectRepository = AppDataSource.getRepository(Project);
-  private versionRepository = AppDataSource.getRepository(ProjectVersion);
-  private commentRepository = AppDataSource.getRepository(ProjectComment);
-  private authorRepository = AppDataSource.getRepository(ProjectAuthor);
+  private projectRepository: Repository<Project>;
+  private versionRepository: Repository<ProjectVersion>;
+  private commentRepository: Repository<ProjectComment>;
+
+  constructor() {
+    this.projectRepository = AppDataSource.getRepository(Project);
+    this.versionRepository = AppDataSource.getRepository(ProjectVersion);
+    this.commentRepository = AppDataSource.getRepository(ProjectComment);
+  }
 
   async createProject(
     title: string,
@@ -20,7 +25,7 @@ export class ProjectService {
     ownerId: number,
     startDate?: Date,
     endDate?: Date,
-    initialStatus: ProjectStatus = 'pendente'
+    status: ProjectStatus = 'pendente'
   ): Promise<Project> {
     const project = this.projectRepository.create({
       title,
@@ -29,32 +34,52 @@ export class ProjectService {
       category,
       academic_level: academicLevel,
       owner_id: ownerId,
-      status: initialStatus,
       start_date: startDate,
       end_date: endDate,
+      status,
     });
-
     return await this.projectRepository.save(project);
   }
 
-  async getProjectById(id: number): Promise<Project | null> {
+  async getProjectById(id: number, userId?: number, isAdmin: boolean = false): Promise<Project | null> {
     const project = await this.projectRepository.findOne({
       where: { id, is_deleted: false },
       relations: ['owner', 'versions', 'comments', 'authors'],
     });
     if (!project) return null;
 
+    // Security Check: Visibility rules
+    if (!isAdmin) {
+      // 1. If user is the owner, they ALWAYS have access
+      if (project.owner_id === userId) {
+        // Access granted
+      } else {
+        // 2. Drafts are ONLY visible to the owner
+        if (project.status === 'rascunho') {
+          return null;
+        }
+
+        // 3. For all other statuses, user must be an invited author/collaborator
+        const userRepo = AppDataSource.getRepository('User');
+        const user = await userRepo.findOne({ where: { id: userId } }) as any;
+        const userCpf = user?.cpf?.replace(/\D/g, '');
+        
+        const isInvitedAuthor = project.authors?.some(a => a.cpf.replace(/\D/g, '') === userCpf);
+        if (!isInvitedAuthor) {
+          return null; // Access denied: user is neither owner nor collaborator
+        }
+      }
+    }
+
     // Load links and files separately to avoid errors if tables are not yet migrated
     try {
-      const full = await this.projectRepository.findOne({
-        where: { id },
-        relations: ['links', 'files'],
-      });
-      if (full) {
-        project.links = full.links || [];
-        project.files = full.files || [];
-      }
-    } catch {
+      const linkRepo = AppDataSource.getRepository('ProjectLink');
+      const fileRepo = AppDataSource.getRepository('ProjectFile');
+      
+      project.links = await linkRepo.find({ where: { project_id: id } }) as any[] || [];
+      project.files = await fileRepo.find({ where: { project_id: id } }) as any[] || [];
+    } catch (err) {
+      console.error('Error loading project relations:', err);
       project.links = [];
       project.files = [];
     }
@@ -66,7 +91,8 @@ export class ProjectService {
     ownerId?: number,
     status?: ProjectStatus,
     limit: number = 100,
-    offset: number = 0
+    offset: number = 0,
+    isAdmin: boolean = false
   ): Promise<{ projects: Project[]; total: number }> {
     let query = this.projectRepository.createQueryBuilder('project')
       .where('project.is_deleted = :deleted', { deleted: false });
@@ -91,19 +117,75 @@ export class ProjectService {
     return { projects, total };
   }
 
+  async listUserProjects(
+    userId: number,
+    cpf: string,
+    status?: ProjectStatus,
+    limit: number = 100,
+    offset: number = 0
+  ): Promise<{ projects: Project[]; total: number }> {
+    const cleanCpf = cpf.replace(/\D/g, '');
+    
+    // Subquery to find project IDs where user is an author
+    const authorSubquery = AppDataSource.getRepository('ProjectAuthor')
+      .createQueryBuilder('author')
+      .select('author.project_id')
+      .where('author.cpf = :cleanCpf', { cleanCpf });
+
+    let query = this.projectRepository.createQueryBuilder('project')
+      .leftJoinAndSelect('project.owner', 'owner')
+      .leftJoinAndSelect('project.authors', 'authors')
+      .where('project.is_deleted = :deleted', { deleted: false })
+      .andWhere('(project.owner_id = :userId OR project.id IN (' + authorSubquery.getQuery() + '))', { userId, cleanCpf });
+
+    if (status) {
+      query = query.andWhere('project.status = :status', { status });
+    }
+
+    const total = await query.getCount();
+    const projects = await query
+      .orderBy('project.created_at', 'DESC')
+      .limit(limit)
+      .offset(offset)
+      .getMany();
+
+    return { projects, total };
+  }
+
+  async searchProjects(query: string, userId: number, isAdmin: boolean = false, userCpf?: string): Promise<Project[]> {
+    const cleanCpf = userCpf?.replace(/\D/g, '');
+    
+    let qb = this.projectRepository.createQueryBuilder('project')
+      .leftJoinAndSelect('project.owner', 'owner')
+      .where('project.is_deleted = :deleted', { deleted: false })
+      .andWhere('(project.title LIKE :query OR project.summary LIKE :query)', { query: `%${query}%` });
+
+    if (!isAdmin) {
+      const authorSubquery = AppDataSource.getRepository('ProjectAuthor')
+        .createQueryBuilder('author')
+        .select('author.project_id')
+        .where('author.cpf = :cleanCpf', { cleanCpf });
+
+      qb = qb.andWhere('(project.owner_id = :userId OR project.id IN (' + authorSubquery.getQuery() + '))', { userId, cleanCpf });
+      // Non-admins cannot search drafts of others
+      qb = qb.andWhere('(project.status != :draft OR project.owner_id = :userId)', { draft: 'rascunho', userId });
+    }
+
+    return await qb.limit(20).getMany();
+  }
+
   async getPendingProjects(limit: number = 100, offset: number = 0) {
     return this.listProjects(undefined, 'pendente', limit, offset);
   }
 
   async updateProject(id: number, updates: Partial<Project>, changedBy: number, isAdmin: boolean = false): Promise<Project> {
-    const project = await this.getProjectById(id);
+    const project = await this.getProjectById(id, changedBy, isAdmin);
     if (!project) {
       throw new AppError(404, 'Projeto nao encontrado');
     }
 
     // If NOT admin and project is approved, store as pending edit request
     if (!isAdmin && project.status === 'aprovado') {
-      // Remove fields that shouldn't be in pending edits
       const { status, is_deleted, deleted_at, deleted_by, reviewed_by, reviewed_at, review_comment, ...editableUpdates } = updates as any;
 
       await this.projectRepository.update(id, {
@@ -114,14 +196,18 @@ export class ProjectService {
         pending_edit_comment: (updates as any).edit_reason || 'Solicitacao de alteracao',
       });
 
-      const updated = await this.getProjectById(id);
+      const updated = await this.getProjectById(id, changedBy, isAdmin);
       if (!updated) throw new AppError(404, 'Projeto nao encontrado');
       return updated;
     }
 
-    // Admin or project not yet approved: apply directly
+    // Admin or project not yet approved (or is draft): apply directly
+    if (!isAdmin && project.owner_id !== changedBy) {
+      throw new AppError(403, 'Voce nao tem permissao para editar este projeto');
+    }
+
     for (const [field, newValue] of Object.entries(updates)) {
-      if (field === 'edit_reason') continue; // skip meta field
+      if (field === 'edit_reason' || field === 'authors' || field === 'links') continue; 
       const oldValue = (project as any)[field];
       if (oldValue !== newValue) {
         const version = this.versionRepository.create({
@@ -135,9 +221,12 @@ export class ProjectService {
       }
     }
 
-    const { edit_reason, ...cleanUpdates } = updates as any;
-    await this.projectRepository.update(id, cleanUpdates);
-    const updated = await this.getProjectById(id);
+    const { edit_reason, authors, links, ...cleanUpdates } = updates as any;
+    if (Object.keys(cleanUpdates).length > 0) {
+      await this.projectRepository.update(id, cleanUpdates);
+    }
+    
+    const updated = await this.getProjectById(id, changedBy, isAdmin);
     if (!updated) throw new AppError(404, 'Projeto nao encontrado');
     return updated;
   }
@@ -148,7 +237,7 @@ export class ProjectService {
       reviewed_by: reviewedBy,
       review_comment: comment,
       reviewed_at: new Date(),
-    }, reviewedBy, true);
+    } as any, reviewedBy, true);
   }
 
   async rejectProject(id: number, reviewedBy: number, comment?: string): Promise<Project> {
@@ -157,14 +246,21 @@ export class ProjectService {
       reviewed_by: reviewedBy,
       review_comment: comment,
       reviewed_at: new Date(),
-    }, reviewedBy, true);
+    } as any, reviewedBy, true);
   }
 
-  async deleteProject(id: number, deletedBy: number): Promise<void> {
+  async deleteProject(id: number, userId: number, isAdmin: boolean = false): Promise<void> {
+    const project = await this.getProjectById(id, userId, isAdmin);
+    if (!project) throw new AppError(404, 'Projeto nao encontrado');
+    
+    if (!isAdmin && project.owner_id !== userId) {
+      throw new AppError(403, 'Voce nao tem permissao para excluir este projeto');
+    }
+
     await this.projectRepository.update(id, {
       is_deleted: true,
       deleted_at: new Date(),
-      deleted_by: deletedBy,
+      deleted_by: userId,
     });
   }
 
@@ -198,8 +294,6 @@ export class ProjectService {
     }
   }
 
-  // --- Pending edit management (admin) ---
-
   async listPendingEdits(): Promise<Project[]> {
     return await this.projectRepository.find({
       where: { has_pending_edit: true, is_deleted: false },
@@ -217,7 +311,6 @@ export class ProjectService {
 
     const edits = JSON.parse(project.pending_edit_data);
 
-    // Record version history for each changed field
     for (const [field, newValue] of Object.entries(edits)) {
       const oldValue = (project as any)[field];
       if (oldValue !== newValue) {
@@ -232,7 +325,6 @@ export class ProjectService {
       }
     }
 
-    // Apply the edits + clear pending
     await this.projectRepository.update(id, {
       ...edits,
       has_pending_edit: false,
@@ -258,7 +350,6 @@ export class ProjectService {
       throw new AppError(400, 'Nenhuma edicao pendente para este projeto');
     }
 
-    // Clear pending edit without applying
     await this.projectRepository.update(id, {
       has_pending_edit: false,
       pending_edit_data: undefined,
@@ -275,74 +366,4 @@ export class ProjectService {
     if (!updated) throw new AppError(404, 'Projeto nao encontrado');
     return updated;
   }
-
-  // List projects owned by user OR where user is author by CPF
-  async listUserProjects(
-    userId: number,
-    userCpf?: string,
-    status?: ProjectStatus,
-    limit: number = 100,
-    offset: number = 0
-  ): Promise<{ projects: Project[]; total: number }> {
-    let query = this.projectRepository.createQueryBuilder('project')
-      .leftJoinAndSelect('project.owner', 'owner')
-      .leftJoinAndSelect('project.authors', 'authors')
-      .where('project.is_deleted = :deleted', { deleted: false });
-
-    if (userCpf) {
-      query = query.andWhere(
-        '(project.owner_id = :userId OR project.id IN ' +
-        '(SELECT pa.project_id FROM project_authors pa WHERE pa.cpf = :cpf))',
-        { userId, cpf: userCpf.replace(/\D/g, '') }
-      );
-    } else {
-      query = query.andWhere('project.owner_id = :userId', { userId });
-    }
-
-    if (status) {
-      query = query.andWhere('project.status = :status', { status });
-    }
-
-    const total = await query.getCount();
-    const projects = await query
-      .orderBy('project.created_at', 'DESC')
-      .limit(limit)
-      .offset(offset)
-      .getMany();
-
-    return { projects, total };
-  }
-
-  // Search projects by title (respecting user visibility)
-  async searchProjects(
-    term: string,
-    userId: number,
-    isAdmin: boolean,
-    userCpf?: string
-  ): Promise<Array<{ id: number; title: string; status: string; category: string }>> {
-    let query = this.projectRepository.createQueryBuilder('project')
-      .where('project.is_deleted = :deleted', { deleted: false })
-      .andWhere('project.title LIKE :term', { term: `%${term}%` });
-
-    if (!isAdmin) {
-      if (userCpf) {
-        query = query.andWhere(
-          '(project.owner_id = :userId OR project.id IN ' +
-          '(SELECT pa.project_id FROM project_authors pa WHERE pa.cpf = :cpf))',
-          { userId, cpf: userCpf.replace(/\D/g, '') }
-        );
-      } else {
-        query = query.andWhere('project.owner_id = :userId', { userId });
-      }
-    }
-
-    const projects = await query
-      .select(['project.id', 'project.title', 'project.status', 'project.category'])
-      .orderBy('project.created_at', 'DESC')
-      .limit(10)
-      .getMany();
-
-    return projects.map(p => ({ id: p.id, title: p.title, status: p.status, category: p.category }));
-  }
 }
-

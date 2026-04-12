@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import express, { Express } from 'express';
+import path from 'path';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { AppDataSource } from './config/database';
@@ -33,14 +34,14 @@ const PORT = process.env.PORT || 8000;
 // SEGURANÇA - Middleware de Segurança
 // ============================================
 
-// Helmet - Headers de segurança HTTP
-app.use(securityHeaders);
+// Helmet - Headers de segurança HTTP desativados para depuração
+// app.use(securityHeaders);
 
-// Headers customizados
-app.use(customSecurityHeaders);
+// Headers customizados desativados para depuração
+// app.use(customSecurityHeaders);
 
-// Rate Limiting Global
-app.use(globalLimiter);
+	// Rate Limiting Global desativado
+	// app.use(globalLimiter);
 
 // Validação de Content-Type
 app.use(validateContentType);
@@ -53,7 +54,7 @@ app.use(suspiciousRequestLogger);
 // ============================================
 
 app.use(cors({
-  origin: (process.env.CORS_ORIGINS || 'http://localhost:8080').split(','),
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -84,6 +85,7 @@ app.use((req, res, next) => {
 // ============================================
 
 app.use('/api', authRoutes);
+app.use('/api', fileRoutes);
 app.use('/api', userRoutes);
 app.use('/api', projectRoutes);
 app.use('/api', categoryRoutes);
@@ -93,7 +95,15 @@ app.use('/api', adminRoutes);
 app.use('/api', authorApprovalRoutes);
 app.use('/api', exportRoutes);
 app.use('/api', fullExportRoutes);
-app.use('/api', fileRoutes);
+
+// ============================================
+// FRONTEND ESTÁTICO E UPLOADS
+// ============================================
+const uploadsPath = path.join(__dirname, '../../uploads');
+const frontendPath = path.join(__dirname, '../public');
+
+app.use('/uploads', express.static(uploadsPath));
+app.use(express.static(frontendPath));
 
 // ============================================
 // HEALTH CHECK
@@ -112,13 +122,17 @@ app.get('/health', (req, res) => {
 // 404 HANDLER
 // ============================================
 
-app.use((req, res) => {
-  logger.warn(`404 Not Found: ${req.method} ${req.path}`);
-  res.status(404).json({
-    error: 'Rota não encontrada',
-    path: req.path,
-    method: req.method,
-  });
+app.get('*', (req, res) => {
+  if (!req.path.startsWith('/api') && !req.path.startsWith('/uploads') && !req.path.startsWith('/health')) {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+  } else {
+    logger.warn(`404 Not Found: ${req.method} ${req.path}`);
+    res.status(404).json({
+      error: 'Rota não encontrada',
+      path: req.path,
+      method: req.method,
+    });
+  }
 });
 
 // ============================================
@@ -138,7 +152,7 @@ const startServer = async () => {
     logger.info('✅ Database connection established');
 
     // Iniciar servidor
-    app.listen(PORT, () => {
+    app.listen(Number(PORT), '0.0.0.0', () => {
       logger.info(`✅ Server running on port ${PORT}`);
       console.log(`
 ╔════════════════════════════════════════════════════════════╗
