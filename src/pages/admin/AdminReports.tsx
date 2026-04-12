@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, useRef } from "react";
-import { BarChart3, FileText, Users, TrendingUp, Download, Filter, RefreshCw, User, FileSpreadsheet, ArrowUpRight, ArrowDownRight, Minus, Clock, GitCompare, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { BarChart3, FileText, Users, TrendingUp, Download, Filter, RefreshCw, User, FileSpreadsheet, ArrowUpRight, ArrowDownRight, Minus, Clock, GitCompare, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Plus, Trash2, UserCheck } from "lucide-react";
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
