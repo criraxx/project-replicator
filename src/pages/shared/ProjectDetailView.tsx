@@ -312,12 +312,13 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
                     {isPending && (
                       <button
                         onClick={async () => {
-                          if (isDemoMode) {
+                          if (demo.isDemoMode) {
                             toast({ title: "Notificação enviada!", description: `Lembrete enviado para ${author.name}.` });
                             return;
                           }
                           try {
-                            await api.sendNotificationToUser(author.user_id || author.id, {
+                            await api.sendNotification({
+                              user_id: author.user_id || author.id,
                               title: "Sua confirmação é necessária",
                               message: `Você foi adicionado como colaborador no projeto "${project.title}". Acesse o sistema para revisar e confirmar sua participação.`,
                               type: "warning",
