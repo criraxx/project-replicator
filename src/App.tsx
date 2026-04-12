@@ -31,6 +31,7 @@ import EditProjectPage from "./pages/shared/EditProjectPage";
 import ProjectDetailView from "./pages/shared/ProjectDetailView";
 import ProfilePage from "./pages/shared/ProfilePage";
 import NotificationsPage from "./pages/shared/NotificationsPage";
+import UserReports from "./pages/shared/UserReports";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
