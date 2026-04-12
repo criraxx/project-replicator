@@ -184,8 +184,11 @@ const AdminReports = () => {
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [chartType, setChartType] = useState<ChartType>("columns");
   const chartsRef = useRef<HTMLDivElement>(null);
+  const ownerDropdownRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
   const [activeTab, setActiveTab] = useState("geral");
+  const [ownerSearch, setOwnerSearch] = useState("");
+  const [ownerDropdownOpen, setOwnerDropdownOpen] = useState(false);
 
   // Comparison state
   const [compareMode, setCompareMode] = useState(false);
@@ -433,11 +436,16 @@ const AdminReports = () => {
 
   const uniqueOwners = useMemo(() => {
     const seen = new Set<number>();
-    return projects.reduce<{ id: number; name: string }[]>((acc, p) => {
+    return projects.reduce<{ id: number; name: string; email?: string; cpf?: string }[]>((acc, p) => {
       if (!seen.has(p.owner_id)) {
         seen.add(p.owner_id);
         const owner = users.find(u => u.id === p.owner_id);
-        acc.push({ id: p.owner_id, name: owner?.name || p.owner?.name || `Usuário ${p.owner_id}` });
+        acc.push({
+          id: p.owner_id,
+          name: owner?.name || p.owner?.name || `Usuário ${p.owner_id}`,
+          email: owner?.email,
+          cpf: owner?.cpf,
+        });
       }
       return acc;
     }, []);
