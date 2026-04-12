@@ -868,91 +868,262 @@ const AdminReports = () => {
 
           {/* ===== TAB COMPARAÇÃO ===== */}
           <TabsContent value="comparacao">
-            <div className="bg-card rounded-xl shadow-sm border border-border p-5 mb-6">
-              <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                <GitCompare className="w-4 h-4" /> Comparar Dois Períodos
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <p className="text-xs font-semibold text-primary">Período A</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <DatePickerInline label="Início" value={periodA_start} onChange={setPeriodA_start} />
-                    <DatePickerInline label="Fim" value={periodA_end} onChange={setPeriodA_end} />
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <p className="text-xs font-semibold text-muted-foreground">Período B</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <DatePickerInline label="Início" value={periodB_start} onChange={setPeriodB_start} />
-                    <DatePickerInline label="Fim" value={periodB_end} onChange={setPeriodB_end} />
-                  </div>
+            {/* Mode selector */}
+            <div className="bg-card rounded-xl shadow-sm border border-border p-4 mb-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-sm font-semibold">Comparar por:</span>
+                <div className="flex gap-1">
+                  <button onClick={() => setCompareMode("periodos")}
+                    className={cn("px-3 py-1.5 rounded-lg text-xs font-medium transition-colors", compareMode === "periodos" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80")}>
+                    <Clock className="w-3.5 h-3.5 inline mr-1" />Períodos
+                  </button>
+                  <button onClick={() => setCompareMode("usuarios")}
+                    className={cn("px-3 py-1.5 rounded-lg text-xs font-medium transition-colors", compareMode === "usuarios" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80")}>
+                    <UserCheck className="w-3.5 h-3.5 inline mr-1" />Usuários
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Comparison Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
-              {[
-                { label: "Total de Projetos", a: metricsA.total, b: metricsB.total },
-                { label: "Aprovados", a: metricsA.approved, b: metricsB.approved },
-                { label: "Taxa de Aprovação", a: metricsA.approvalRate, b: metricsB.approvalRate, suffix: "%" },
-                { label: "Autores Únicos", a: metricsA.uniqueAuthors, b: metricsB.uniqueAuthors },
-              ].map((m, i) => (
-                <div key={i} className="bg-card rounded-xl p-4 shadow-sm border border-border">
-                  <div className="text-[13px] text-muted-foreground mb-2">{m.label}</div>
-                  <div className="flex items-end justify-between gap-2">
-                    <div>
-                      <div className="text-xs text-primary font-medium">Período A</div>
-                      <div className="text-2xl font-bold text-foreground">{m.a}{m.suffix || ""}</div>
-                    </div>
-                    <div className="text-center pb-1">
-                      <VariationBadge current={m.a} previous={m.b} />
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs text-muted-foreground font-medium">Período B</div>
-                      <div className="text-2xl font-bold text-muted-foreground">{m.b}{m.suffix || ""}</div>
-                    </div>
+            {compareMode === "periodos" && (
+              <>
+                {/* Dynamic periods */}
+                <div className="bg-card rounded-xl shadow-sm border border-border p-5 mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      <GitCompare className="w-4 h-4" /> Períodos para Comparação ({periods.length})
+                    </h3>
+                    <button onClick={addPeriod} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                      <Plus className="w-3.5 h-3.5" /> Adicionar Período
+                    </button>
                   </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Detailed comparison table */}
-            <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden mb-6">
-              <div className="p-5 pb-3">
-                <h3 className="text-sm font-semibold">Detalhamento por Métrica</h3>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/50">
-                      <th className="text-left p-3 font-medium text-muted-foreground">Métrica</th>
-                      <th className="text-center p-3 font-medium text-primary">Período A</th>
-                      <th className="text-center p-3 font-medium text-muted-foreground">Período B</th>
-                      <th className="text-center p-3 font-medium text-muted-foreground">Variação</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      { label: "Total de Projetos", a: metricsA.total, b: metricsB.total },
-                      { label: "Aprovados", a: metricsA.approved, b: metricsB.approved },
-                      { label: "Rejeitados", a: metricsA.rejected, b: metricsB.rejected },
-                      { label: "Devolvidos", a: metricsA.returned, b: metricsB.returned },
-                      { label: "Pendentes", a: metricsA.pending, b: metricsB.pending },
-                      { label: "Taxa de Aprovação (%)", a: metricsA.approvalRate, b: metricsB.approvalRate },
-                      { label: "Autores Únicos", a: metricsA.uniqueAuthors, b: metricsB.uniqueAuthors },
-                    ].map((row, i) => (
-                      <tr key={i} className="border-b border-border hover:bg-muted/30">
-                        <td className="p-3 font-medium text-foreground">{row.label}</td>
-                        <td className="p-3 text-center font-semibold text-foreground">{row.a}</td>
-                        <td className="p-3 text-center text-muted-foreground">{row.b}</td>
-                        <td className="p-3 text-center"><VariationBadge current={row.a} previous={row.b} /></td>
-                      </tr>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {periods.map((p, i) => (
+                      <div key={i} className="border border-border rounded-lg p-4 space-y-3 relative">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-semibold" style={{ color: COLORS[i % COLORS.length] }}>
+                            <span className="inline-block w-3 h-3 rounded-full mr-1.5" style={{ background: COLORS[i % COLORS.length] }} />
+                            {p.label}
+                          </p>
+                          {periods.length > 2 && (
+                            <button onClick={() => removePeriod(i)} className="text-muted-foreground hover:text-destructive transition-colors">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <DatePickerInline label="Início" value={p.start} onChange={(d) => updatePeriod(i, "start", d)} />
+                          <DatePickerInline label="Fim" value={p.end} onChange={(d) => updatePeriod(i, "end", d)} />
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                  </div>
+                </div>
+
+                {/* Period comparison table */}
+                <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden mb-6">
+                  <div className="p-5 pb-3">
+                    <h3 className="text-sm font-semibold">Comparativo entre Períodos</h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border bg-muted/50">
+                          <th className="text-left p-3 font-medium text-muted-foreground">Métrica</th>
+                          {periodMetrics.map((pm, i) => (
+                            <th key={i} className="text-center p-3 font-medium" style={{ color: COLORS[i % COLORS.length] }}>{pm.label}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(["total", "approved", "rejected", "returned", "pending", "approvalRate", "uniqueAuthors"] as const).map((key, ri) => {
+                          const labels: Record<string, string> = {
+                            total: "Total de Projetos", approved: "Aprovados", rejected: "Rejeitados",
+                            returned: "Devolvidos", pending: "Pendentes", approvalRate: "Taxa de Aprovação (%)", uniqueAuthors: "Autores Únicos",
+                          };
+                          return (
+                            <tr key={key} className="border-b border-border hover:bg-muted/30">
+                              <td className="p-3 font-medium text-foreground">{labels[key]}</td>
+                              {periodMetrics.map((pm, i) => (
+                                <td key={i} className="p-3 text-center font-semibold text-foreground">
+                                  {pm.metrics[key]}{key === "approvalRate" ? "%" : ""}
+                                </td>
+                              ))}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Period bar chart comparison */}
+                <div className="bg-card rounded-xl shadow-sm border border-border p-5 mb-6">
+                  <h3 className="text-sm font-semibold mb-4">Gráfico Comparativo</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={[
+                      { name: "Total", ...Object.fromEntries(periodMetrics.map((pm, i) => [pm.label, pm.metrics.total])) },
+                      { name: "Aprovados", ...Object.fromEntries(periodMetrics.map((pm, i) => [pm.label, pm.metrics.approved])) },
+                      { name: "Rejeitados", ...Object.fromEntries(periodMetrics.map((pm, i) => [pm.label, pm.metrics.rejected])) },
+                      { name: "Pendentes", ...Object.fromEntries(periodMetrics.map((pm, i) => [pm.label, pm.metrics.pending])) },
+                    ]}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                      <Tooltip />
+                      <Legend />
+                      {periodMetrics.map((pm, i) => (
+                        <Bar key={pm.label} dataKey={pm.label} fill={COLORS[i % COLORS.length]} radius={[4, 4, 0, 0]} />
+                      ))}
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </>
+            )}
+
+            {compareMode === "usuarios" && (
+              <>
+                {/* User selector */}
+                <div className="bg-card rounded-xl shadow-sm border border-border p-5 mb-6">
+                  <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                    <Users className="w-4 h-4" /> Selecionar Usuários para Comparar
+                  </h3>
+                  <div ref={compareUserDropdownRef} className="relative max-w-md">
+                    <input
+                      type="text"
+                      value={compareUserSearch}
+                      onChange={(e) => { setCompareUserSearch(e.target.value); setCompareUserDropdownOpen(true); }}
+                      onFocus={() => setCompareUserDropdownOpen(true)}
+                      placeholder="Buscar por nome, CPF ou email..."
+                      className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                    {compareUserDropdownOpen && (
+                      <div className="absolute z-50 mt-1 w-full bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {users
+                          .filter((u: any) => {
+                            if (!compareUserSearch) return true;
+                            const q = compareUserSearch.toLowerCase().replace(/[.\-/]/g, "");
+                            return u.name?.toLowerCase().includes(q)
+                              || (u.email && u.email.toLowerCase().includes(q))
+                              || (u.cpf && u.cpf.replace(/\D/g, "").includes(q));
+                          })
+                          .slice(0, 20)
+                          .map((u: any) => (
+                            <button
+                              key={u.id}
+                              onClick={() => {
+                                setCompareUserIds(prev => prev.includes(u.id) ? prev.filter(x => x !== u.id) : [...prev, u.id]);
+                              }}
+                              className={cn("w-full text-left px-3 py-2 hover:bg-muted transition-colors", compareUserIds.includes(u.id) && "bg-muted font-medium")}
+                            >
+                              <span className="flex items-center gap-2">
+                                <input type="checkbox" checked={compareUserIds.includes(u.id)} readOnly className="w-3.5 h-3.5 accent-primary" />
+                                <span>
+                                  <span className="text-sm font-medium text-foreground">{u.name}</span>
+                                  <span className="block text-xs text-muted-foreground">
+                                    {u.email || ""}
+                                    {u.cpf ? ` · CPF: ${u.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}` : ""}
+                                  </span>
+                                </span>
+                              </span>
+                            </button>
+                          ))}
+                        {users.filter((u: any) => {
+                          if (!compareUserSearch) return true;
+                          const q = compareUserSearch.toLowerCase().replace(/[.\-/]/g, "");
+                          return u.name?.toLowerCase().includes(q) || (u.email && u.email.toLowerCase().includes(q)) || (u.cpf && u.cpf.replace(/\D/g, "").includes(q));
+                        }).length === 0 && (
+                          <p className="px-3 py-2 text-sm text-muted-foreground">Nenhum usuário encontrado</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {compareUserIds.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {compareUserIds.map((uid, i) => {
+                        const u = users.find((x: any) => x.id === uid);
+                        return (
+                          <span key={uid} className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-medium text-white" style={{ background: COLORS[i % COLORS.length] }}>
+                            {u?.name || `#${uid}`}
+                            <button onClick={() => setCompareUserIds(prev => prev.filter(x => x !== uid))} className="hover:opacity-70">✕</button>
+                          </span>
+                        );
+                      })}
+                      <button onClick={() => setCompareUserIds([])} className="text-[11px] text-muted-foreground hover:text-destructive px-2">Limpar todos</button>
+                    </div>
+                  )}
+                </div>
+
+                {compareUserIds.length >= 2 ? (
+                  <>
+                    {/* User comparison table */}
+                    <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden mb-6">
+                      <div className="p-5 pb-3">
+                        <h3 className="text-sm font-semibold">Comparativo entre Usuários</h3>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b border-border bg-muted/50">
+                              <th className="text-left p-3 font-medium text-muted-foreground">Métrica</th>
+                              {userMetrics.map((um, i) => (
+                                <th key={i} className="text-center p-3 font-medium" style={{ color: COLORS[i % COLORS.length] }}>{um.label}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(["total", "approved", "rejected", "returned", "pending", "approvalRate"] as const).map((key) => {
+                              const labels: Record<string, string> = {
+                                total: "Total de Projetos", approved: "Aprovados", rejected: "Rejeitados",
+                                returned: "Devolvidos", pending: "Pendentes", approvalRate: "Taxa de Aprovação (%)",
+                              };
+                              return (
+                                <tr key={key} className="border-b border-border hover:bg-muted/30">
+                                  <td className="p-3 font-medium text-foreground">{labels[key]}</td>
+                                  {userMetrics.map((um, i) => (
+                                    <td key={i} className="p-3 text-center font-semibold text-foreground">
+                                      {um.metrics[key]}{key === "approvalRate" ? "%" : ""}
+                                    </td>
+                                  ))}
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* User bar chart comparison */}
+                    <div className="bg-card rounded-xl shadow-sm border border-border p-5 mb-6">
+                      <h3 className="text-sm font-semibold mb-4">Gráfico Comparativo por Usuário</h3>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={[
+                          { name: "Total", ...Object.fromEntries(userMetrics.map(um => [um.label, um.metrics.total])) },
+                          { name: "Aprovados", ...Object.fromEntries(userMetrics.map(um => [um.label, um.metrics.approved])) },
+                          { name: "Rejeitados", ...Object.fromEntries(userMetrics.map(um => [um.label, um.metrics.rejected])) },
+                          { name: "Taxa Aprov. %", ...Object.fromEntries(userMetrics.map(um => [um.label, um.metrics.approvalRate])) },
+                        ]}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                          <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                          <Tooltip />
+                          <Legend />
+                          {userMetrics.map((um, i) => (
+                            <Bar key={um.label} dataKey={um.label} fill={COLORS[i % COLORS.length]} radius={[4, 4, 0, 0]} />
+                          ))}
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </>
+                ) : (
+                  <div className="bg-card rounded-xl shadow-sm border border-border p-8 text-center text-muted-foreground mb-6">
+                    <Users className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                    <p className="text-sm font-medium">Selecione pelo menos 2 usuários para comparar</p>
+                    <p className="text-xs mt-1">Use o campo acima para buscar e adicionar usuários à comparação</p>
+                  </div>
+                )}
+              </>
+            )}
           </TabsContent>
         </Tabs>
 
