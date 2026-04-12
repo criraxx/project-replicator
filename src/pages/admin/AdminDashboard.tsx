@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, FolderOpen, Clock, CheckCircle, Shield, LayoutGrid, Activity, Inbox, Tag, Eye, BarChart3 } from "lucide-react";
 
@@ -9,6 +9,7 @@ import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { statusColors, statusLabels } from "@/constants/ui";
 import { useDemoData } from "@/hooks/useDemoData";
+import { usePolling } from "@/hooks/usePolling";
 
 const COLORS = ["hsl(170,37%,30%)", "hsl(43,96%,56%)", "hsl(210,72%,46%)", "hsl(3,81%,55%)"];
 
@@ -24,7 +25,7 @@ const AdminDashboard = () => {
 
   const demo = useDemoData();
 
-  useEffect(() => {
+  const fetchAll = useCallback(async () => {
     if (demo.isDemoMode) {
       setStats(demo.getStats()!);
       setUsers(demo.getUsers()!);
@@ -34,44 +35,43 @@ const AdminDashboard = () => {
       setLoading(false);
       return;
     }
-    const fetchAll = async () => {
-      try {
-        const [statsData, usersData, projectsData, catsData, levelsData] = await Promise.allSettled([
-          api.getProjectStats(),
-          api.listUsers(),
-          api.listProjects({ limit: 5 }),
-          api.listCategories(),
-          api.listAcademicLevels(),
-        ]);
-        const u = usersData.status === "fulfilled" ? usersData.value : [];
-        const p = projectsData.status === "fulfilled" ? (projectsData.value.projects || []) : [];
-        const c = catsData.status === "fulfilled" ? catsData.value : [];
-        const l = levelsData.status === "fulfilled" ? levelsData.value : [];
-        setUsers(u);
-        setProjects(p);
-        setCategories(c);
-        setLevels(l);
-        if (statsData.status === "fulfilled") {
-          setStats(statsData.value);
-        } else {
-          setStats({
-            total: p.length,
-            pending: p.filter((x: any) => x.status === "pendente").length,
-            approved: p.filter((x: any) => x.status === "aprovado").length,
-            rejected: p.filter((x: any) => x.status === "rejeitado").length,
-          });
-        }
-      } catch {
-        setUsers([]);
-        setProjects([]);
-        setCategories([]);
-        setLevels([]);
-        setStats({ total: 0, pending: 0, approved: 0, rejected: 0 });
+    try {
+      const [statsData, usersData, projectsData, catsData, levelsData] = await Promise.allSettled([
+        api.getProjectStats(),
+        api.listUsers(),
+        api.listProjects({ limit: 5 }),
+        api.listCategories(),
+        api.listAcademicLevels(),
+      ]);
+      const u = usersData.status === "fulfilled" ? usersData.value : [];
+      const p = projectsData.status === "fulfilled" ? (projectsData.value.projects || []) : [];
+      const c = catsData.status === "fulfilled" ? catsData.value : [];
+      const l = levelsData.status === "fulfilled" ? levelsData.value : [];
+      setUsers(u);
+      setProjects(p);
+      setCategories(c);
+      setLevels(l);
+      if (statsData.status === "fulfilled") {
+        setStats(statsData.value);
+      } else {
+        setStats({
+          total: p.length,
+          pending: p.filter((x: any) => x.status === "pendente").length,
+          approved: p.filter((x: any) => x.status === "aprovado").length,
+          rejected: p.filter((x: any) => x.status === "rejeitado").length,
+        });
       }
-      setLoading(false);
-    };
-    fetchAll();
-  }, []);
+    } catch {
+      setUsers([]);
+      setProjects([]);
+      setCategories([]);
+      setLevels([]);
+      setStats({ total: 0, pending: 0, approved: 0, rejected: 0 });
+    }
+    setLoading(false);
+  }, [demo.isDemoMode]);
+
+  usePolling(fetchAll, 30000, !demo.isDemoMode);
 
   const usersByRole = [
     { name: "Admin", value: users.filter(u => u.role === "admin").length },

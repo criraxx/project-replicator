@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, FileText, Image, ExternalLink, CheckCircle, XCircle, Clock, AlertTriangle, Download, Eye, X, Edit3, Users, RotateCcw, Bell, Send } from "lucide-react";
 import { formatDateBrasilia, formatDateTimeBrasilia } from "@/lib/formatters";
@@ -10,6 +10,7 @@ import { statusColors, statusLabels } from "@/constants/ui";
 
 import { useToast } from "@/hooks/use-toast";
 import { useDemoData } from "@/hooks/useDemoData";
+import { usePolling } from "@/hooks/usePolling";
 
 interface ProjectDetailViewProps {
   isAdmin?: boolean;
@@ -34,26 +35,28 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
   const isPesquisador = user?.role === "pesquisador";
   const navItems = isAdmin ? ADMIN_NAV : isPesquisador ? PESQUISADOR_NAV : BOLSISTA_NAV;
 
-  useEffect(() => {
+  const loadProject = useCallback(async () => {
     if (!projectId) return;
     if (demo.isDemoMode) {
       setProject(demo.getProjectById(Number(projectId)));
       setLoading(false);
       return;
     }
-    const load = async () => {
-      setLoading(true);
-      try {
-        const data = await api.getProject(Number(projectId));
-        setProject(data);
-      } catch {
-        setProject(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [projectId]);
+    try {
+      const data = await api.getProject(Number(projectId));
+      setProject(data);
+    } catch {
+      setProject(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [projectId, demo.isDemoMode]);
+
+  // Initial load
+  useEffect(() => { loadProject(); }, [projectId]);
+
+  // Poll for updates every 20s
+  usePolling(loadProject, 20000, !demo.isDemoMode && !!projectId);
 
   const formatDate = (d: string) => formatDateBrasilia(d);
   const formatDateTime = (d: string) => formatDateTimeBrasilia(d);

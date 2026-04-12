@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Eye, CheckCircle, XCircle, Inbox, FileText } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
@@ -7,6 +7,7 @@ import { statusColors, statusLabels } from "@/constants/ui";
 import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { useDemoData } from "@/hooks/useDemoData";
+import { usePolling } from "@/hooks/usePolling";
 
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
 import { formatDateBrasilia } from "@/lib/formatters";
@@ -36,7 +37,7 @@ const AdminProjects = () => {
 
   const demo = useDemoData();
 
-  useEffect(() => {
+  const fetchAll = useCallback(async () => {
     if (demo.isDemoMode) {
       const p = demo.getProjects()!;
       setProjects(p);
@@ -46,33 +47,32 @@ const AdminProjects = () => {
       setLoading(false);
       return;
     }
-    const fetchAll = async () => {
-      try {
-        const [projData, statsData, catsData, lvlsData] = await Promise.allSettled([
-          api.listProjects({ limit: 100 }),
-          api.getProjectStats(),
-          api.listCategories(),
-          api.listAcademicLevels(),
-        ]);
-        const p = projData.status === "fulfilled" && projData.value.projects?.length ? projData.value.projects : [];
-        setProjects(p);
-        if (statsData.status === "fulfilled") {
-          setStats(statsData.value);
-        } else {
-          setStats({ total: p.length, pending: p.filter((x: any) => x.status === "pendente").length, approved: p.filter((x: any) => x.status === "aprovado").length, rejected: p.filter((x: any) => x.status === "rejeitado").length });
-        }
-        setCategories(catsData.status === "fulfilled" && catsData.value?.length ? catsData.value : []);
-        setLevels(lvlsData.status === "fulfilled" && lvlsData.value?.length ? lvlsData.value : []);
-      } catch {
-        setProjects([]);
-        setStats({ total: 0, pending: 0, approved: 0, rejected: 0 });
-        setCategories([]);
-        setLevels([]);
+    try {
+      const [projData, statsData, catsData, lvlsData] = await Promise.allSettled([
+        api.listProjects({ limit: 100 }),
+        api.getProjectStats(),
+        api.listCategories(),
+        api.listAcademicLevels(),
+      ]);
+      const p = projData.status === "fulfilled" && projData.value.projects?.length ? projData.value.projects : [];
+      setProjects(p);
+      if (statsData.status === "fulfilled") {
+        setStats(statsData.value);
+      } else {
+        setStats({ total: p.length, pending: p.filter((x: any) => x.status === "pendente").length, approved: p.filter((x: any) => x.status === "aprovado").length, rejected: p.filter((x: any) => x.status === "rejeitado").length });
       }
-      setLoading(false);
-    };
-    fetchAll();
-  }, []);
+      setCategories(catsData.status === "fulfilled" && catsData.value?.length ? catsData.value : []);
+      setLevels(lvlsData.status === "fulfilled" && lvlsData.value?.length ? lvlsData.value : []);
+    } catch {
+      setProjects([]);
+      setStats({ total: 0, pending: 0, approved: 0, rejected: 0 });
+      setCategories([]);
+      setLevels([]);
+    }
+    setLoading(false);
+  }, [demo.isDemoMode]);
+
+  usePolling(fetchAll, 30000, !demo.isDemoMode);
 
   const uniqueAuthors = useMemo(() => {
     const seen = new Set<string>();
