@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, Shield, AlertTriangle, Clock, Users, Download, Inbox, Info, User, Eye } from "lucide-react";
+import { Search, Shield, AlertTriangle, Clock, Users, Download, Inbox, Info, User, Eye, FileSpreadsheet } from "lucide-react";
 import { formatDateTimeBrasilia } from "@/lib/formatters";
 import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
@@ -10,6 +10,7 @@ import { useDemoData } from "@/hooks/useDemoData";
 import { useAuth } from "@/contexts/AuthContext";
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const SEVERITY_OPTIONS = [
   { value: "low", label: "Low" },
