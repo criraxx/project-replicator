@@ -190,12 +190,17 @@ const AdminReports = () => {
   const [ownerSearch, setOwnerSearch] = useState("");
   const [ownerDropdownOpen, setOwnerDropdownOpen] = useState(false);
 
-  // Comparison state
-  const [compareMode, setCompareMode] = useState(false);
-  const [periodA_start, setPeriodA_start] = useState<Date | undefined>(startOfMonth(subMonths(new Date(), 3)));
-  const [periodA_end, setPeriodA_end] = useState<Date | undefined>(endOfMonth(subMonths(new Date(), 1)));
-  const [periodB_start, setPeriodB_start] = useState<Date | undefined>(startOfMonth(subMonths(new Date(), 6)));
-  const [periodB_end, setPeriodB_end] = useState<Date | undefined>(endOfMonth(subMonths(new Date(), 4)));
+  // Comparison state - dynamic periods
+  type CompareMode = "periodos" | "usuarios";
+  const [compareMode, setCompareMode] = useState<CompareMode>("periodos");
+  const [periods, setPeriods] = useState<{ label: string; start?: Date; end?: Date }[]>([
+    { label: "Período A", start: startOfMonth(subMonths(new Date(), 3)), end: endOfMonth(subMonths(new Date(), 1)) },
+    { label: "Período B", start: startOfMonth(subMonths(new Date(), 6)), end: endOfMonth(subMonths(new Date(), 4)) },
+  ]);
+  const [compareUserIds, setCompareUserIds] = useState<number[]>([]);
+  const [compareUserSearch, setCompareUserSearch] = useState("");
+  const [compareUserDropdownOpen, setCompareUserDropdownOpen] = useState(false);
+  const compareUserDropdownRef = useRef<HTMLDivElement>(null);
 
   const [projects, setProjects] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
