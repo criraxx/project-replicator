@@ -41,7 +41,7 @@ const BolsistaProjects = () => {
     setLoading(false);
   }, [demo.isDemoMode]);
 
-  usePolling(fetchData, 30000, !demo.isDemoMode);
+  usePolling(fetchData, 30000);
 
   const handleApprove = async (id: number) => {
     setProcessing(true);

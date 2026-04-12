@@ -72,7 +72,7 @@ const AdminProjects = () => {
     setLoading(false);
   }, [demo.isDemoMode]);
 
-  usePolling(fetchAll, 30000, !demo.isDemoMode);
+  usePolling(fetchAll, 30000);
 
   const uniqueAuthors = useMemo(() => {
     const seen = new Set<string>();

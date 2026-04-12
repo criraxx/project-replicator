@@ -71,7 +71,7 @@ const AdminDashboard = () => {
     setLoading(false);
   }, [demo.isDemoMode]);
 
-  usePolling(fetchAll, 30000, !demo.isDemoMode);
+  usePolling(fetchAll, 30000);
 
   const usersByRole = [
     { name: "Admin", value: users.filter(u => u.role === "admin").length },

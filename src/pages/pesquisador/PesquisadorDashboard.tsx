@@ -33,7 +33,7 @@ const PesquisadorDashboard = () => {
     setLoading(false);
   }, [demo.isDemoMode]);
 
-  usePolling(fetchProjects, 30000, !demo.isDemoMode);
+  usePolling(fetchProjects, 30000);
 
   const approved = projects.filter(p => p.status === "aprovado").length;
   const pending = projects.filter(p => p.status === "pendente" || p.status === "em_revisao").length;

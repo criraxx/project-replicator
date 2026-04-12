@@ -37,7 +37,8 @@ const NotificationsPage = ({ backPath }: { backPath?: string }) => {
     }
   }, [demo.isDemoMode]);
 
-  usePolling(fetchNotifications, 15000, !demo.isDemoMode);
+  // usePolling handles both initial fetch + periodic refresh; for demo mode, just fetch once
+  usePolling(fetchNotifications, 15000);
 
   const handleMarkAsRead = async (id: number) => {
     try {
