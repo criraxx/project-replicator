@@ -50,7 +50,7 @@ const AdminAudit = () => {
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [userSearch, setUserSearch] = useState("");
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [allUsers, setAllUsers] = useState<{ id: number; name: string }[]>([]);
+  const [allUsers, setAllUsers] = useState<{ id: number; name: string; email?: string; cpf?: string }[]>([]);
   const [exporting, setExporting] = useState(false);
   const { toast } = useToast();
   const demo = useDemoData();
@@ -82,7 +82,7 @@ const AdminAudit = () => {
         ]);
         setLogs(logData.status === "fulfilled" && logData.value.logs?.length ? logData.value.logs : []);
         if (userData.status === "fulfilled" && userData.value?.length) {
-          setAllUsers(userData.value.map((u: any) => ({ id: u.id, name: u.name })));
+          setAllUsers(userData.value.map((u: any) => ({ id: u.id, name: u.name, email: u.email, cpf: u.cpf })));
         }
       } catch {
         setLogs([]);
@@ -92,15 +92,21 @@ const AdminAudit = () => {
     fetchData();
   }, []);
 
-  // Unique users from logs for the dropdown
+  // Unique users from logs for the dropdown (with email/cpf for search)
   const logUsers = useMemo(() => {
-    const map = new Map<number, string>();
+    const map = new Map<number, { id: number; name: string; email?: string; cpf?: string }>();
     logs.forEach(l => {
       if (l.user_id && !map.has(l.user_id)) {
-        map.set(l.user_id, l.user?.name || allUsers.find(u => u.id === l.user_id)?.name || `Usuário #${l.user_id}`);
+        const full = allUsers.find(u => u.id === l.user_id);
+        map.set(l.user_id, {
+          id: l.user_id,
+          name: full?.name || l.user?.name || `Usuário #${l.user_id}`,
+          email: full?.email,
+          cpf: full?.cpf,
+        });
       }
     });
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [logs, allUsers]);
 
   const filtered = useMemo(() => {
@@ -241,13 +247,13 @@ const AdminAudit = () => {
 
           {/* User selector when "Por Usuário" is active */}
           {viewMode === "usuario" && (
-            <div ref={userDropdownRef} className="relative min-w-[250px]">
+            <div ref={userDropdownRef} className="relative min-w-[300px]">
               <input
                 type="text"
                 value={userSearch}
-                onChange={(e) => { setUserSearch(e.target.value); setUserDropdownOpen(true); }}
+                onChange={(e) => { setUserSearch(e.target.value); setUserDropdownOpen(true); setSelectedUserId(""); }}
                 onFocus={() => setUserDropdownOpen(true)}
-                placeholder="Digitar para filtrar usuário..."
+                placeholder="Buscar por nome, CPF ou email..."
                 className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-card focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
               {selectedUserId && (
@@ -257,9 +263,15 @@ const AdminAudit = () => {
                 >✕</button>
               )}
               {userDropdownOpen && (
-                <div className="absolute z-50 mt-1 w-full bg-card border border-border rounded-lg shadow-lg max-h-52 overflow-y-auto">
+                <div className="absolute z-50 mt-1 w-full bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
                   {logUsers
-                    .filter(u => !userSearch || u.name.toLowerCase().includes(userSearch.toLowerCase()))
+                    .filter(u => {
+                      if (!userSearch) return true;
+                      const q = userSearch.toLowerCase().replace(/[.\-/]/g, "");
+                      return u.name.toLowerCase().includes(q)
+                        || (u.email && u.email.toLowerCase().includes(q))
+                        || (u.cpf && u.cpf.replace(/\D/g, "").includes(q));
+                    })
                     .map(u => (
                       <button
                         key={u.id}
@@ -268,12 +280,22 @@ const AdminAudit = () => {
                           setUserSearch(u.name);
                           setUserDropdownOpen(false);
                         }}
-                        className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors ${String(u.id) === selectedUserId ? "bg-muted font-medium" : ""}`}
+                        className={`w-full text-left px-3 py-2 hover:bg-muted transition-colors ${String(u.id) === selectedUserId ? "bg-muted font-medium" : ""}`}
                       >
-                        {u.name}
+                        <span className="text-sm font-medium text-foreground">{u.name}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {u.email || ""}
+                          {u.cpf ? ` · CPF: ${u.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")}` : ""}
+                        </span>
                       </button>
                     ))}
-                  {logUsers.filter(u => !userSearch || u.name.toLowerCase().includes(userSearch.toLowerCase())).length === 0 && (
+                  {logUsers.filter(u => {
+                    if (!userSearch) return true;
+                    const q = userSearch.toLowerCase().replace(/[.\-/]/g, "");
+                    return u.name.toLowerCase().includes(q)
+                      || (u.email && u.email.toLowerCase().includes(q))
+                      || (u.cpf && u.cpf.replace(/\D/g, "").includes(q));
+                  }).length === 0 && (
                     <p className="px-3 py-2 text-sm text-muted-foreground">Nenhum usuário encontrado</p>
                   )}
                 </div>
