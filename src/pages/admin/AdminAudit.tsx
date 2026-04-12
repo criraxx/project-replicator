@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, Shield, AlertTriangle, Clock, Users, Download, Inbox, Info, User, Eye } from "lucide-react";
+import { Search, Shield, AlertTriangle, Clock, Users, Download, Inbox, Info, User, Eye, FileSpreadsheet } from "lucide-react";
 import { formatDateTimeBrasilia } from "@/lib/formatters";
 import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
@@ -10,6 +10,7 @@ import { useDemoData } from "@/hooks/useDemoData";
 import { useAuth } from "@/contexts/AuthContext";
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const SEVERITY_OPTIONS = [
   { value: "low", label: "Low" },
@@ -36,6 +37,7 @@ const AdminAudit = () => {
   const [viewMode, setViewMode] = useState<ViewMode>("geral");
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [allUsers, setAllUsers] = useState<{ id: number; name: string }[]>([]);
+  const [exporting, setExporting] = useState(false);
   const { toast } = useToast();
   const demo = useDemoData();
   const { user: currentUser } = useAuth();
@@ -97,6 +99,53 @@ const AdminAudit = () => {
 
   const clearFilters = () => { setSearch(""); setSeverityFilters([]); setActionFilters([]); setSelectedUserId(""); };
 
+  const buildExportPayload = () => {
+    const userName = viewMode === "meus"
+      ? currentUser?.name
+      : viewMode === "usuario"
+        ? logUsers.find(u => u.id === Number(selectedUserId))?.name
+        : undefined;
+    return {
+      logs: filtered.map(l => ({
+        action: l.action,
+        details: l.details,
+        user_name: l.user?.name || allUsers.find(u => u.id === l.user_id)?.name || `Usuário #${l.user_id}`,
+        ip_address: l.ip_address,
+        severity: l.severity,
+        created_at: l.created_at,
+      })),
+      viewMode,
+      userName,
+    };
+  };
+
+  const exportLogs = async (format: "pdf" | "excel") => {
+    setExporting(true);
+    try {
+      const token = localStorage.getItem("cebio_token");
+      const apiBase = import.meta.env.VITE_API_URL || "/api";
+      const url = format === "pdf" ? "/audit/export/pdf" : "/audit/export/excel";
+      const ext = format === "pdf" ? "pdf" : "xlsx";
+      const res = await fetch(`${apiBase}${url}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: token ? `Bearer ${token}` : "" },
+        body: JSON.stringify(buildExportPayload()),
+      });
+      if (!res.ok) throw new Error("Falha na exportação");
+      const blob = await res.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `auditoria_cebio_${new Date().toISOString().slice(0, 10)}.${ext}`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast({ title: "Exportação concluída", description: `Arquivo ${ext.toUpperCase()} baixado com sucesso.` });
+    } catch {
+      toast({ title: "Erro", description: "Falha ao exportar logs.", variant: "destructive" });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <AppLayout pageName="Auditoria" navItems={ADMIN_NAV} notificationCount={0}>
       {/* Banner */}
@@ -111,9 +160,21 @@ const AdminAudit = () => {
               <span className="flex items-center gap-1.5 text-[12px] sm:text-[13px] opacity-90"><Download className="w-4 h-4" /> Exportação</span>
             </div>
           </div>
-          <button className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 self-start">
-            <Download className="w-4 h-4" /> Exportar Logs
-          </button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button disabled={exporting} className="bg-primary-foreground/20 hover:bg-primary-foreground/30 disabled:opacity-50 text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 self-start">
+                <Download className="w-4 h-4" /> {exporting ? "Exportando..." : "Exportar Logs"}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-1" align="end">
+              <button onClick={() => exportLogs("pdf")} className="w-full text-left px-3 py-2 text-sm rounded hover:bg-muted flex items-center gap-2">
+                <Download className="w-4 h-4" /> Exportar PDF
+              </button>
+              <button onClick={() => exportLogs("excel")} className="w-full text-left px-3 py-2 text-sm rounded hover:bg-muted flex items-center gap-2">
+                <FileSpreadsheet className="w-4 h-4" /> Exportar Excel
+              </button>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
