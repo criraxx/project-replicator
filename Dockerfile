@@ -6,20 +6,20 @@ FROM node:20-alpine AS build
 WORKDIR /app
 
 # Copiar arquivos de dependências
-COPY package.json pnpm-lock.yaml ./
+COPY package.json package-lock.json ./
 
-# Instalar pnpm e dependências
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
+# Instalar dependências sem depender de lockfile sincronizado
+RUN npm install
 
 # Copiar código fonte
 COPY . .
 
 # Aceitar variável de API URL no build
-ARG VITE_API_URL=http://localhost:8000/api
+ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
 
 # Build do frontend
-RUN pnpm run build
+RUN npm run build
 
 # ========================
 # Frontend - Nginx Stage
