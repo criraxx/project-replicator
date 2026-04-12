@@ -31,6 +31,7 @@ import EditProjectPage from "./pages/shared/EditProjectPage";
 import ProjectDetailView from "./pages/shared/ProjectDetailView";
 import ProfilePage from "./pages/shared/ProfilePage";
 import NotificationsPage from "./pages/shared/NotificationsPage";
+import UserReports from "./pages/shared/UserReports";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/pesquisador/submissao" element={<ProtectedRoute requiredRole="pesquisador"><SubmissionForm /></ProtectedRoute>} />
             <Route path="/pesquisador/editar" element={<ProtectedRoute requiredRole="pesquisador"><EditProjectPage /></ProtectedRoute>} />
             <Route path="/pesquisador/historico" element={<ProtectedRoute requiredRole="pesquisador"><PesquisadorHistory /></ProtectedRoute>} />
+            <Route path="/pesquisador/relatorios" element={<ProtectedRoute requiredRole="pesquisador"><UserReports /></ProtectedRoute>} />
             <Route path="/pesquisador/perfil" element={<ProtectedRoute requiredRole="pesquisador"><ProfilePage backPath="/pesquisador/dashboard" /></ProtectedRoute>} />
             <Route path="/pesquisador/notificacoes" element={<ProtectedRoute requiredRole="pesquisador"><NotificationsPage /></ProtectedRoute>} />
             
@@ -79,6 +81,7 @@ const App = () => (
             <Route path="/bolsista/submissao" element={<ProtectedRoute requiredRole="bolsista"><SubmissionForm /></ProtectedRoute>} />
             <Route path="/bolsista/editar" element={<ProtectedRoute requiredRole="bolsista"><EditProjectPage /></ProtectedRoute>} />
             <Route path="/bolsista/historico" element={<ProtectedRoute requiredRole="bolsista"><BolsistaHistory /></ProtectedRoute>} />
+            <Route path="/bolsista/relatorios" element={<ProtectedRoute requiredRole="bolsista"><UserReports /></ProtectedRoute>} />
             <Route path="/bolsista/perfil" element={<ProtectedRoute requiredRole="bolsista"><ProfilePage backPath="/bolsista/dashboard" /></ProtectedRoute>} />
             <Route path="/bolsista/notificacoes" element={<ProtectedRoute requiredRole="bolsista"><NotificationsPage /></ProtectedRoute>} />
             
