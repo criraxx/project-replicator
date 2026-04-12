@@ -36,6 +36,8 @@ const AdminAudit = () => {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("geral");
   const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [userSearch, setUserSearch] = useState("");
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [allUsers, setAllUsers] = useState<{ id: number; name: string }[]>([]);
   const [exporting, setExporting] = useState(false);
   const { toast } = useToast();
