@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Inbox, CheckCircle, XCircle, Clock, FileText, Users, Edit3 } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
@@ -9,6 +9,7 @@ import api from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { formatDateBrasilia } from "@/lib/formatters";
 import { useDemoData } from "@/hooks/useDemoData";
+import { usePolling } from "@/hooks/usePolling";
 
 const PesquisadorProjects = () => {
   const { user } = useAuth();
@@ -22,7 +23,7 @@ const PesquisadorProjects = () => {
   const [processing, setProcessing] = useState(false);
   const demo = useDemoData();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (demo.isDemoMode) {
       setProjects(demo.getProjects(true) || []);
       setPendingApprovals([]);
@@ -38,9 +39,9 @@ const PesquisadorProjects = () => {
       setPendingApprovals(approvals.status === "fulfilled" ? approvals.value || [] : []);
     } catch { /* silent */ }
     setLoading(false);
-  };
+  }, [demo.isDemoMode]);
 
-  useEffect(() => { fetchData(); }, []);
+  usePolling(fetchData, 30000);
 
   const handleApprove = async (id: number) => {
     setProcessing(true);
