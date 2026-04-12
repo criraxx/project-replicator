@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, FileText, Image, ExternalLink, CheckCircle, XCircle, Clock, AlertTriangle, Download, Eye, X, Edit3, Users } from "lucide-react";
+import { ArrowLeft, FileText, Image, ExternalLink, CheckCircle, XCircle, Clock, AlertTriangle, Download, Eye, X, Edit3, Users, RotateCcw } from "lucide-react";
 import { formatDateBrasilia, formatDateTimeBrasilia } from "@/lib/formatters";
 import AppLayout from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -61,7 +61,7 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
     if (!project) return;
     setActionLoading(true);
     try {
-      await api.updateProject(project.id, { status: "aprovado", review_comment: reviewComment || undefined });
+      await api.approveProject(project.id, reviewComment || undefined);
       setProject({ ...project, status: "aprovado" });
       toast({ title: "Sucesso", description: "Projeto aprovado com sucesso!" });
       setReviewComment("");
@@ -80,9 +80,28 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
     }
     setActionLoading(true);
     try {
-      await api.updateProject(project.id, { status: "rejeitado", review_comment: reviewComment });
-      setProject({ ...project, status: "rejeitado", rejection_reason: reviewComment });
+      await api.rejectProject(project.id, reviewComment);
+      setProject({ ...project, status: "rejeitado", review_comment: reviewComment });
       toast({ title: "Sucesso", description: "Projeto rejeitado." });
+      setReviewComment("");
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReturn = async () => {
+    if (!project) return;
+    if (!reviewComment.trim()) {
+      toast({ title: "Atencao", description: "Informe o motivo da devolução.", variant: "destructive" });
+      return;
+    }
+    setActionLoading(true);
+    try {
+      await api.returnProject(project.id, reviewComment);
+      setProject({ ...project, status: "devolvido", review_comment: reviewComment });
+      toast({ title: "Sucesso", description: "Projeto devolvido para correções." });
       setReviewComment("");
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
@@ -180,7 +199,7 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors">
           <ArrowLeft className="w-4 h-4" /> Voltar
         </button>
-        {(project.status === "rascunho" || project.status === "devolvido") && project.owner_id === user?.id && (
+        {(project.status === "rascunho" || project.status === "devolvido" || project.status === "rejeitado") && project.owner_id === user?.id && (
           <button 
             onClick={() => navigate(`/pesquisador/submissao?edit=${project.id}`)} 
             className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-secondary transition-colors"
@@ -236,6 +255,13 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
               className="flex items-center gap-2 px-5 py-2.5 bg-destructive text-destructive-foreground rounded-lg text-sm font-semibold hover:bg-destructive/90 transition-colors disabled:opacity-50"
             >
               <XCircle className="w-4 h-4" /> Rejeitar Projeto
+            </button>
+            <button
+              onClick={handleReturn}
+              disabled={actionLoading}
+              className="flex items-center gap-2 px-5 py-2.5 bg-amber-600 text-white rounded-lg text-sm font-semibold hover:bg-amber-700 transition-colors disabled:opacity-50"
+            >
+              <RotateCcw className="w-4 h-4" /> Devolver para Correções
             </button>
           </div>
         </div>

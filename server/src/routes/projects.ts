@@ -237,7 +237,8 @@ router.put('/projects/:id', authMiddleware, ...validateUpdateProject, handleVali
     const project = await projectService.updateProject(Number(req.params.id), projectUpdates, req.user!.id, isAdmin);
 
     // If it's a draft, returned or admin, we can update authors and links directly
-    if (isAdmin || project.status === 'rascunho' || project.status === 'devolvido' || project.status === 'pendente') {
+    // Allow editing authors/links for editable statuses (including rejected projects being resubmitted)
+    if (isAdmin || ['rascunho', 'devolvido', 'pendente', 'rejeitado', 'aguardando_autores'].includes(project.status)) {
       const targetProjectId = Number(req.params.id);
       
       if (authors && Array.isArray(authors)) {
@@ -253,16 +254,17 @@ router.put('/projects/:id', authMiddleware, ...validateUpdateProject, handleVali
         );
       }
 
-      // If project was 'devolvido' or 'rascunho' and is now being submitted ('pendente')
-      // and has co-authors, it should go to 'aguardando_autores'
+      // If project is being submitted ('pendente') and has co-authors, 
+      // it should go to 'aguardando_autores' until all approve
       if (!isAdmin && projectUpdates.status === 'pendente' && authors && authors.length > 1) {
+        // Reset all non-owner author statuses so they need to re-approve
+        await authorApprovalService.resetAuthorStatuses(targetProjectId);
         project.status = 'aguardando_autores';
         await AppDataSource.getRepository('Project').save(project);
       }
 
       if (links && Array.isArray(links)) {
         const linkRepo = AppDataSource.getRepository(ProjectLink);
-        // Clear existing links and re-add
         await linkRepo.delete({ project_id: targetProjectId });
         for (const l of links) {
           if (l.url) {
@@ -374,6 +376,27 @@ router.post('/projects/:id/reject-edit', authMiddleware, requireRole('admin'), a
       undefined,
       project.id,
       `Edicao rejeitada: ${project.title}`,
+      req.ip || 'unknown',
+      'medium'
+    );
+
+    res.json(project);
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Erro interno' });
+  }
+});
+
+// POST /api/projects/:id/return - Admin returns project for corrections (devolvido)
+router.post('/projects/:id/return', authMiddleware, requireRole('admin'), async (req: Request, res: Response) => {
+  try {
+    const project = await projectService.returnProject(Number(req.params.id), req.user!.id, req.body.comment);
+
+    await auditService.logAction(
+      'RETURN_PROJECT',
+      req.user!.id,
+      undefined,
+      project.id,
+      `Projeto devolvido para correções: ${project.title}`,
       req.ip || 'unknown',
       'medium'
     );

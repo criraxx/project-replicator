@@ -249,6 +249,23 @@ export class ProjectService {
     } as any, reviewedBy, true);
   }
 
+  async returnProject(id: number, reviewedBy: number, comment?: string): Promise<Project> {
+    const project = await this.getProjectById(id, reviewedBy, true);
+    if (!project) throw new AppError(404, 'Projeto nao encontrado');
+
+    // Add comment explaining why it was returned
+    if (comment) {
+      await this.addComment(id, reviewedBy, `Devolvido para correções: ${comment}`);
+    }
+
+    return this.updateProject(id, {
+      status: 'devolvido',
+      reviewed_by: reviewedBy,
+      review_comment: comment,
+      reviewed_at: new Date(),
+    } as any, reviewedBy, true);
+  }
+
   async deleteProject(id: number, userId: number, isAdmin: boolean = false): Promise<void> {
     const project = await this.getProjectById(id, userId, isAdmin);
     if (!project) throw new AppError(404, 'Projeto nao encontrado');

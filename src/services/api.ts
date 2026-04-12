@@ -193,6 +193,10 @@ class ApiClient {
     return this.request<any>('POST', `/projects/${id}/reject`, { comment });
   }
 
+  async returnProject(id: number, comment?: string) {
+    return this.request<any>('POST', `/projects/${id}/return`, { comment });
+  }
+
   async deleteProject(id: number) {
     return this.request<void>('DELETE', `/projects/${id}`);
   }
