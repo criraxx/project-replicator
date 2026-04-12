@@ -229,7 +229,7 @@ const AdminAudit = () => {
 
           {/* User selector when "Por Usuário" is active */}
           {viewMode === "usuario" && (
-            <div className="relative min-w-[250px]">
+            <div ref={userDropdownRef} className="relative min-w-[250px]">
               <input
                 type="text"
                 value={userSearch}
