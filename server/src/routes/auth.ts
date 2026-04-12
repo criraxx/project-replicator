@@ -114,8 +114,8 @@ router.put('/auth/change-password', authMiddleware, validateChangePassword, hand
       return res.status(400).json({ error: 'Senha atual e nova senha são obrigatórias' });
     }
 
-    if (new_password.length < 6) {
-      return res.status(400).json({ error: 'A nova senha deve ter no mínimo 6 caracteres' });
+    if (new_password.length < 8) {
+      return res.status(400).json({ error: 'A nova senha deve ter no mínimo 8 caracteres' });
     }
 
     await userService.changePassword(req.user!.id, current_password, new_password);
