@@ -199,7 +199,7 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-sm font-medium hover:bg-muted transition-colors">
           <ArrowLeft className="w-4 h-4" /> Voltar
         </button>
-        {(project.status === "rascunho" || project.status === "devolvido") && project.owner_id === user?.id && (
+        {(project.status === "rascunho" || project.status === "devolvido" || project.status === "rejeitado") && project.owner_id === user?.id && (
           <button 
             onClick={() => navigate(`/pesquisador/submissao?edit=${project.id}`)} 
             className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-secondary transition-colors"
@@ -255,6 +255,13 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
               className="flex items-center gap-2 px-5 py-2.5 bg-destructive text-destructive-foreground rounded-lg text-sm font-semibold hover:bg-destructive/90 transition-colors disabled:opacity-50"
             >
               <XCircle className="w-4 h-4" /> Rejeitar Projeto
+            </button>
+            <button
+              onClick={handleReturn}
+              disabled={actionLoading}
+              className="flex items-center gap-2 px-5 py-2.5 bg-amber-600 text-white rounded-lg text-sm font-semibold hover:bg-amber-700 transition-colors disabled:opacity-50"
+            >
+              <RotateCcw className="w-4 h-4" /> Devolver para Correções
             </button>
           </div>
         </div>
