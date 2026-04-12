@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { BarChart3, FileText, Users, TrendingUp, Download, Filter, RefreshCw, User, FileSpreadsheet } from "lucide-react";
+import { BarChart3, FileText, Users, TrendingUp, Download, Filter, RefreshCw, User, FileSpreadsheet, ArrowUpRight, ArrowDownRight, Minus, Clock, GitCompare } from "lucide-react";
 import MultiSelectFilter from "@/components/ui/multi-select-filter";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
@@ -7,7 +7,7 @@ import {
   LineChart, Line,
   CartesianGrid,
 } from "recharts";
-import { format } from "date-fns";
+import { format, subMonths, startOfMonth, endOfMonth, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import AppLayout from "@/components/layout/AppLayout";
 import { ADMIN_NAV } from "@/constants/navigation";
@@ -18,15 +18,16 @@ import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import api from "@/services/api";
 import { formatDateBrasilia } from "@/lib/formatters";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
-
-const COLORS = ["hsl(170,37%,30%)", "hsl(43,96%,56%)", "hsl(210,72%,46%)", "hsl(3,81%,55%)", "hsl(270,50%,50%)", "hsl(30,80%,55%)"];
+const COLORS = ["hsl(170,37%,30%)", "hsl(43,96%,56%)", "hsl(210,72%,46%)", "hsl(3,81%,55%)", "hsl(270,50%,50%)", "hsl(30,80%,55%)", "hsl(150,60%,40%)", "hsl(330,60%,50%)"];
 const STATUS_OPTIONS = [
   { value: "all", label: "Todos" },
   { value: "pendente", label: "Pendente" },
   { value: "aprovado", label: "Aprovado" },
   { value: "rejeitado", label: "Rejeitado" },
   { value: "em_revisao", label: "Em Revisão" },
+  { value: "devolvido", label: "Devolvido" },
 ];
 const USER_TYPE_OPTIONS = [
   { value: "all", label: "Todos" },
@@ -53,13 +54,13 @@ const Pictogram = ({ data }: { data: { name: string; value: number; color: strin
     for (let i = 0; i < count; i++) icons.push({ color: d.color, label: d.name });
   });
   return (
-    <div className="bg-white p-4 rounded-lg">
+    <div className="bg-card p-4 rounded-lg">
       <div className="flex flex-wrap gap-1 justify-center mb-4">
         {icons.map((ic, i) => (
           <User key={i} className="w-4 h-4" style={{ color: ic.color }} />
         ))}
       </div>
-      <div className="flex gap-4 justify-center">
+      <div className="flex gap-4 justify-center flex-wrap">
         {data.map((d, i) => (
           <span key={i} className="flex items-center gap-1.5 text-xs">
             <span className="w-3 h-3 rounded-full inline-block" style={{ background: d.color }} />
@@ -128,6 +129,52 @@ const RenderChart = ({ type, data, dataKey = "value", nameKey = "name" }: { type
   );
 };
 
+const MultiLineChart = ({ data, lines }: { data: any[]; lines: { key: string; color: string; label: string }[] }) => {
+  if (!data.length) return <p className="text-center text-muted-foreground py-8">Sem dados</p>;
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <LineChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+        <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+        <Tooltip />
+        <Legend />
+        {lines.map(l => (
+          <Line key={l.key} type="monotone" dataKey={l.key} stroke={l.color} strokeWidth={2} dot={{ r: 3 }} name={l.label} />
+        ))}
+      </LineChart>
+    </ResponsiveContainer>
+  );
+};
+
+const StackedBarChart = ({ data, bars }: { data: any[]; bars: { key: string; color: string; label: string }[] }) => {
+  if (!data.length) return <p className="text-center text-muted-foreground py-8">Sem dados</p>;
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <BarChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+        <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+        <Tooltip />
+        <Legend />
+        {bars.map(b => (
+          <Bar key={b.key} dataKey={b.key} fill={b.color} stackId="stack" name={b.label} />
+        ))}
+      </BarChart>
+    </ResponsiveContainer>
+  );
+};
+
+// --- Variation badge ---
+const VariationBadge = ({ current, previous }: { current: number; previous: number }) => {
+  if (previous === 0 && current === 0) return <span className="text-xs text-muted-foreground">—</span>;
+  if (previous === 0) return <span className="text-xs text-green-600 flex items-center gap-0.5"><ArrowUpRight className="w-3 h-3" />Novo</span>;
+  const pct = Math.round(((current - previous) / previous) * 100);
+  if (pct === 0) return <span className="text-xs text-muted-foreground flex items-center gap-0.5"><Minus className="w-3 h-3" />0%</span>;
+  if (pct > 0) return <span className="text-xs text-green-600 flex items-center gap-0.5"><ArrowUpRight className="w-3 h-3" />+{pct}%</span>;
+  return <span className="text-xs text-destructive flex items-center gap-0.5"><ArrowDownRight className="w-3 h-3" />{pct}%</span>;
+};
+
 const AdminReports = () => {
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
@@ -138,6 +185,14 @@ const AdminReports = () => {
   const [chartType, setChartType] = useState<ChartType>("columns");
   const chartsRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
+  const [activeTab, setActiveTab] = useState("geral");
+
+  // Comparison state
+  const [compareMode, setCompareMode] = useState(false);
+  const [periodA_start, setPeriodA_start] = useState<Date | undefined>(startOfMonth(subMonths(new Date(), 3)));
+  const [periodA_end, setPeriodA_end] = useState<Date | undefined>(endOfMonth(subMonths(new Date(), 1)));
+  const [periodB_start, setPeriodB_start] = useState<Date | undefined>(startOfMonth(subMonths(new Date(), 6)));
+  const [periodB_end, setPeriodB_end] = useState<Date | undefined>(endOfMonth(subMonths(new Date(), 4)));
 
   const [projects, setProjects] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
@@ -165,6 +220,7 @@ const AdminReports = () => {
     fetchAll();
   }, []);
 
+  // ===== FILTERED PROJECTS =====
   const filtered = useMemo(() => {
     return projects.filter(p => {
       if (statusFilters.length > 0 && !statusFilters.includes(p.status)) return false;
@@ -180,6 +236,7 @@ const AdminReports = () => {
     });
   }, [projects, statusFilters, categoryFilters, userTypeFilters, ownerFilters, startDate, endDate, users]);
 
+  // ===== BASIC CHARTS (existing) =====
   const byStatus = useMemo(() => {
     const map: Record<string, number> = {};
     filtered.forEach(p => { map[p.status] = (map[p.status] || 0) + 1; });
@@ -221,6 +278,148 @@ const AdminReports = () => {
     return Object.entries(map).map(([name, value]) => ({ name: name === "pesquisador" ? "Pesquisadores" : "Bolsistas", value }));
   }, [filtered, users]);
 
+  // ===== NEW ANALYTICS CHARTS =====
+
+  // 1. Approval rate per category (stacked bar)
+  const approvalByCategory = useMemo(() => {
+    const map: Record<string, { aprovado: number; rejeitado: number; pendente: number; devolvido: number }> = {};
+    filtered.forEach(p => {
+      const cat = p.category || "Sem categoria";
+      if (!map[cat]) map[cat] = { aprovado: 0, rejeitado: 0, pendente: 0, devolvido: 0 };
+      if (p.status === "aprovado") map[cat].aprovado++;
+      else if (p.status === "rejeitado") map[cat].rejeitado++;
+      else if (p.status === "devolvido") map[cat].devolvido++;
+      else map[cat].pendente++;
+    });
+    return Object.entries(map).map(([name, v]) => ({ name, ...v }));
+  }, [filtered]);
+
+  // 2. Average review time (days from created_at to updated_at for approved/rejected)
+  const avgReviewTime = useMemo(() => {
+    const map: Record<string, { totalDays: number; count: number }> = {};
+    filtered.forEach(p => {
+      if (!["aprovado", "rejeitado"].includes(p.status)) return;
+      const created = new Date(p.created_at);
+      const updated = new Date(p.updated_at || p.created_at);
+      const days = Math.max(0, differenceInDays(updated, created));
+      const cat = p.category || "Sem categoria";
+      if (!map[cat]) map[cat] = { totalDays: 0, count: 0 };
+      map[cat].totalDays += days;
+      map[cat].count++;
+    });
+    return Object.entries(map).map(([name, v]) => ({
+      name,
+      value: v.count > 0 ? Math.round(v.totalDays / v.count) : 0,
+    })).sort((a, b) => b.value - a.value);
+  }, [filtered]);
+
+  // 3. By academic level
+  const byAcademicLevel = useMemo(() => {
+    const map: Record<string, number> = {};
+    filtered.forEach(p => {
+      const level = p.academic_level || "Não informado";
+      map[level] = (map[level] || 0) + 1;
+    });
+    return Object.entries(map).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [filtered]);
+
+  // 4. Monthly comparison (multi-line: approved vs rejected vs pending per month)
+  const monthlyComparison = useMemo(() => {
+    const map: Record<string, { aprovado: number; rejeitado: number; pendente: number }> = {};
+    filtered.forEach(p => {
+      const d = new Date(p.created_at);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      if (!map[key]) map[key] = { aprovado: 0, rejeitado: 0, pendente: 0 };
+      if (p.status === "aprovado") map[key].aprovado++;
+      else if (p.status === "rejeitado") map[key].rejeitado++;
+      else map[key].pendente++;
+    });
+    return Object.entries(map).sort().map(([name, v]) => ({ name, ...v }));
+  }, [filtered]);
+
+  // 5. Co-author distribution
+  const coAuthorDist = useMemo(() => {
+    const map: Record<string, number> = { "Sem coautores": 0, "1 coautor": 0, "2 coautores": 0, "3+ coautores": 0 };
+    filtered.forEach(p => {
+      const count = p.authors?.length || 0;
+      if (count === 0) map["Sem coautores"]++;
+      else if (count === 1) map["1 coautor"]++;
+      else if (count === 2) map["2 coautores"]++;
+      else map["3+ coautores"]++;
+    });
+    return Object.entries(map).map(([name, value]) => ({ name, value }));
+  }, [filtered]);
+
+  // 6. Active vs inactive users
+  const userActivity = useMemo(() => {
+    const active = users.filter(u => u.is_active).length;
+    const inactive = users.filter(u => !u.is_active).length;
+    return [
+      { name: "Ativos", value: active },
+      { name: "Inativos", value: inactive },
+    ];
+  }, [users]);
+
+  // 7. Rework rate per author (devolvido/rejeitado count)
+  const reworkByAuthor = useMemo(() => {
+    const map: Record<string, { total: number; rework: number }> = {};
+    filtered.forEach(p => {
+      const owner = users.find(u => u.id === p.owner_id);
+      const name = owner?.name || `Usuário ${p.owner_id}`;
+      if (!map[name]) map[name] = { total: 0, rework: 0 };
+      map[name].total++;
+      if (["devolvido", "rejeitado"].includes(p.status)) map[name].rework++;
+    });
+    return Object.entries(map)
+      .filter(([, v]) => v.total >= 1)
+      .map(([name, v]) => ({
+        name,
+        value: Math.round((v.rework / v.total) * 100),
+        total: v.total,
+        rework: v.rework,
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10);
+  }, [filtered, users]);
+
+  // 8. Category productivity ranking (approved count)
+  const categoryRanking = useMemo(() => {
+    const map: Record<string, number> = {};
+    filtered.forEach(p => {
+      if (p.status !== "aprovado") return;
+      const cat = p.category || "Sem categoria";
+      map[cat] = (map[cat] || 0) + 1;
+    });
+    return Object.entries(map).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [filtered]);
+
+  // ===== COMPARISON =====
+  const filterByPeriod = (start?: Date, end?: Date) => {
+    return projects.filter(p => {
+      const d = new Date(p.created_at);
+      if (start && d < start) return false;
+      if (end && d > end) return false;
+      return true;
+    });
+  };
+
+  const periodAProjects = useMemo(() => filterByPeriod(periodA_start, periodA_end), [projects, periodA_start, periodA_end]);
+  const periodBProjects = useMemo(() => filterByPeriod(periodB_start, periodB_end), [projects, periodB_start, periodB_end]);
+
+  const getMetrics = (list: any[]) => {
+    const total = list.length;
+    const approved = list.filter(p => p.status === "aprovado").length;
+    const rejected = list.filter(p => p.status === "rejeitado").length;
+    const returned = list.filter(p => p.status === "devolvido").length;
+    const pending = list.filter(p => p.status === "pendente").length;
+    const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
+    const uniqueAuthors = new Set(list.map(p => p.owner_id)).size;
+    return { total, approved, rejected, returned, pending, approvalRate, uniqueAuthors };
+  };
+
+  const metricsA = useMemo(() => getMetrics(periodAProjects), [periodAProjects]);
+  const metricsB = useMemo(() => getMetrics(periodBProjects), [periodBProjects]);
+
   const approvalRate = filtered.length > 0 ? Math.round((filtered.filter(p => p.status === "aprovado").length / filtered.length) * 100) : 0;
 
   const clearFilters = () => {
@@ -249,7 +448,7 @@ const AdminReports = () => {
     const userTypeLabel = userTypeFilters.length > 0 ? userTypeFilters.map(s => USER_TYPE_OPTIONS.find(o => o.value === s)?.label || s).join(", ") : "Todos";
     const catLabel = categoryFilters.length > 0 ? categoryFilters.join(", ") : "Todas";
     const ownerLabel = ownerFilters.length > 0 ? ownerFilters.map(id => uniqueOwners.find(o => String(o.id) === id)?.name || id).join(", ") : "Todos";
-    
+
     return {
       title: "Relatorio CEBIO Brasil",
       generatedAt: new Date().toLocaleString("pt-BR"),
@@ -274,6 +473,10 @@ const AdminReports = () => {
         { title: "Top 10 Usuarios", data: byUser },
         { title: "Evolucao Temporal", data: byMonth },
         { title: "Tipo de Usuario", data: byUserType },
+        { title: "Nivel Academico", data: byAcademicLevel },
+        { title: "Tempo Medio de Revisao (dias)", data: avgReviewTime },
+        { title: "Distribuicao de Coautores", data: coAuthorDist },
+        { title: "Ranking de Categorias (Aprovados)", data: categoryRanking },
       ],
       projects: filtered.map(p => {
         const owner = users.find((u: any) => u.id === p.owner_id);
@@ -295,7 +498,7 @@ const AdminReports = () => {
       const apiBase = import.meta.env.VITE_API_URL || '/api';
       const res = await fetch(`${apiBase}${url}`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Authorization": token ? `Bearer ${token}` : ""
         },
@@ -322,13 +525,30 @@ const AdminReports = () => {
 
   const exportSectionPDF = async (title: string, data: { name: string; value: number }[]) => {
     const payload = await buildPayload();
-    downloadBlob("/exports/pdf-section", { 
-      sectionTitle: title, 
-      data, 
-      chartType, 
-      projects: payload.projects 
+    downloadBlob("/exports/pdf-section", {
+      sectionTitle: title,
+      data,
+      chartType,
+      projects: payload.projects
     }, `${title.replace(/\s+/g, "_")}.pdf`);
   };
+
+  const DatePickerInline = ({ label, value, onChange }: { label: string; value?: Date; onChange: (d: Date | undefined) => void }) => (
+    <div>
+      <label className="text-xs text-muted-foreground mb-1 block">{label}</label>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !value && "text-muted-foreground")}>
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {value ? format(value, "dd/MM/yyyy") : "Selecionar"}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar mode="single" selected={value} onSelect={onChange} initialFocus className="p-3 pointer-events-auto" />
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
 
   return (
     <AppLayout pageName="Relatórios e Analytics" navItems={ADMIN_NAV} notificationCount={0}>
@@ -347,180 +567,290 @@ const AdminReports = () => {
       </div>
 
       <div>
-      {/* KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
-        {[
-          { icon: FileText, label: "Projetos (filtrados)", value: filtered.length, sub: `de ${projects.length} totais`, iconBg: "bg-cebio-blue-bg", iconColor: "text-cebio-blue" },
-          { icon: Users, label: "Usuários no Sistema", value: users.length, sub: `${users.filter(u => u.is_active).length} ativos`, iconBg: "bg-cebio-green-bg", iconColor: "text-primary" },
-          { icon: TrendingUp, label: "Taxa de Aprovação", value: `${approvalRate}%`, sub: `${filtered.filter(p => p.status === "aprovado").length} aprovados`, iconBg: "bg-cebio-yellow-bg", iconColor: "text-cebio-yellow" },
-          { icon: BarChart3, label: "Categorias", value: categories.length, sub: `${byCategory.length} com projetos`, iconBg: "bg-cebio-purple-bg", iconColor: "text-cebio-purple" },
-        ].map((kpi, i) => (
-          <div key={i} className="bg-card rounded-xl p-5 shadow-sm border border-border flex justify-between items-start">
-            <div>
-              <div className="text-[13px] text-muted-foreground mb-1">{kpi.label}</div>
-              <div className="text-3xl font-bold text-foreground">{kpi.value}</div>
-              <div className="text-xs text-muted-foreground mt-1">{kpi.sub}</div>
-            </div>
-            <div className={`w-11 h-11 rounded-full ${kpi.iconBg} flex items-center justify-center`}>
-              <kpi.icon className={`w-5 h-5 ${kpi.iconColor}`} />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <div className="bg-card rounded-xl shadow-sm border border-border p-5 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter className="w-4 h-4 text-muted-foreground" />
-          <h3 className="text-sm font-semibold">Filtros</h3>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
-          <MultiSelectFilter
-            label="Status"
-            options={STATUS_OPTIONS.filter(o => o.value !== "all")}
-            selected={statusFilters}
-            onChange={setStatusFilters}
-            placeholder="Todos"
-          />
-          <MultiSelectFilter
-            label="Categoria"
-            options={categories.map(c => ({ value: c.name, label: c.name }))}
-            selected={categoryFilters}
-            onChange={setCategoryFilters}
-            placeholder="Todas"
-          />
-          <MultiSelectFilter
-            label="Tipo de Usuario"
-            options={USER_TYPE_OPTIONS.filter(o => o.value !== "all")}
-            selected={userTypeFilters}
-            onChange={setUserTypeFilters}
-            placeholder="Todos"
-          />
-          <MultiSelectFilter
-            label="Proprietario"
-            options={uniqueOwners.map(o => ({ value: String(o.id), label: o.name }))}
-            selected={ownerFilters}
-            onChange={setOwnerFilters}
-            placeholder="Todos"
-          />
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Data Início</label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, "dd/MM/yyyy") : "Selecionar"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus className="p-3 pointer-events-auto" />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Data Fim</label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")}>
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {endDate ? format(endDate, "dd/MM/yyyy") : "Selecionar"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={endDate} onSelect={setEndDate} initialFocus className="p-3 pointer-events-auto" />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={clearFilters}><RefreshCw className="w-3.5 h-3.5 mr-1" /> Limpar Filtros</Button>
-        </div>
-      </div>
-
-      {/* Chart Type Selector */}
-      <div className="bg-card rounded-xl shadow-sm border border-border p-5 mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
-          <h3 className="text-sm font-semibold">Tipo de Gráfico</h3>
-          <div className="flex gap-1 flex-wrap">
-            {CHART_TYPES.map(ct => (
-              <button
-                key={ct.value}
-                onClick={() => setChartType(ct.value)}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
-                  chartType === ct.value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
-                )}
-              >
-                {ct.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Charts Grid */}
-      <div ref={chartsRef} className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
-        {[
-          { title: "Projetos por Status", data: byStatus, type: chartType },
-          { title: "Projetos por Categoria", data: byCategory, type: chartType },
-          { title: "Top 10 Usuarios", data: byUser, type: chartType === "columns" ? "bars" as ChartType : chartType },
-          { title: "Evolucao Temporal", data: byMonth, type: (chartType === "pie" || chartType === "pictogram" ? "lines" : chartType) as ChartType },
-          { title: "Tipo de Usuario", data: byUserType, type: chartType },
-        ].map((chart, i) => (
-          <div key={i} className="bg-card rounded-xl shadow-sm border border-border p-5 chart-container" data-title={chart.title}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold">{chart.title}</h3>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => exportSectionPDF(chart.title, chart.data)}
-                  disabled={exporting}
-                  className="px-2 py-1 rounded text-[11px] font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors flex items-center gap-1 disabled:opacity-50"
-                >
-                  <Download className="w-3 h-3" /> PDF
-                </button>
+        {/* KPIs */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+          {[
+            { icon: FileText, label: "Projetos (filtrados)", value: filtered.length, sub: `de ${projects.length} totais`, iconBg: "bg-cebio-blue-bg", iconColor: "text-cebio-blue" },
+            { icon: Users, label: "Usuários no Sistema", value: users.length, sub: `${users.filter(u => u.is_active).length} ativos`, iconBg: "bg-cebio-green-bg", iconColor: "text-primary" },
+            { icon: TrendingUp, label: "Taxa de Aprovação", value: `${approvalRate}%`, sub: `${filtered.filter(p => p.status === "aprovado").length} aprovados`, iconBg: "bg-cebio-yellow-bg", iconColor: "text-cebio-yellow" },
+            { icon: BarChart3, label: "Categorias", value: categories.length, sub: `${byCategory.length} com projetos`, iconBg: "bg-cebio-purple-bg", iconColor: "text-cebio-purple" },
+          ].map((kpi, i) => (
+            <div key={i} className="bg-card rounded-xl p-5 shadow-sm border border-border flex justify-between items-start">
+              <div>
+                <div className="text-[13px] text-muted-foreground mb-1">{kpi.label}</div>
+                <div className="text-3xl font-bold text-foreground">{kpi.value}</div>
+                <div className="text-xs text-muted-foreground mt-1">{kpi.sub}</div>
+              </div>
+              <div className={`w-11 h-11 rounded-full ${kpi.iconBg} flex items-center justify-center`}>
+                <kpi.icon className={`w-5 h-5 ${kpi.iconColor}`} />
               </div>
             </div>
-            <RenderChart type={chart.type} data={chart.data} />
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      {/* Summary Table */}
-      <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
-        <div className="p-5 pb-0">
-          <h3 className="text-sm font-semibold mb-1">Tabela Resumo</h3>
-          <p className="text-xs text-muted-foreground mb-4">{filtered.length} projetos com os filtros aplicados</p>
+        {/* Filters */}
+        <div className="bg-card rounded-xl shadow-sm border border-border p-5 mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold">Filtros</h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
+            <MultiSelectFilter label="Status" options={STATUS_OPTIONS.filter(o => o.value !== "all")} selected={statusFilters} onChange={setStatusFilters} placeholder="Todos" />
+            <MultiSelectFilter label="Categoria" options={categories.map(c => ({ value: c.name, label: c.name }))} selected={categoryFilters} onChange={setCategoryFilters} placeholder="Todas" />
+            <MultiSelectFilter label="Tipo de Usuario" options={USER_TYPE_OPTIONS.filter(o => o.value !== "all")} selected={userTypeFilters} onChange={setUserTypeFilters} placeholder="Todos" />
+            <MultiSelectFilter label="Proprietario" options={uniqueOwners.map(o => ({ value: String(o.id), label: o.name }))} selected={ownerFilters} onChange={setOwnerFilters} placeholder="Todos" />
+            <DatePickerInline label="Data Início" value={startDate} onChange={setStartDate} />
+            <DatePickerInline label="Data Fim" value={endDate} onChange={setEndDate} />
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={clearFilters}><RefreshCw className="w-3.5 h-3.5 mr-1" /> Limpar Filtros</Button>
+          </div>
         </div>
-        <div className="overflow-x-auto">
-          <div className="overflow-x-auto"><table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="text-left p-3 font-medium text-muted-foreground">Título</th>
-                <th className="text-left p-3 font-medium text-muted-foreground">Proprietário</th>
-                <th className="text-left p-3 font-medium text-muted-foreground">Categoria</th>
-                <th className="text-left p-3 font-medium text-muted-foreground">Status</th>
-                <th className="text-left p-3 font-medium text-muted-foreground">Data</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum projeto encontrado</td></tr>
-              ) : filtered.slice(0, 20).map((p: any) => (
-                <tr key={p.id} className="border-b border-border hover:bg-muted/30">
-                  <td className="p-3 font-medium text-foreground">{p.title}</td>
-                  <td className="p-3 text-muted-foreground">{p.owner?.name || "—"}</td>
-                  <td className="p-3 text-muted-foreground">{p.category || "—"}</td>
-                  <td className="p-3"><span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-muted">{p.status}</span></td>
-                  <td className="p-3 text-muted-foreground">{formatDateBrasilia(p.created_at)}</td>
-                </tr>
+
+        {/* Tabs: Geral | Analíticos | Comparação */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+          <TabsList className="mb-4">
+            <TabsTrigger value="geral"><BarChart3 className="w-4 h-4 mr-1.5" />Geral</TabsTrigger>
+            <TabsTrigger value="analiticos"><TrendingUp className="w-4 h-4 mr-1.5" />Analíticos</TabsTrigger>
+            <TabsTrigger value="comparacao"><GitCompare className="w-4 h-4 mr-1.5" />Comparação</TabsTrigger>
+          </TabsList>
+
+          {/* ===== TAB GERAL ===== */}
+          <TabsContent value="geral">
+            {/* Chart Type Selector */}
+            <div className="bg-card rounded-xl shadow-sm border border-border p-5 mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <h3 className="text-sm font-semibold">Tipo de Gráfico</h3>
+                <div className="flex gap-1 flex-wrap">
+                  {CHART_TYPES.map(ct => (
+                    <button key={ct.value} onClick={() => setChartType(ct.value)}
+                      className={cn("px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+                        chartType === ct.value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      )}>
+                      {ct.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div ref={chartsRef} className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
+              {[
+                { title: "Projetos por Status", data: byStatus, type: chartType },
+                { title: "Projetos por Categoria", data: byCategory, type: chartType },
+                { title: "Top 10 Usuários", data: byUser, type: chartType === "columns" ? "bars" as ChartType : chartType },
+                { title: "Evolução Temporal", data: byMonth, type: (chartType === "pie" || chartType === "pictogram" ? "lines" : chartType) as ChartType },
+                { title: "Tipo de Usuário", data: byUserType, type: chartType },
+              ].map((chart, i) => (
+                <div key={i} className="bg-card rounded-xl shadow-sm border border-border p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold">{chart.title}</h3>
+                    <button onClick={() => exportSectionPDF(chart.title, chart.data)} disabled={exporting}
+                      className="px-2 py-1 rounded text-[11px] font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors flex items-center gap-1 disabled:opacity-50">
+                      <Download className="w-3 h-3" /> PDF
+                    </button>
+                  </div>
+                  <RenderChart type={chart.type} data={chart.data} />
+                </div>
               ))}
-            </tbody>
-          </table></div>
-          {filtered.length > 20 && (
-            <div className="p-3 text-center text-xs text-muted-foreground">Mostrando 20 de {filtered.length} projetos</div>
-          )}
+            </div>
+          </TabsContent>
+
+          {/* ===== TAB ANALÍTICOS ===== */}
+          <TabsContent value="analiticos">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
+              {/* 1. Approval by category (stacked) */}
+              <div className="bg-card rounded-xl shadow-sm border border-border p-5">
+                <h3 className="text-sm font-semibold mb-4">Taxa de Aprovação por Categoria</h3>
+                <StackedBarChart data={approvalByCategory} bars={[
+                  { key: "aprovado", color: COLORS[0], label: "Aprovado" },
+                  { key: "rejeitado", color: COLORS[3], label: "Rejeitado" },
+                  { key: "devolvido", color: COLORS[1], label: "Devolvido" },
+                  { key: "pendente", color: COLORS[2], label: "Pendente" },
+                ]} />
+              </div>
+
+              {/* 2. Avg review time */}
+              <div className="bg-card rounded-xl shadow-sm border border-border p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <h3 className="text-sm font-semibold">Tempo Médio de Revisão (dias)</h3>
+                </div>
+                <RenderChart type="bars" data={avgReviewTime} />
+              </div>
+
+              {/* 3. Academic level */}
+              <div className="bg-card rounded-xl shadow-sm border border-border p-5">
+                <h3 className="text-sm font-semibold mb-4">Projetos por Nível Acadêmico</h3>
+                <RenderChart type="pie" data={byAcademicLevel} />
+              </div>
+
+              {/* 4. Monthly comparison multi-line */}
+              <div className="bg-card rounded-xl shadow-sm border border-border p-5">
+                <h3 className="text-sm font-semibold mb-4">Comparativo Mensal (Aprovados × Rejeitados × Pendentes)</h3>
+                <MultiLineChart data={monthlyComparison} lines={[
+                  { key: "aprovado", color: COLORS[0], label: "Aprovados" },
+                  { key: "rejeitado", color: COLORS[3], label: "Rejeitados" },
+                  { key: "pendente", color: COLORS[2], label: "Pendentes" },
+                ]} />
+              </div>
+
+              {/* 5. Co-author distribution */}
+              <div className="bg-card rounded-xl shadow-sm border border-border p-5">
+                <h3 className="text-sm font-semibold mb-4">Distribuição de Coautores</h3>
+                <RenderChart type="columns" data={coAuthorDist} />
+              </div>
+
+              {/* 6. Active/inactive users */}
+              <div className="bg-card rounded-xl shadow-sm border border-border p-5">
+                <h3 className="text-sm font-semibold mb-4">Saúde da Base de Usuários</h3>
+                <RenderChart type="pie" data={userActivity} />
+              </div>
+
+              {/* 7. Rework rate */}
+              <div className="bg-card rounded-xl shadow-sm border border-border p-5">
+                <h3 className="text-sm font-semibold mb-4">Taxa de Retrabalho por Autor (%)</h3>
+                {reworkByAuthor.length > 0 ? (
+                  <RenderChart type="bars" data={reworkByAuthor} />
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">Sem dados de retrabalho</p>
+                )}
+              </div>
+
+              {/* 8. Category productivity ranking */}
+              <div className="bg-card rounded-xl shadow-sm border border-border p-5">
+                <h3 className="text-sm font-semibold mb-4">Ranking de Categorias (Aprovados)</h3>
+                <RenderChart type="bars" data={categoryRanking} />
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* ===== TAB COMPARAÇÃO ===== */}
+          <TabsContent value="comparacao">
+            <div className="bg-card rounded-xl shadow-sm border border-border p-5 mb-6">
+              <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                <GitCompare className="w-4 h-4" /> Comparar Dois Períodos
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold text-primary">Período A</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <DatePickerInline label="Início" value={periodA_start} onChange={setPeriodA_start} />
+                    <DatePickerInline label="Fim" value={periodA_end} onChange={setPeriodA_end} />
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold text-muted-foreground">Período B</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <DatePickerInline label="Início" value={periodB_start} onChange={setPeriodB_start} />
+                    <DatePickerInline label="Fim" value={periodB_end} onChange={setPeriodB_end} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Comparison Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+              {[
+                { label: "Total de Projetos", a: metricsA.total, b: metricsB.total },
+                { label: "Aprovados", a: metricsA.approved, b: metricsB.approved },
+                { label: "Taxa de Aprovação", a: metricsA.approvalRate, b: metricsB.approvalRate, suffix: "%" },
+                { label: "Autores Únicos", a: metricsA.uniqueAuthors, b: metricsB.uniqueAuthors },
+              ].map((m, i) => (
+                <div key={i} className="bg-card rounded-xl p-4 shadow-sm border border-border">
+                  <div className="text-[13px] text-muted-foreground mb-2">{m.label}</div>
+                  <div className="flex items-end justify-between gap-2">
+                    <div>
+                      <div className="text-xs text-primary font-medium">Período A</div>
+                      <div className="text-2xl font-bold text-foreground">{m.a}{m.suffix || ""}</div>
+                    </div>
+                    <div className="text-center pb-1">
+                      <VariationBadge current={m.a} previous={m.b} />
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-muted-foreground font-medium">Período B</div>
+                      <div className="text-2xl font-bold text-muted-foreground">{m.b}{m.suffix || ""}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Detailed comparison table */}
+            <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden mb-6">
+              <div className="p-5 pb-3">
+                <h3 className="text-sm font-semibold">Detalhamento por Métrica</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/50">
+                      <th className="text-left p-3 font-medium text-muted-foreground">Métrica</th>
+                      <th className="text-center p-3 font-medium text-primary">Período A</th>
+                      <th className="text-center p-3 font-medium text-muted-foreground">Período B</th>
+                      <th className="text-center p-3 font-medium text-muted-foreground">Variação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { label: "Total de Projetos", a: metricsA.total, b: metricsB.total },
+                      { label: "Aprovados", a: metricsA.approved, b: metricsB.approved },
+                      { label: "Rejeitados", a: metricsA.rejected, b: metricsB.rejected },
+                      { label: "Devolvidos", a: metricsA.returned, b: metricsB.returned },
+                      { label: "Pendentes", a: metricsA.pending, b: metricsB.pending },
+                      { label: "Taxa de Aprovação (%)", a: metricsA.approvalRate, b: metricsB.approvalRate },
+                      { label: "Autores Únicos", a: metricsA.uniqueAuthors, b: metricsB.uniqueAuthors },
+                    ].map((row, i) => (
+                      <tr key={i} className="border-b border-border hover:bg-muted/30">
+                        <td className="p-3 font-medium text-foreground">{row.label}</td>
+                        <td className="p-3 text-center font-semibold text-foreground">{row.a}</td>
+                        <td className="p-3 text-center text-muted-foreground">{row.b}</td>
+                        <td className="p-3 text-center"><VariationBadge current={row.a} previous={row.b} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Summary Table */}
+        <div className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
+          <div className="p-5 pb-0">
+            <h3 className="text-sm font-semibold mb-1">Tabela Resumo</h3>
+            <p className="text-xs text-muted-foreground mb-4">{filtered.length} projetos com os filtros aplicados</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="text-left p-3 font-medium text-muted-foreground">Título</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Proprietário</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Categoria</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Status</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Data</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum projeto encontrado</td></tr>
+                ) : filtered.slice(0, 20).map((p: any) => (
+                  <tr key={p.id} className="border-b border-border hover:bg-muted/30">
+                    <td className="p-3 font-medium text-foreground">{p.title}</td>
+                    <td className="p-3 text-muted-foreground">{p.owner?.name || "—"}</td>
+                    <td className="p-3 text-muted-foreground">{p.category || "—"}</td>
+                    <td className="p-3"><span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-muted">{p.status}</span></td>
+                    <td className="p-3 text-muted-foreground">{formatDateBrasilia(p.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filtered.length > 20 && (
+              <div className="p-3 text-center text-xs text-muted-foreground">Mostrando 20 de {filtered.length} projetos</div>
+            )}
+          </div>
         </div>
-      </div>
       </div>
     </AppLayout>
   );
