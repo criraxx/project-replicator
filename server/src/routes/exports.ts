@@ -31,10 +31,12 @@ interface ExportPayload {
   projects: ProjectData[];
 }
 
+type PdfDocument = InstanceType<typeof PDFDocument>;
+
 const COLORS = ['#2D5F4A', '#D4A843', '#3B82F6', '#EF4444', '#8B5CF6', '#F59E0B', '#10B981', '#6366F1'];
 
 // Helper to draw a Pie Chart
-function drawPieChart(doc: PDFKit.PDFDocument, data: ChartData[], x: number, y: number, radius: number) {
+function drawPieChart(doc: PdfDocument, data: ChartData[], x: number, y: number, radius: number) {
   const total = data.reduce((sum, d) => sum + d.value, 0);
   if (total === 0) return;
 
@@ -65,7 +67,7 @@ function drawPieChart(doc: PDFKit.PDFDocument, data: ChartData[], x: number, y: 
 }
 
 // Helper to draw a Bar Chart (Vertical or Horizontal)
-function drawBarChart(doc: PDFKit.PDFDocument, data: ChartData[], x: number, y: number, width: number, height: number, isHorizontal: boolean = false) {
+function drawBarChart(doc: PdfDocument, data: ChartData[], x: number, y: number, width: number, height: number, isHorizontal: boolean = false) {
   const maxVal = Math.max(...data.map(d => d.value), 1);
   
   if (isHorizontal) {
@@ -96,7 +98,7 @@ function drawBarChart(doc: PDFKit.PDFDocument, data: ChartData[], x: number, y: 
 }
 
 // Helper to draw a Line Chart
-function drawLineChart(doc: PDFKit.PDFDocument, data: ChartData[], x: number, y: number, width: number, height: number) {
+function drawLineChart(doc: PdfDocument, data: ChartData[], x: number, y: number, width: number, height: number) {
   const maxVal = Math.max(...data.map(d => d.value), 1);
   const stepX = width / (data.length - 1 || 1);
 
@@ -121,7 +123,7 @@ function drawLineChart(doc: PDFKit.PDFDocument, data: ChartData[], x: number, y:
 }
 
 // Helper to draw a Pictogram
-function drawPictogram(doc: PDFKit.PDFDocument, data: ChartData[], x: number, y: number, width: number) {
+function drawPictogram(doc: PdfDocument, data: ChartData[], x: number, y: number, width: number) {
   const total = data.reduce((sum, d) => sum + d.value, 0);
   if (total === 0) return;
 
@@ -157,7 +159,7 @@ function drawPictogram(doc: PDFKit.PDFDocument, data: ChartData[], x: number, y:
 }
 
 // Helper to draw Projects Table
-function drawProjectsTable(doc: PDFKit.PDFDocument, projects: ProjectData[]) {
+function drawProjectsTable(doc: PdfDocument, projects: ProjectData[]) {
   const green = '#2D5F4A';
   const lightGray = '#F3F4F6';
 
@@ -193,7 +195,7 @@ function drawProjectsTable(doc: PDFKit.PDFDocument, projects: ProjectData[]) {
 }
 
 // Helper to draw Advanced Comparison Tables
-function drawAdvancedComparisonTables(doc: PDFKit.PDFDocument, projects: ProjectData[]) {
+function drawAdvancedComparisonTables(doc: PdfDocument, projects: ProjectData[]) {
   const green = '#2D5F4A';
   const lightGray = '#F3F4F6';
 
