@@ -441,6 +441,7 @@ const AdminReports = () => {
     setCategoryFilters([]);
     setUserTypeFilters([]);
     setOwnerFilters([]);
+    setOwnerSearch("");
     setStartDate(undefined);
     setEndDate(undefined);
   };
