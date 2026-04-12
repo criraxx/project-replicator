@@ -61,7 +61,7 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
     if (!project) return;
     setActionLoading(true);
     try {
-      await api.updateProject(project.id, { status: "aprovado", review_comment: reviewComment || undefined });
+      await api.approveProject(project.id, reviewComment || undefined);
       setProject({ ...project, status: "aprovado" });
       toast({ title: "Sucesso", description: "Projeto aprovado com sucesso!" });
       setReviewComment("");
@@ -80,9 +80,28 @@ const ProjectDetailView = ({ isAdmin: isAdminProp }: ProjectDetailViewProps) => 
     }
     setActionLoading(true);
     try {
-      await api.updateProject(project.id, { status: "rejeitado", review_comment: reviewComment });
-      setProject({ ...project, status: "rejeitado", rejection_reason: reviewComment });
+      await api.rejectProject(project.id, reviewComment);
+      setProject({ ...project, status: "rejeitado", review_comment: reviewComment });
       toast({ title: "Sucesso", description: "Projeto rejeitado." });
+      setReviewComment("");
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReturn = async () => {
+    if (!project) return;
+    if (!reviewComment.trim()) {
+      toast({ title: "Atencao", description: "Informe o motivo da devolução.", variant: "destructive" });
+      return;
+    }
+    setActionLoading(true);
+    try {
+      await api.returnProject(project.id, reviewComment);
+      setProject({ ...project, status: "devolvido", review_comment: reviewComment });
+      toast({ title: "Sucesso", description: "Projeto devolvido para correções." });
       setReviewComment("");
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
