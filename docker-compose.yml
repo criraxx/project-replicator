@@ -17,7 +17,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./server/cebio_database_updated.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./server/cebio_database_production.sql:/docker-entrypoint-initdb.d/01-schema.sql
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-cebio_root_2024}"]
@@ -60,7 +60,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api}
+        VITE_API_URL: ${VITE_API_URL:-/api}
     container_name: cebio-frontend
     restart: always
     ports:

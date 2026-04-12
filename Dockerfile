@@ -15,7 +15,7 @@ RUN npm install
 COPY . .
 
 # Aceitar variável de API URL no build
-ARG VITE_API_URL=http://localhost:8000/api
+ARG VITE_API_URL=/api
 ENV VITE_API_URL=$VITE_API_URL
 
 # Build do frontend
