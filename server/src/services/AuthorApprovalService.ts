@@ -141,10 +141,25 @@ export class AuthorApprovalService {
       projToNotify.id
     );
 
-    // Send project back to owner (devolvido)
-    await this.projectRepository.update(author.project_id, { status: 'devolvido' });
+    // Send project back to owner (devolvido) so they can edit and resubmit
+    await this.projectRepository.update(author.project_id, { 
+      status: 'devolvido',
+      review_comment: `Colaborador ${author.name} rejeitou participação. Motivo: ${reason.trim()}`
+    });
 
     return author;
+  }
+
+  /**
+   * Reset all non-owner author statuses to 'pendente' (used when owner resubmits after devolvido)
+   */
+  async resetAuthorStatuses(projectId: number): Promise<void> {
+    await this.authorRepository
+      .createQueryBuilder()
+      .update(ProjectAuthor)
+      .set({ approval_status: 'pendente', responded_at: undefined as any, rejection_reason: undefined as any })
+      .where('project_id = :projectId AND is_owner = :isOwner', { projectId, isOwner: false })
+      .execute();
   }
 
   /**
