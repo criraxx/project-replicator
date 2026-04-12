@@ -268,7 +268,72 @@ function drawAdvancedComparisonTables(doc: PDFKit.PDFDocument, projects: Project
 }
 
 router.post('/exports/excel', async (req: Request, res: Response) => {
-  res.status(404).json({ error: 'Excel export disabled' });
+  try {
+    const payload: ExportPayload = req.body;
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'CEBIO Brasil';
+
+    const greenFill: ExcelJS.FillPattern = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2D5F4A' } };
+    const headerFont: Partial<ExcelJS.Font> = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+    const borderStyle: Partial<ExcelJS.Borders> = {
+      top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+      bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+      left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+      right: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+    };
+
+    // Summary sheet
+    const wsSummary = workbook.addWorksheet('Resumo');
+    wsSummary.columns = [{ width: 30 }, { width: 25 }];
+    const titleRow = wsSummary.addRow([payload.title || 'Relatório CEBIO Brasil']);
+    titleRow.getCell(1).font = { bold: true, size: 16, color: { argb: 'FF2D5F4A' } };
+    wsSummary.addRow(['Gerado em', payload.generatedAt]);
+    wsSummary.addRow([]);
+    wsSummary.addRow(['Filtro', 'Valor']);
+    payload.filters.forEach(f => wsSummary.addRow([f.label, f.value]));
+    wsSummary.addRow([]);
+    wsSummary.addRow(['KPI', 'Valor']);
+    payload.kpis.forEach(k => wsSummary.addRow([k.label, String(k.value)]));
+
+    // Charts data sheets
+    payload.sections.forEach(section => {
+      const ws = workbook.addWorksheet(section.title.substring(0, 31));
+      ws.columns = [{ width: 35 }, { width: 15 }];
+      const hRow = ws.addRow([section.title, 'Valor']);
+      hRow.eachCell(cell => { cell.fill = greenFill; cell.font = headerFont; cell.border = borderStyle; });
+      section.data.forEach((d, i) => {
+        const row = ws.addRow([d.name, d.value]);
+        row.eachCell(cell => {
+          cell.border = borderStyle;
+          if (i % 2 === 0) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF9FAFB' } };
+        });
+      });
+    });
+
+    // Projects sheet
+    if (payload.projects?.length) {
+      const ws = workbook.addWorksheet('Projetos');
+      ws.columns = [{ width: 40 }, { width: 25 }, { width: 20 }, { width: 15 }, { width: 15 }];
+      const hRow = ws.addRow(['Título', 'Proprietário', 'Categoria', 'Status', 'Data']);
+      hRow.eachCell(cell => { cell.fill = greenFill; cell.font = headerFont; cell.border = borderStyle; });
+      payload.projects.forEach((p, i) => {
+        const row = ws.addRow([p.title, p.owner, p.category, p.status, p.date]);
+        row.eachCell(cell => {
+          cell.border = borderStyle;
+          if (i % 2 === 0) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF9FAFB' } };
+        });
+      });
+      ws.autoFilter = { from: 'A1', to: 'E1' };
+    }
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=relatorio_cebio_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error('Excel export error:', err);
+    res.status(500).json({ error: 'Falha ao gerar Excel' });
+  }
 });
 
 // =====================
